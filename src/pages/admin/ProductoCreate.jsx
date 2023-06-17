@@ -116,7 +116,7 @@ function ProductoCreate() {
             rows="5"
             required
             minLength={10}
-            maxLength={250}
+            maxLength={300}
             value={values.description}
             onChange={handleChange}
           ></textarea>

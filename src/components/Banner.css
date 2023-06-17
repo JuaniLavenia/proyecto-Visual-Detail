@@ -1,0 +1,71 @@
+.conteinerBanner {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.bannerImg {
+  width: 300px;
+  transition: transform 0.5s;
+}
+
+.imgBan {
+  height: auto;
+  width: 280px;
+  margin-bottom: 3rem;
+  margin-top: 2rem;
+  align-items: center;
+  position: relative;
+  overflow: hidden;
+  border-radius: 20px;
+}
+
+.imgBan::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.5);
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+.imgBanTexto {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  padding: 2.5rem;
+  background-color: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  font-size: 1.5rem;
+  font-family: "Rubik", sans-serif;
+  text-align: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+}
+
+@media (hover: none) {
+  .imgBan::before,
+  .imgBanTexto {
+    opacity: 1;
+  }
+}
+
+@media (hover: hover) {
+  .imgBan:hover img {
+    transform: scale(1.2);
+  }
+
+  .imgBan:hover::before {
+    opacity: 1;
+  }
+
+  .imgBan:hover .imgBanTexto {
+    opacity: 1;
+  }
+}

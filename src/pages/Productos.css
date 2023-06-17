@@ -1,0 +1,28 @@
+.noresult {
+  min-height: 28vh;
+  display: flex;
+  flex-direction: column;
+  align-self: center;
+  text-align: center;
+  padding: 5rem;
+}
+.cleanSearch {
+  min-width: 380px;
+  height: 100%;
+}
+.loading {
+  min-height: 50vh;
+  display: flex;
+  flex-direction: column;
+  align-self: center;
+  text-align: center;
+  padding: 5rem;
+}
+
+/*______________Media Queries______________*/
+@media (max-width: 991px) {
+  .categorias {
+    display: flex;
+    flex-direction: column;
+  }
+}

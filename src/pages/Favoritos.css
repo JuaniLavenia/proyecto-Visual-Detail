@@ -1,0 +1,124 @@
+:root {
+  --color-l1: #fff004;
+  --color-l2: #00b3f5;
+  --color-bg: rgb(36, 35, 35);
+  --font-family: "Rubik", sans-serif;
+}
+
+* {
+  font-family: var(--font-family);
+}
+
+.descrpt {
+  font-size: 1.2rem;
+}
+
+.imgFav {
+  width: 250px;
+}
+
+.favorites {
+  min-height: 100vh;
+  min-width: 380px;
+  justify-content: center;
+  display: flex;
+  align-items: center;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  padding: 4rem;
+}
+
+.cardFav {
+  display: flex;
+  flex-direction: column;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  align-items: center;
+  padding: 20px;
+}
+
+.cardFavorites {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  background-color: #fff;
+  border-radius: 10px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  transition: box-shadow 0.3s ease-in-out;
+  width: 750px;
+}
+
+.cardFavorites:hover {
+  box-shadow: 0 8px 16px rgba(0, 0, 0, 0.2);
+}
+
+.cardBtnFav {
+  display: flex;
+  flex-direction: row;
+  gap: 10px;
+  margin-bottom: 10px;
+}
+
+.cardBtnFav button {
+  border: none;
+  border-radius: 5px;
+  font-size: 16px;
+  font-weight: bold;
+  padding: 5px 10px;
+  cursor: pointer;
+  align-self: center;
+}
+
+.cardPriceFav {
+  font-size: 24px;
+  font-weight: bold;
+  text-align: center;
+  padding-top: 5rem;
+  padding-left: 1rem;
+  margin-right: 1.6rem;
+}
+
+.total-comprar {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 1rem;
+}
+
+@media (max-width: 991px) {
+  .cardFavorites {
+    display: flex;
+    flex-direction: column;
+  }
+  .cardFav {
+    display: flex;
+    flex-direction: row;
+  }
+  .cardPriceFav {
+    text-align: center;
+    padding-left: 0;
+  }
+  .imgFav {
+    width: 200px;
+    align-self: center;
+  }
+  .favContainer {
+    width: 100%;
+  }
+  .cardBtnFav {
+    display: flex;
+    flex-direction: column;
+  }
+  .titl {
+    text-align: center;
+  }
+  .descrpt {
+    font-size: 1.1rem;
+    text-align: center;
+  }
+}

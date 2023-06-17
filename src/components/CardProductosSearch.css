@@ -1,0 +1,64 @@
+.imgCard {
+  height: auto;
+  width: 250px;
+  align-self: center;
+}
+
+@media (max-width: 569px) {
+  .btnCardPr {
+    font-size: 0.7rem;
+  }
+}
+
+@media (min-width: 570px) {
+  .btnCardPr {
+    font-size: 0.7rem;
+  }
+}
+
+@media (min-width: 768px) {
+  .btnCardPr {
+    width: 150px;
+  }
+  .btnfav {
+    font-size: 0.5rem !important;
+  }
+  .btncart {
+    font-size: 0.7rem !important;
+  }
+}
+@media (min-width: 800px) {
+  .btnCardPr {
+    width: 160px;
+  }
+
+  .btncart {
+    font-size: 0.8rem !important;
+  }
+}
+@media (min-width: 850px) {
+  .btnCardPr {
+    width: auto !important;
+  }
+
+  .btncart {
+    font-size: 0.8rem !important;
+  }
+}
+
+@media (min-width: 992px) {
+  .btncart {
+    font-size: 1rem !important;
+  }
+  .btnCardPr {
+    width: auto !important;
+  }
+}
+@media (min-width: 1180px) {
+  .btnCardPr {
+    width: auto !important;
+  }
+  .btncart {
+    font-size: 1rem !important;
+  }
+}

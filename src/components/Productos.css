@@ -1,0 +1,44 @@
+.contenedor-cards {
+  min-height: 100%;
+}
+
+.h1-titulos {
+  display: flex;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  padding-top: 3rem;
+}
+
+.mas-text {
+  display: flex;
+  text-align: center;
+  justify-content: center;
+  align-items: center;
+  text-decoration: none;
+  padding-bottom: 3rem;
+}
+
+.productos {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  align-items: center;
+}
+
+.card-productos {
+  width: 370px;
+  margin: 20px;
+  border: none;
+}
+
+.img-container {
+  display: flex;
+  align-items: center;
+}
+
+.img-productos {
+  height: 250px;
+  min-width: 180px;
+  margin-left: -20px;
+}

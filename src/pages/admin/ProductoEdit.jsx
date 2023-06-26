@@ -19,9 +19,7 @@ function ProductoEdit() {
 
   useEffect(() => {
     axios
-      .get(
-        `https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/productos/${id}`
-      )
+      .get(`http://localhost:3000/api/v1/productos/${id}`)
       .then((res) => {
         setValues(res.data);
       })
@@ -49,15 +47,11 @@ function ProductoEdit() {
     setIsLoading(true);
 
     axios
-      .put(
-        `https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/productos/${id}`,
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      )
+      .put(`http://localhost:3000/api/v1/productos/${id}`, formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
       .then((res) => {
         Swal.fire({
           position: "top-center",
@@ -154,6 +148,34 @@ function ProductoEdit() {
 
         <div className="mb-3">
           <div className="mb-3">
+            <label htmlFor="brand" className="form-label">
+              Marca
+            </label>
+            <select
+              type="text"
+              className="form-control"
+              id="brand"
+              required
+              name="brand"
+              value={values.brand}
+              onChange={handleChange}
+            >
+              <option disabled>Marcas</option>
+              <option>Toxic-Shine</option>
+              <option>Fullcar</option>
+              <option>Dreams</option>
+              <option>Ternnova</option>
+              <option>Drop</option>
+              <option>Menzerna</option>
+              <option>Meguiars</option>
+              <option>Vonixx</option>
+              <option>Otros</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="mb-3">
+          <div className="mb-3">
             <label htmlFor="category" className="form-label">
               Categoria
             </label>
@@ -172,6 +194,7 @@ function ProductoEdit() {
               <option>Línea Profesional</option>
               <option>Línea Industrial</option>
               <option>Perfumes</option>
+              <option>Otros</option>
             </select>
           </div>
         </div>

@@ -32,15 +32,11 @@ function ProductoCreate() {
     setIsLoading(true);
 
     axios
-      .post(
-        "https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/productos",
-        formData,
-        {
-          headers: {
-            "Content-Type": "multipart/form-data",
-          },
-        }
-      )
+      .post("http://localhost:3000/api/v1/productos", formData, {
+        headers: {
+          "Content-Type": "multipart/form-data",
+        },
+      })
       .then((res) => {
         setValues(res.data);
         Swal.fire({
@@ -138,6 +134,34 @@ function ProductoCreate() {
 
         <div className="mb-3">
           <div className="mb-3">
+            <label htmlFor="brand" className="form-label">
+              Marca
+            </label>
+            <select
+              type="text"
+              className="form-control"
+              id="brand"
+              required
+              name="brand"
+              value={values.brand}
+              onChange={handleChange}
+            >
+              <option disabled>Marcas</option>
+              <option>Toxic-Shine</option>
+              <option>Fullcar</option>
+              <option>Dreams</option>
+              <option>Ternnova</option>
+              <option>Drop</option>
+              <option>Menzerna</option>
+              <option>Meguiars</option>
+              <option>Vonixx</option>
+              <option>Otros</option>
+            </select>
+          </div>
+        </div>
+
+        <div className="mb-3">
+          <div className="mb-3">
             <label htmlFor="category" className="form-label">
               Categoria
             </label>
@@ -158,6 +182,7 @@ function ProductoCreate() {
               <option>Línea Profesional</option>
               <option>Línea Industrial</option>
               <option>Perfumes</option>
+              <option>Otros</option>
             </select>
           </div>
         </div>

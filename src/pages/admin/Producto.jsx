@@ -12,9 +12,7 @@ function Producto() {
   const getProductos = () => {
     setIsLoading(true);
     axios
-      .get(
-        `https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/productos`
-      )
+      .get(`http://localhost:3000/api/v1/productos`)
       .then((res) => setProductos(res.data))
       .catch((error) => {
         Swal.fire({
@@ -48,9 +46,7 @@ function Producto() {
     }).then((result) => {
       if (result.isConfirmed) {
         axios
-          .delete(
-            `https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/productos/${id}`
-          )
+          .delete(`http://localhost:3000/api/v1/productos/${id}`)
           .then((res) => {
             Swal.fire({
               position: "center",
@@ -84,9 +80,7 @@ function Producto() {
       getProductos();
     } else {
       axios
-        .get(
-          `https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/productos/search/${search}`
-        )
+        .get(`http://localhost:3000/api/v1/productos/search/${search}`)
         .then((res) => {
           setProductos(res.data);
         })
@@ -157,7 +151,7 @@ function Producto() {
                   <td scope="row">{producto.capacity}</td>
                   <td scope="row">
                     <img
-                      src={`https://proyecto-web-final-backend--juan-ignacio245.repl.co/img/productos/${producto.image}`}
+                      src={`http://localhost:3000/api/v1/img/productos/${producto.image}`}
                       width={100}
                       alt={producto.nombre}
                       className="img"

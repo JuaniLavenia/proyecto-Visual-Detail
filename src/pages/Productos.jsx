@@ -12,6 +12,7 @@ function SearchClean() {
   const [categoria, setCategoria] = useState("");
   const [selectedBrand, setBrand] = useState("");
   const [isLoading, setIsLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
     const cartItems = JSON.parse(localStorage.getItem("cartItems")) || [];
@@ -36,11 +37,7 @@ function SearchClean() {
       );
       setProducts(response.data);
     } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Conexión perdida",
-        text: "No se pudo establecer conexión con el servidor.",
-      });
+      setError("No se pudo establecer conexión con el servidor.");
     }
 
     setIsLoading(false);
@@ -61,11 +58,7 @@ function SearchClean() {
       setProducts(data);
       setCategoria(category);
     } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Conexión perdida",
-        text: "No se pudo establecer conexión con el servidor.",
-      });
+      setError("No se pudo establecer conexión con el servidor.");
     }
 
     setIsLoading(false);
@@ -82,11 +75,7 @@ function SearchClean() {
       setProducts(data);
       setBrand(brand);
     } catch (error) {
-      Swal.fire({
-        icon: "error",
-        title: "Conexión perdida",
-        text: "No se pudo establecer conexión con el servidor.",
-      });
+      setError("No se pudo establecer conexión con el servidor.");
     }
 
     setIsLoading(false);
@@ -233,6 +222,9 @@ function SearchClean() {
               <p className="text-center">Cargando productos...</p>
             ) : (
               <div className="row">
+                {error.length > 0 && (
+                  <p className="text-center text-danger">{error}</p>
+                )}
                 {products.map((product, index) => (
                   <div className="col-sm-6 col-md-4" key={index}>
                     <CardProductos

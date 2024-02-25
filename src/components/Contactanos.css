@@ -1,0 +1,50 @@
+.contact-container {
+  background-color: black;
+  background-image: url(https://cdn.shopify.com/s/files/1/0272/1346/3623/files/DSC6756-Edit_1024x1024.jpg?v=1634901495);
+  background-position: center;
+  background-repeat: no-repeat;
+  background-size: cover;
+  padding-bottom: 3rem;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
+  color: white;
+  min-height: 60vh;
+}
+
+.contact-container ::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background-color: rgba(0, 0, 0, 0.8);
+  z-index: -1;
+}
+
+.contact-link {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-decoration: none;
+  color: black;
+  margin-bottom: 10px;
+}
+
+.contact-link svg {
+  margin-bottom: 5px;
+}
+
+.contact-content {
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  background-color: white;
+  color: black;
+  width: 30%;
+  margin-top: 50px;
+  padding: 20px;
+}

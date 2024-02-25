@@ -134,6 +134,7 @@ function Header() {
                   <li className="nav-item">
                     <Link
                       className="nav-link text-light"
+                      target="_blank"
                       to="https://goo.gl/maps/pyTLGSD6mtBn7HvN9"
                     >
                       <svg
@@ -164,7 +165,12 @@ function Header() {
                     </Link>
                   </li>
                   <li className="nav-item">
-                    <Link className="nav-link text-light" to="">
+                    <Link
+                      className="nav-link text-light"
+                      to="/contactanos"
+                      data-toggle="modal"
+                      data-target="#modalContact"
+                    >
                       <svg
                         className="bi d-block mx-auto mb-1"
                         width="30px"

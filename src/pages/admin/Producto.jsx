@@ -8,6 +8,7 @@ function Producto() {
   const [productos, setProductos] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [search, setSearch] = useState("");
+  const [error, setError] = useState("");
 
   const getProductos = () => {
     setIsLoading(true);
@@ -15,11 +16,7 @@ function Producto() {
       .get(`http://localhost:3000/api/v1/productos`)
       .then((res) => setProductos(res.data))
       .catch((error) => {
-        Swal.fire({
-          icon: "error",
-          title: "Conexión perdida",
-          text: "No se pudo establecer conexión con el servidor.",
-        });
+        setError("No se pudo establecer conexión con el servidor.");
       })
       .finally(() => {
         setIsLoading(false);
@@ -57,11 +54,7 @@ function Producto() {
             });
           })
           .catch((err) =>
-            Swal.fire({
-              icon: "error",
-              title: "Conexión perdida",
-              text: "No se pudo establecer conexión con el servidor.",
-            })
+            setError("No se pudo establecer conexión con el servidor.")
           )
           .finally(() => {
             getProductos();
@@ -85,11 +78,7 @@ function Producto() {
           setProductos(res.data);
         })
         .catch((error) => {
-          Swal.fire({
-            icon: "error",
-            title: "Conexión perdida",
-            text: "No se pudo establecer conexión con el servidor.",
-          });
+          setError("No se pudo establecer conexión con el servidor.");
         })
         .finally(() => {
           setIsLoading(false);
@@ -142,39 +131,48 @@ function Producto() {
             {isLoading ? (
               <p className="text-center">Cargando productos...</p>
             ) : (
-              productos.map((producto) => (
-                <tr key={producto._id} className="file">
-                  <td scope="row">{producto.name}</td>
-                  <td scope="row">{producto.category}</td>
-                  <td scope="row">$ {producto.price}</td>
-                  <td scope="row">{producto.stock}</td>
-                  <td scope="row">{producto.capacity}</td>
-                  <td scope="row">
-                    <img
-                      src={`http://localhost:3000/api/v1/img/productos/${producto.image}`}
-                      width={100}
-                      alt={producto.nombre}
-                      className="img"
-                    />
-                  </td>
-                  <td scope="row">
-                    <Link
-                      to={`/adm/productos/edit/${producto._id}`}
-                      type="button"
-                      className="btn btn-warning m-1"
-                    >
-                      Editar
-                    </Link>
-                    <button
-                      onClick={() => destroy(producto._id)}
-                      type="button"
-                      className="btn btn-danger m-1"
-                    >
-                      Borrar
-                    </button>
-                  </td>
-                </tr>
-              ))
+              <>
+                {error && (
+                  <tr>
+                    <td colSpan="7" className="text-center text-danger">
+                      {error}
+                    </td>
+                  </tr>
+                )}
+                {productos.map((producto) => (
+                  <tr key={producto._id} className="file">
+                    <td scope="row">{producto.name}</td>
+                    <td scope="row">{producto.category}</td>
+                    <td scope="row">$ {producto.price}</td>
+                    <td scope="row">{producto.stock}</td>
+                    <td scope="row">{producto.capacity}</td>
+                    <td scope="row">
+                      <img
+                        src={`http://localhost:3000/api/v1/img/productos/${producto.image}`}
+                        width={100}
+                        alt={producto.nombre}
+                        className="img"
+                      />
+                    </td>
+                    <td scope="row">
+                      <Link
+                        to={`/adm/productos/edit/${producto._id}`}
+                        type="button"
+                        className="btn btn-warning m-1"
+                      >
+                        Editar
+                      </Link>
+                      <button
+                        onClick={() => destroy(producto._id)}
+                        type="button"
+                        className="btn btn-danger m-1"
+                      >
+                        Borrar
+                      </button>
+                    </td>
+                  </tr>
+                ))}
+              </>
             )}
           </tbody>
         </table>

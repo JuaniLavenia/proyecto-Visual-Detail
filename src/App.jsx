@@ -13,6 +13,7 @@ import Producto from "./pages/admin/Producto";
 import ProductoEdit from "./pages/admin/ProductoEdit";
 import ProductoCreate from "./pages/admin/ProductoCreate";
 import Productos from "./pages/Productos";
+import Contactanos from "./components/Contactanos";
 
 function App() {
   return (
@@ -30,6 +31,7 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/carrito" element={<Carrito />} />
             <Route path="/favoritos" element={<Favoritos />} />
+            <Route path="/contactanos" element={<Contactanos />} />
           </Routes>
 
           <Footer />

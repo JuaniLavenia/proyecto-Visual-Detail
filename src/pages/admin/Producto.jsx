@@ -129,7 +129,11 @@ function Producto() {
           </thead>
           <tbody className="tbody">
             {isLoading ? (
-              <p className="text-center">Cargando productos...</p>
+              <tr>
+                <td colSpan="7" className="text-center">
+                  Cargando productos...
+                </td>
+              </tr>
             ) : (
               <>
                 {error && (

@@ -13,7 +13,9 @@ function Producto() {
   const getProductos = () => {
     setIsLoading(true);
     axios
-      .get(`http://localhost:3000/api/v1/productos`)
+      .get(
+        `https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/productos`
+      )
       .then((res) => setProductos(res.data))
       .catch((error) => {
         setError("No se pudo establecer conexión con el servidor.");
@@ -43,7 +45,9 @@ function Producto() {
     }).then((result) => {
       if (result.isConfirmed) {
         axios
-          .delete(`http://localhost:3000/api/v1/productos/${id}`)
+          .delete(
+            `https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/productos/${id}`
+          )
           .then((res) => {
             Swal.fire({
               position: "center",
@@ -73,7 +77,9 @@ function Producto() {
       getProductos();
     } else {
       axios
-        .get(`http://localhost:3000/api/v1/productos/search/${search}`)
+        .get(
+          `https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/productos/search/${search}`
+        )
         .then((res) => {
           setProductos(res.data);
         })

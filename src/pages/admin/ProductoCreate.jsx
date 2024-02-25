@@ -32,11 +32,15 @@ function ProductoCreate() {
     setIsLoading(true);
 
     axios
-      .post("http://localhost:3000/api/v1/productos", formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      })
+      .post(
+        "https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/productos",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      )
       .then((res) => {
         setValues(res.data);
         Swal.fire({

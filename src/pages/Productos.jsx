@@ -33,7 +33,7 @@ function SearchClean() {
 
     try {
       const response = await axios.get(
-        "http://localhost:3000/api/v1/productos"
+        "https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/productos"
       );
       setProducts(response.data);
     } catch (error) {
@@ -52,7 +52,7 @@ function SearchClean() {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/api/v1/productos/category/${category}`
+        `https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/productos/category/${category}`
       );
       const data = await response.json();
       setProducts(data);
@@ -69,7 +69,7 @@ function SearchClean() {
 
     try {
       const response = await fetch(
-        `http://localhost:3000/api/v1/productos/brand/${brand}`
+        `https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/productos/brand/${brand}`
       );
       const data = await response.json();
       setProducts(data);

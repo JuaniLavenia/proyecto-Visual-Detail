@@ -19,7 +19,9 @@ function ProductoEdit() {
 
   useEffect(() => {
     axios
-      .get(`http://localhost:3000/api/v1/productos/${id}`)
+      .get(
+        `https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/productos/${id}`
+      )
       .then((res) => {
         setValues(res.data);
       })
@@ -47,11 +49,15 @@ function ProductoEdit() {
     setIsLoading(true);
 
     axios
-      .put(`http://localhost:3000/api/v1/productos/${id}`, formData, {
-        headers: {
-          "Content-Type": "multipart/form-data",
-        },
-      })
+      .put(
+        `https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/productos/${id}`,
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      )
       .then((res) => {
         Swal.fire({
           position: "top-center",

@@ -1,14 +1,16 @@
 import axios from "axios";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useContext } from "react";
 import { Link } from "react-router-dom";
 import "./producto.css";
 import Swal from "sweetalert2";
+import { AuthContext } from "../../context/AuthContext";
 
 function Producto() {
   const [productos, setProductos] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
+  const { token, userId } = useContext(AuthContext);
 
   const getProductos = () => {
     setIsLoading(true);
@@ -147,39 +149,41 @@ function Producto() {
                     </td>
                   </tr>
                 )}
-                {productos.map((producto) => (
-                  <tr key={producto._id} className="file">
-                    <td scope="row">{producto.name}</td>
-                    <td scope="row">{producto.category}</td>
-                    <td scope="row">$ {producto.price}</td>
-                    <td scope="row">{producto.stock}</td>
-                    <td scope="row">{producto.capacity}</td>
-                    <td scope="row">
-                      <img
-                        src={`https://visual-detailing-backend.vercel.app/img/productos/${producto.image}`}
-                        width={100}
-                        alt={producto.nombre}
-                        className="img"
-                      />
-                    </td>
-                    <td scope="row">
-                      <Link
-                        to={`/adm/productos/edit/${producto._id}`}
-                        type="button"
-                        className="btn btn-warning m-1"
-                      >
-                        Editar
-                      </Link>
-                      <button
-                        onClick={() => destroy(producto._id)}
-                        type="button"
-                        className="btn btn-danger m-1"
-                      >
-                        Borrar
-                      </button>
-                    </td>
-                  </tr>
-                ))}
+                {token &&
+                  userId === "65dbfbfdbbaccc7f307ebc2e" &&
+                  productos.map((producto) => (
+                    <tr key={producto._id} className="file">
+                      <td scope="row">{producto.name}</td>
+                      <td scope="row">{producto.category}</td>
+                      <td scope="row">$ {producto.price}</td>
+                      <td scope="row">{producto.stock}</td>
+                      <td scope="row">{producto.capacity}</td>
+                      <td scope="row">
+                        <img
+                          src={`https://visual-detailing-backend.vercel.app/img/productos/${producto.image}`}
+                          width={100}
+                          alt={producto.nombre}
+                          className="img"
+                        />
+                      </td>
+                      <td scope="row">
+                        <Link
+                          to={`/adm/productos/edit/${producto._id}`}
+                          type="button"
+                          className="btn btn-warning m-1"
+                        >
+                          Editar
+                        </Link>
+                        <button
+                          onClick={() => destroy(producto._id)}
+                          type="button"
+                          className="btn btn-danger m-1"
+                        >
+                          Borrar
+                        </button>
+                      </td>
+                    </tr>
+                  ))}
               </>
             )}
           </tbody>

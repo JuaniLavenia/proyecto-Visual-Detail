@@ -258,7 +258,7 @@ function Header() {
                     )}
                   </li>
                   <li className="nav-item" id="pag-admin">
-                    {token && userId === "64641124d8ab8071b667c088" && (
+                    {token && userId === "65dbfbfdbbaccc7f307ebc2e" && (
                       <Link className="nav-link text-light" to="/adm/productos">
                         <svg
                           className="bi d-block mx-auto mb-1"

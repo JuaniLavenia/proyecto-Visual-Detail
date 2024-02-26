@@ -8,10 +8,17 @@ import "./Login.css";
 function Login() {
   const { login } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
+  const [isLoginForm, setLoginForm] = useState(true);
 
   const [values, setValues] = useState({
     email: "",
     password: "",
+  });
+
+  const [valuesR, setValuesR] = useState({
+    email: "",
+    password: "",
+    password_confirmation: "",
   });
 
   const navigate = useNavigate();
@@ -19,36 +26,79 @@ function Login() {
   const handleSubmit = (e) => {
     e.preventDefault();
 
-    if (values.email && values.password) {
+    if (
+      (values.email && values.password) ||
+      (valuesR.email &&
+        valuesR.password &&
+        valuesR.password_confirmation &&
+        valuesR.password === valuesR.password_confirmation)
+    ) {
       setIsLoading(true);
 
-      axios
-        .post("https://visual-detailing-backend.vercel.app/api/login", values)
-        .then((res) => {
-          const { token, userId } = res.data;
-          localStorage.setItem("token", token);
-          login(token, userId);
+      let apiUrl = "";
 
-          Swal.fire({
-            position: "center",
-            icon: "success",
-            title: "Sesión iniciada",
-            showConfirmButton: false,
-            timer: 1500,
+      if (isLoginForm) {
+        apiUrl = "https://visual-detailing-backend.vercel.app/api/login";
+        axios
+          .post(apiUrl, values)
+          .then((res) => {
+            const { token, userId } = res.data;
+            localStorage.setItem("token", token);
+            login(token, userId);
+
+            Swal.fire({
+              position: "center",
+              icon: "success",
+              title: "Sesión iniciada",
+              showConfirmButton: false,
+              timer: 1500,
+            });
+            setValues({ email: "", password: "" });
+            setValuesR({ email: "", password: "", password_confirmation: "" });
+            navigate("/");
+          })
+          .catch((err) => {
+            Swal.fire({
+              icon: "error",
+              title: "Oops...",
+              text: "Los datos proporcionados no son correctos",
+            });
+          })
+          .finally(() => {
+            setIsLoading(false);
           });
-          setValues({ email: "", password: "" });
-          navigate("/");
-        })
-        .catch((err) => {
-          Swal.fire({
-            icon: "error",
-            title: "Oops...",
-            text: "Los datos proporcionados no son correctos",
+      } else {
+        apiUrl = "https://visual-detailing-backend.vercel.app/api/register";
+
+        axios
+          .post(apiUrl, valuesR)
+          .then((res) => {
+            const { token, userId } = res.data;
+            localStorage.setItem("token", token);
+            login(token, userId);
+
+            Swal.fire({
+              position: "center",
+              icon: "success",
+              title: "Sesión iniciada",
+              showConfirmButton: false,
+              timer: 1500,
+            });
+            setValues({ email: "", password: "" });
+            setValuesR({ email: "", password: "", password_confirmation: "" });
+            navigate("/");
+          })
+          .catch((err) => {
+            Swal.fire({
+              icon: "error",
+              title: "Oops...",
+              text: "Los datos proporcionados no son correctos",
+            });
+          })
+          .finally(() => {
+            setIsLoading(false);
           });
-        })
-        .finally(() => {
-          setIsLoading(false);
-        });
+      }
     } else {
       Swal.fire({
         icon: "error",
@@ -60,76 +110,165 @@ function Login() {
 
   const handleChange = (event) => {
     const { name, value } = event.target;
-    setValues({
-      ...values,
-      [name]: value,
-    });
+
+    if (isLoginForm) {
+      setValues({
+        ...values,
+        [name]: value,
+      });
+    } else {
+      setValuesR({
+        ...valuesR,
+        [name]: value,
+      });
+    }
   };
 
   return (
     <>
       <main className="mainDiv pt-5 w-100">
         <div className="col col-lg-4 col-md-8 col-sm-12 login">
-          <h1 className="fw-bold text-center py-10 text-black">Bienvenido</h1>
-
-          <form onSubmit={handleSubmit}>
-            <div className="mb-3">
-              <label htmlFor="email" className="form-label text-black">
-                Correo electrónico
-              </label>
-              <input
-                type="email"
-                className="form-control loginInput"
-                id="emailLogin"
-                aria-describedby="emailHelp"
-                required
-                maxLength={40}
-                name="email"
-                value={values.email}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="mb-3">
-              <label
-                htmlFor="registerPassword"
-                className="form-label text-black"
-              >
-                Contraseña
-              </label>
-              <input
-                type="password"
-                className="form-control loginInput"
-                id="PasswordLogin"
-                required
-                minLength={6}
-                maxLength={12}
-                name="password"
-                value={values.password}
-                onChange={handleChange}
-              />
-            </div>
-            <div className="mb-3 btnsDiv">
-              <button
-                id="iniciarSesion"
-                type="submit"
-                className="btn btn-primary btn-inicio-sesion"
-                onSubmit={handleSubmit}
-                disabled={isLoading}
-              >
-                {isLoading ? "Cargando..." : "Iniciar Sesión"}
-              </button>
-              <button type="button" className="btn btn-warning btn-registrarse">
-                Quiero registrarme
-              </button>
-              <button
-                type="button"
-                id="olvideContrasena"
-                className="btn btn-secondary btn-contrasena text-light"
-              >
-                Olvidé mi contraseña
-              </button>
-            </div>
-          </form>
+          <h1 className="fw-bold text-center py-10 text-black">
+            {isLoginForm ? "Bienvenido" : "Registro"}
+          </h1>
+          {isLoginForm ? (
+            <form onSubmit={handleSubmit}>
+              <div className="mb-3">
+                <label htmlFor="email" className="form-label text-black">
+                  Correo electrónico
+                </label>
+                <input
+                  type="email"
+                  className="form-control loginInput"
+                  id="emailLogin"
+                  aria-describedby="emailHelp"
+                  required
+                  maxLength={40}
+                  name="email"
+                  value={values.email}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="mb-3">
+                <label
+                  htmlFor="registerPassword"
+                  className="form-label text-black"
+                >
+                  Contraseña
+                </label>
+                <input
+                  type="password"
+                  className="form-control loginInput"
+                  id="PasswordLogin"
+                  required
+                  minLength={6}
+                  maxLength={12}
+                  name="password"
+                  value={values.password}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="mb-3 btnsDiv">
+                <button
+                  id="iniciarSesion"
+                  type="submit"
+                  className="btn btn-primary btn-inicio-sesion"
+                  onSubmit={handleSubmit}
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Cargando..." : "Iniciar Sesión"}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-warning btn-registrarse"
+                  onClick={() => setLoginForm(!isLoginForm)}
+                >
+                  Quiero registrarme
+                </button>
+                <button
+                  type="button"
+                  id="olvideContrasena"
+                  className="btn btn-secondary btn-contrasena text-light"
+                >
+                  Olvidé mi contraseña
+                </button>
+              </div>
+            </form>
+          ) : (
+            <form onSubmit={handleSubmit}>
+              <div className="mb-3">
+                <label htmlFor="email" className="form-label">
+                  Correo electrónico
+                </label>
+                <input
+                  type="email"
+                  className="form-control loginInput"
+                  id="emailRegister"
+                  aria-describedby="emailHelp"
+                  maxLength={40}
+                  required
+                  name="email"
+                  value={valuesR.email}
+                  onChange={handleChange}
+                />
+              </div>
+              <div className="mb-3">
+                <label
+                  htmlFor="registerPassword"
+                  className="form-label loginInput"
+                >
+                  Contraseña
+                </label>
+                <input
+                  type="password"
+                  className="form-control loginInput"
+                  id="passwordRegister"
+                  required
+                  minLength={6}
+                  maxLength={12}
+                  name="password"
+                  value={valuesR.password}
+                  onChange={handleChange}
+                />
+                <label
+                  htmlFor="password_confirmation"
+                  className="form-label mt-3"
+                >
+                  Confirmar contraseña
+                </label>
+                <input
+                  type="password"
+                  className="form-control loginInput"
+                  id="password_confirmation"
+                  required
+                  minLength={6}
+                  maxLength={12}
+                  name="password_confirmation"
+                  value={valuesR.password_confirmation}
+                  onChange={handleChange}
+                />
+                <div className="password_comfirmation form-text">
+                  La contraseña tiene que tener entre 6 y 12 caracteres
+                </div>
+              </div>
+              <div className="mb-3 btnsDiv">
+                <button
+                  type="submit"
+                  className="btn btn-primary"
+                  disabled={isLoading}
+                >
+                  {isLoading ? "Cargando..." : "Registrarse"}
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-warning btn-registrarse"
+                  onClick={() => setLoginForm(!isLoginForm)}
+                >
+                  Iniciar Sesion
+                </button>
+              </div>
+            </form>
+          )}
         </div>
       </main>
     </>

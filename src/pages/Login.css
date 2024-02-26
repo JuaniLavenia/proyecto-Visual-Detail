@@ -18,7 +18,10 @@
   flex-direction: column;
   justify-content: center;
   height: 520px;
-  border-radius: 30px;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  padding: 20px;
+  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
   transition: opacity 0.5s ease-in-out;
 }
 
@@ -60,14 +63,14 @@
   margin: 0.5rem;
   border-radius: 20px;
   padding: 0.5rem;
+  font-size: 0.9rem;
 }
 .loginInput {
-  padding: 1rem;
-  height: 40px;
-  width: 500px;
-  margin: 0.5rem;
-  border-radius: 20px;
-  padding: 0.5rem;
+  width: 100%;
+  padding: 8px;
+  margin-bottom: 10px;
+  box-sizing: border-box;
+  border-radius: 8px;
 }
 
 .btn-inicio-sesion {
@@ -87,15 +90,35 @@
 
 .btnsDiv {
   display: flex;
-  justify-content: center;
+  justify-content: space-between;
+}
+
+.btn {
+  width: 48%;
 }
 
 .password_comfirmation {
   padding-left: 15px;
 }
 
-@media (max-width: 991px) {
+@media (max-width: 768px) {
   .login {
-    width: 530px;
+    width: 80%;
+  }
+}
+
+/* Estilos específicos para dispositivos extra pequeños */
+@media (max-width: 480px) {
+  .login {
+    width: 100%;
+  }
+
+  .btnsDiv {
+    flex-direction: column;
+  }
+
+  .btn {
+    width: 100%;
+    margin-bottom: 10px;
   }
 }

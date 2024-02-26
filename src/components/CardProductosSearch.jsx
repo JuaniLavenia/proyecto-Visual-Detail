@@ -77,7 +77,7 @@ function CardProductos({
     <div className="card cardP m-3 bg-dark text-light d-flex h-100">
       <img
         className="imgCard d-flex"
-        src={`https://proyecto-web-final-backend--juan-ignacio245.repl.co/img/productos/${image}`}
+        src={`https://visual-detailing-backend.vercel.app/img/productos/${image}`}
         alt={name}
       />
       <div className="card-body">

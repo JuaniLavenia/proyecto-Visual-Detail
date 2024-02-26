@@ -19,9 +19,7 @@ function ProductoEdit() {
 
   useEffect(() => {
     axios
-      .get(
-        `https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/productos/${id}`
-      )
+      .get(`https://visual-detailing-backend.vercel.app/api/productos/${id}`)
       .then((res) => {
         setValues(res.data);
       })
@@ -50,7 +48,7 @@ function ProductoEdit() {
 
     axios
       .put(
-        `https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/productos/${id}`,
+        `https://visual-detailing-backend.vercel.app/api/productos/${id}`,
         formData,
         {
           headers: {

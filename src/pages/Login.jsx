@@ -23,10 +23,7 @@ function Login() {
       setIsLoading(true);
 
       axios
-        .post(
-          "https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/login",
-          values
-        )
+        .post("https://visual-detailing-backend.vercel.app/api/login", values)
         .then((res) => {
           const { token, userId } = res.data;
           localStorage.setItem("token", token);

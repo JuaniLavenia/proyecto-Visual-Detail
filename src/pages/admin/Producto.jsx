@@ -13,9 +13,7 @@ function Producto() {
   const getProductos = () => {
     setIsLoading(true);
     axios
-      .get(
-        `https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/productos`
-      )
+      .get(`https://visual-detailing-backend.vercel.app/api/productos`)
       .then((res) => setProductos(res.data))
       .catch((error) => {
         setError("No se pudo establecer conexión con el servidor.");
@@ -46,7 +44,7 @@ function Producto() {
       if (result.isConfirmed) {
         axios
           .delete(
-            `https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/productos/${id}`
+            `https://visual-detailing-backend.vercel.app/api/productos/${id}`
           )
           .then((res) => {
             Swal.fire({
@@ -78,7 +76,7 @@ function Producto() {
     } else {
       axios
         .get(
-          `https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/productos/search/${search}`
+          `https://visual-detailing-backend.vercel.app/api/productos/search/${search}`
         )
         .then((res) => {
           setProductos(res.data);
@@ -158,7 +156,7 @@ function Producto() {
                     <td scope="row">{producto.capacity}</td>
                     <td scope="row">
                       <img
-                        src={`http://localhost:3000/api/v1/img/productos/${producto.image}`}
+                        src={`https://visual-detailing-backend.vercel.app/img/productos/${producto.image}`}
                         width={100}
                         alt={producto.nombre}
                         className="img"

@@ -33,7 +33,7 @@ function SearchClean() {
 
     try {
       const response = await axios.get(
-        "https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/productos"
+        "https://visual-detailing-backend.vercel.app/api/productos"
       );
       setProducts(response.data);
     } catch (error) {
@@ -52,7 +52,7 @@ function SearchClean() {
 
     try {
       const response = await fetch(
-        `https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/productos/category/${category}`
+        `https://visual-detailing-backend.vercel.app/api/productos/category/${category}`
       );
       const data = await response.json();
       setProducts(data);
@@ -69,7 +69,7 @@ function SearchClean() {
 
     try {
       const response = await fetch(
-        `https://proyecto-web-final-backend--juan-ignacio245.repl.co/api/productos/brand/${brand}`
+        `https://visual-detailing-backend.vercel.app/api/productos/brand/${brand}`
       );
       const data = await response.json();
       setProducts(data);

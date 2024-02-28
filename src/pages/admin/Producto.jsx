@@ -15,7 +15,7 @@ function Producto() {
   const getProductos = () => {
     setIsLoading(true);
     axios
-      .get(`https://visual-detailing-backend.vercel.app/api/productos`)
+      .get(`https://visual-detail-backend.onrender.com/api/productos`)
       .then((res) => setProductos(res.data))
       .catch((error) => {
         setError("No se pudo establecer conexión con el servidor.");
@@ -46,7 +46,7 @@ function Producto() {
       if (result.isConfirmed) {
         axios
           .delete(
-            `https://visual-detailing-backend.vercel.app/api/productos/${id}`
+            `https://visual-detail-backend.onrender.com/api/productos/${id}`
           )
           .then((res) => {
             Swal.fire({
@@ -78,7 +78,7 @@ function Producto() {
     } else {
       axios
         .get(
-          `https://visual-detailing-backend.vercel.app/api/productos/search/${search}`
+          `https://visual-detail-backend.onrender.com/api/productos/search/${search}`
         )
         .then((res) => {
           setProductos(res.data);
@@ -160,7 +160,7 @@ function Producto() {
                       <td scope="row">{producto.capacity}</td>
                       <td scope="row">
                         <img
-                          src={`https://visual-detailing-backend.vercel.app/img/productos/${producto.image}`}
+                          src={`https://visual-detail-backend.onrender.com/img/productos/${producto.image}`}
                           width={100}
                           alt={producto.nombre}
                           className="img"

@@ -152,7 +152,7 @@ function Carrito() {
                 >
                   <div className="card-image">
                     <img
-                      src={`https://visual-detailing-backend.vercel.app/img/productos/${item.image}`}
+                      src={`https://visual-detail-backend.onrender.com/img/productos/${item.image}`}
                       alt={item.name}
                     />
                   </div>

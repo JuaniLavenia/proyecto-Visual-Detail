@@ -33,7 +33,7 @@ function SearchClean() {
 
     try {
       const response = await axios.get(
-        "https://visual-detailing-backend.vercel.app/api/productos"
+        "https://visual-detail-backend.onrender.com/api/productos"
       );
       setProducts(response.data);
     } catch (error) {
@@ -52,7 +52,7 @@ function SearchClean() {
 
     try {
       const response = await fetch(
-        `https://visual-detailing-backend.vercel.app/api/productos/category/${category}`
+        `https://visual-detail-backend.onrender.com/api/productos/category/${category}`
       );
       const data = await response.json();
       setProducts(data);
@@ -69,7 +69,7 @@ function SearchClean() {
 
     try {
       const response = await fetch(
-        `https://visual-detailing-backend.vercel.app/api/productos/brand/${brand}`
+        `https://visual-detail-backend.onrender.com/api/productos/brand/${brand}`
       );
       const data = await response.json();
       setProducts(data);

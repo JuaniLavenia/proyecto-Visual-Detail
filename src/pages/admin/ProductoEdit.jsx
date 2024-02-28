@@ -21,7 +21,7 @@ function ProductoEdit() {
 
   useEffect(() => {
     axios
-      .get(`https://visual-detailing-backend.vercel.app/api/productos/${id}`)
+      .get(`https://visual-detail-backend.onrender.com/api/productos/${id}`)
       .then((res) => {
         setValues(res.data);
       })
@@ -50,7 +50,7 @@ function ProductoEdit() {
 
     axios
       .put(
-        `https://visual-detailing-backend.vercel.app/api/productos/${id}`,
+        `https://visual-detail-backend.onrender.com/api/productos/${id}`,
         formData,
         {
           headers: {

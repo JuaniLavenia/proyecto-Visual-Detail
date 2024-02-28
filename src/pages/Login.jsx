@@ -38,7 +38,7 @@ function Login() {
       let apiUrl = "";
 
       if (isLoginForm) {
-        apiUrl = "https://visual-detailing-backend.vercel.app/api/login";
+        apiUrl = "https://visual-detail-backend.onrender.com/api/login";
         axios
           .post(apiUrl, values)
           .then((res) => {
@@ -68,7 +68,7 @@ function Login() {
             setIsLoading(false);
           });
       } else {
-        apiUrl = "https://visual-detailing-backend.vercel.app/api/register";
+        apiUrl = "https://visual-detail-backend.onrender.com/api/register";
 
         axios
           .post(apiUrl, valuesR)

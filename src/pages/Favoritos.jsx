@@ -99,7 +99,7 @@ function Favoritos() {
               <div className="cardFav" key={index}>
                 <div className="cardFavorites bg-dark text-light">
                   <img
-                    src={`https://visual-detailing-backend.vercel.app/img/productos/${item.image}`}
+                    src={`https://visual-detail-backend.onrender.com/img/productos/${item.image}`}
                     alt={item.name}
                     className="imgFav"
                   />

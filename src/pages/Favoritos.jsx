@@ -121,12 +121,14 @@ function Favoritos() {
                           Ver más productos
                         </Link>
                       </button>
+                      {/*
                       <button
                         className="btn btn-warning"
                         onClick={() => addToCart(item)}
                       >
                         Comprar
                       </button>
+                      */}
                     </div>
                   </div>
                   <div className="card-footer">

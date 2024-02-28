@@ -107,6 +107,7 @@ function CardProductos({
       <div className="card-footer">
         <div className="card-price p-1">$ {price}</div>
         <div className="car-buttons btnCardPr d-flex justify-content-center">
+          {/*
           <button
             className="btn btn-primary me-2 w-50 btncart"
             onClick={() =>
@@ -124,6 +125,7 @@ function CardProductos({
           >
             Comprar
           </button>
+          */}
           <button
             className="btn btn-warning w-50 btnfav"
             onClick={() => {

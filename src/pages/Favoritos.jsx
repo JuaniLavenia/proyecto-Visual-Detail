@@ -90,6 +90,14 @@ function Favoritos() {
     handleAddToCart(product);
   };
 
+  const calculateTotal = () => {
+    let total = 0;
+    favorites.forEach((item) => {
+      total += item.price * item.quantity;
+    });
+    return total;
+  };
+
   return (
     <div className="favorites bg-dark text-light">
       <div className="favContainer">
@@ -141,6 +149,9 @@ function Favoritos() {
         ) : (
           <p className="text-center">No tienes favoritos guardados.</p>
         )}
+        <h3 className="itemCardTotal text-center mt-4" id="itemTotal">
+          Total ${calculateTotal()}
+        </h3>
       </div>
     </div>
   );

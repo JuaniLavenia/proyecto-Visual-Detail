@@ -12,6 +12,7 @@ function ProductoEdit() {
     price: "",
     stock: "",
     category: "",
+    brand: "",
     capacity: "",
   });
   const [image, setImage] = useState();
@@ -44,6 +45,7 @@ function ProductoEdit() {
     formData.append("price", values.price);
     formData.append("stock", values.stock);
     formData.append("category", values.category);
+    formData.append("brand", values.brand);
     formData.append("capacity", values.capacity);
 
     setIsLoading(true);

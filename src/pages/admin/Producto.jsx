@@ -100,8 +100,13 @@ function Producto() {
   const getProductos = () => {
     setIsLoading(true);
     axios
-      .get(`https://visual-detail-backend.onrender.com/api/productos`)
-      .then((res) => setProductos(res.data))
+      .get(
+        `https://visual-detail-backend.onrender.com/api/productos?page=${page}&limit=${pageSize}`
+      )
+      .then((res) => {
+        setProductos(res.data.products);
+        setTotalRows(res.data.totalProducts);
+      })
       .catch((error) => {
         setError("No se pudo establecer conexión con el servidor.");
       })
@@ -179,11 +184,13 @@ function Producto() {
 
   const handlePageChange = (newPage) => {
     setPage(newPage);
+    getProductos();
   };
 
   const handlePerRowsChange = (newPerPage) => {
     setPageSize(newPerPage);
     setPage(1);
+    getProductos();
   };
 
   return (

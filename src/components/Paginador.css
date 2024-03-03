@@ -1,0 +1,32 @@
+.paginador {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin-top: 50px;
+}
+
+.btnPaginador {
+  padding: 8px 12px;
+  margin: 0 5px;
+  cursor: pointer;
+  border: 1px solid #ccc;
+  background-color: #fff;
+  color: #333;
+  font-size: 14px;
+  border-radius: 4px;
+  transition: background-color 0.3s, color 0.3s;
+}
+
+.btnPaginador:hover {
+  background-color: #eaeaea;
+}
+
+.btnPaginador:disabled {
+  cursor: not-allowed;
+  opacity: 0.6;
+}
+
+.spanPaginador {
+  margin: 0 10px;
+  font-size: 14px;
+}

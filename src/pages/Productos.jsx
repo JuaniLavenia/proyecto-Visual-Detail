@@ -4,6 +4,7 @@ import axios from "axios";
 import "./Productos.css";
 import CategoryButton from "../components/CategoryBtn";
 import { CartContext } from "../context/ContextProvider";
+import Paginador from "../components/Paginador";
 import Swal from "sweetalert2";
 
 function SearchClean() {
@@ -13,6 +14,17 @@ function SearchClean() {
   const [selectedBrand, setBrand] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
+  const [pageSize, setPageSize] = useState(10);
+  const [totalRows, setTotalRows] = useState(0);
+  const [currentPage, setCurrentPage] = useState(1);
+
+  const handlePageChange = (newPage) => {
+    if (newPage !== currentPage) {
+      getProductos(newPage);
+    }
+  };
+
+  const totalPages = Math.ceil(totalRows / pageSize);
 
   useEffect(() => {
     const cartItems = JSON.parse(localStorage.getItem("cartItems")) || [];
@@ -28,14 +40,16 @@ function SearchClean() {
     setFavoritesCount(favCount);
   }, []);
 
-  const getProductos = async () => {
+  const getProductos = async (page) => {
     setIsLoading(true);
 
     try {
       const response = await axios.get(
-        "https://visual-detail-backend.onrender.com/api/productos"
+        `https://visual-detail-backend.onrender.com/api/productos?page=${page}&limit=${pageSize}`
       );
-      setProducts(response.data);
+      setProducts(response.data.products);
+      setTotalRows(response.data.totalProducts);
+      setCurrentPage(page);
     } catch (error) {
       setError("No se pudo establecer conexión con el servidor.");
     }
@@ -44,7 +58,7 @@ function SearchClean() {
   };
 
   useEffect(() => {
-    getProductos();
+    getProductos(currentPage);
   }, []);
 
   const handleCategoryClick = async (category) => {
@@ -144,7 +158,6 @@ function SearchClean() {
               </CategoryButton>
             </div>
             <h4 className="text-center">Filtrar por marca</h4>
-
             <div
               className="btn-group d-flex text-center mb-4 categorias"
               role="group"
@@ -216,6 +229,7 @@ function SearchClean() {
               </CategoryButton>
             </div>
           </div>
+
           <div className="col-md-9">
             <h1 className="text-center">Productos</h1>
             {isLoading ? (
@@ -225,6 +239,11 @@ function SearchClean() {
                 {error.length > 0 && (
                   <p className="text-center text-danger">{error}</p>
                 )}
+                <Paginador
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  handlePageChange={handlePageChange}
+                />
                 {products.map((product, index) => (
                   <div className="col-sm-6 col-md-4" key={index}>
                     <CardProductos
@@ -234,6 +253,11 @@ function SearchClean() {
                     />
                   </div>
                 ))}
+                <Paginador
+                  currentPage={currentPage}
+                  totalPages={totalPages}
+                  handlePageChange={handlePageChange}
+                />
               </div>
             )}
           </div>

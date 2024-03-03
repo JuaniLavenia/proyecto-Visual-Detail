@@ -145,13 +145,13 @@ function Favoritos() {
                 </div>
               </div>
             ))}
+            <h3 className="itemCardTotal text-center mt-4" id="itemTotal">
+              Total ${calculateTotal()}
+            </h3>
           </>
         ) : (
           <p className="text-center">No tienes favoritos guardados.</p>
         )}
-        <h3 className="itemCardTotal text-center mt-4" id="itemTotal">
-          Total ${calculateTotal()}
-        </h3>
       </div>
     </div>
   );

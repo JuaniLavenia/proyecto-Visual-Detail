@@ -32,7 +32,6 @@ function Header() {
   const handleLogout = () => {
     localStorage.removeItem("token");
     logout("");
-    //dispatch({ type: "USER_LOGOUT" });
     Swal.fire({
       position: "center",
       icon: "success",
@@ -348,7 +347,6 @@ function Header() {
               </Link>
             </form>
             <div className="d-flex favCart">
-              {/*
               <div className="carrito">
                 <Link to="/carrito" className="text-decoration-none">
                   <button className="car">
@@ -361,7 +359,7 @@ function Header() {
                   </button>
                 </Link>
               </div>
-              */}
+
               <div>
                 <Link to="/favoritos" className="text-decoration-none">
                   <button className="fav">

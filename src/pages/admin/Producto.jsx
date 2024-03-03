@@ -111,6 +111,7 @@ function Producto() {
       })
       .catch((error) => {
         setError("No se pudo establecer conexión con el servidor.");
+        console.log(error);
       })
       .finally(() => {
         setIsLoading(false);
@@ -221,37 +222,35 @@ function Producto() {
       </div>
 
       <div className="table-responsive">
-        {token && userId === "65dbfbfdbbaccc7f307ebc2e" && (
-          <>
-            <DataTable
-              columns={columns}
-              data={productos}
-              progressPending={isLoading}
-              progressComponent={
-                <div>
-                  <span className="text-center">Cargando productos...</span>
-                </div>
-              }
-              responsive
-              noDataComponent="Sin Resultados"
-            />
-            <Paginador
-              currentPage={currentPage}
-              totalPages={totalPages}
-              handlePageChange={handlePageChange}
-            />
-          </>
-        )}
-
-        {/*
-                {error && (
-                  <tr>
-                    <td colSpan="7" className="text-center text-danger">
-                      {error}
-                    </td>
-                  </tr>
-                )}
-      */}
+        {token &&
+          userId === "65dbfbfdbbaccc7f307ebc2e" &&
+          (productos.length > 0 ? (
+            <>
+              <DataTable
+                columns={columns}
+                data={productos}
+                progressPending={isLoading}
+                progressComponent={
+                  <div>
+                    <span className="text-center">Cargando productos...</span>
+                  </div>
+                }
+                responsive
+                noDataComponent="Sin Resultados"
+              />
+              <Paginador
+                currentPage={currentPage}
+                totalPages={totalPages}
+                handlePageChange={handlePageChange}
+              />
+            </>
+          ) : (
+            error && (
+              <div>
+                <span className="text-center text-danger">{error}</span>
+              </div>
+            )
+          ))}
       </div>
     </div>
   );

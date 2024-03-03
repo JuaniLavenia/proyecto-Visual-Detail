@@ -4,11 +4,15 @@ import { Button, Modal } from "react-bootstrap";
 import Swal from "sweetalert2";
 import { Link, useNavigate } from "react-router-dom";
 import { CartContext } from "../context/ContextProvider";
+import { AuthContext } from "../context/AuthContext";
+import axios from "axios";
 
 function Carrito() {
   const { setCartCount } = useContext(CartContext);
   const [showModal, setShowModal] = useState(false);
   const [cartItems, setCartItems] = useState([]);
+  const { userId } = useContext(AuthContext);
+  const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -92,35 +96,38 @@ function Carrito() {
     });
   };
 
-  const handlePayment = () => {
-    const valKey = localStorage.getItem("validation");
-    const valKeyTwo = localStorage.getItem("validation2");
+  const handlePayment = async () => {
+    setIsLoading(true);
+    try {
+      const response = await axios.post(
+        "https://visual-detail-backend.onrender.com/api/pedidos",
+        {
+          usuario: userId,
+          productos: cartItems.map((item) => ({
+            nombre: item.name,
+            cantidad: item.quantity,
+          })),
+        }
+      );
 
-    if (valKey === "true" && valKeyTwo === "true") {
+      if (response.status === 201) {
+        setIsLoading(false);
+        const whatsappLink = `https://wa.me/+543812026631?text=Hola!%20Quisiera%20realizar%20el%20siguiente%20pedido:%0A${cartItems
+          .map((item) => `. ${item.name} (${item.quantity})`)
+          .join("%0A")}`;
+        window.location.href = whatsappLink;
+      } else {
+        setIsLoading(false);
+        console.log("Error al crear el pedido en el servidor");
+      }
+    } catch (error) {
+      setIsLoading(false);
       Swal.fire({
-        position: "center",
-        icon: "success",
-        title:
-          "¡Compra realizada con éxito, se enviará su factura al correo electrónico!",
-        showConfirmButton: false,
-        timer: 2500,
+        icon: "error",
+        title: "Oops...",
+        text: "No se pudo realizar el pedido",
       });
-
-      handleCloseModal();
-      setCartCount(0);
-      setCartItems([]);
-      localStorage.removeItem("cartItems");
-      localStorage.removeItem("validation");
-      localStorage.removeItem("validation2");
-      navigate("/");
-    } else {
-      Swal.fire({
-        position: "center",
-        icon: "info",
-        title: "Verifique los datos ingresados",
-        showConfirmButton: false,
-        timer: 2500,
-      });
+      console.log("Error al crear el pedido:", error);
     }
   };
 
@@ -137,6 +144,22 @@ function Carrito() {
       );
       setCartCount(count);
     }
+  };
+
+  const handleCopyToClipboard = () => {
+    const orderDetail = cartItems
+      .map((item) => `${item.name} (${item.quantity})`)
+      .join("\n");
+    navigator.clipboard.writeText(
+      `Hola! Quisiera realizar el siguiente pedido:\n${orderDetail}`
+    );
+    Swal.fire({
+      position: "center",
+      icon: "success",
+      title: "Detalle del pedido copiado al portapapeles",
+      showConfirmButton: false,
+      timer: 1500,
+    });
   };
 
   return (
@@ -217,18 +240,33 @@ function Carrito() {
         <>
           <Modal show={showModal} onHide={handleCloseModal}>
             <Modal.Header closeButton className="bg-dark text-light">
-              <Modal.Title>Información del pago</Modal.Title>
+              <Modal.Title>Información del pedido</Modal.Title>
             </Modal.Header>
             <Modal.Body className="bg-dark text-light">
-              {/* <Formcarrito />
-              <Envio /> */}
+              <p>Detalle del Pedido:</p>
+              <ul>
+                {cartItems.map((item, index) => (
+                  <li key={index}>{`${item.name} (${item.quantity})`}</li>
+                ))}
+              </ul>
+              <Button variant="secondary" onClick={handleCopyToClipboard}>
+                Copiar al portapapeles
+              </Button>
+              <p className="mt-4 fst-italic text-center">
+                Al generar el pedido se lo redireccionara al chat de Whatsapp
+                donde podra terminar con la compra.
+              </p>
             </Modal.Body>
             <Modal.Footer className="bg-dark text-light">
               <Button variant="danger" onClick={handleCloseModal}>
                 Cancelar
               </Button>
-              <Button variant="primary" onClick={handlePayment}>
-                Pagar y enviar
+              <Button
+                variant="primary"
+                onClick={handlePayment}
+                disabled={isLoading}
+              >
+                {isLoading ? "Generando..." : "Generar pedido y enviar"}
               </Button>
             </Modal.Footer>
           </Modal>

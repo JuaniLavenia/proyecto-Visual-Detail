@@ -185,13 +185,15 @@ function Login() {
                 >
                   Quiero registrarme
                 </button>
-                <button
+                {/*
+                  <button
                   type="button"
                   id="olvideContrasena"
                   className="btn btn-secondary btn-contrasena text-light"
                 >
                   Olvidé mi contraseña
                 </button>
+          */}
               </div>
             </form>
           ) : (

@@ -169,7 +169,9 @@ function ProductoEdit() {
                 value={values.brand}
                 onChange={handleChange}
               >
-                <option disabled>Marcas</option>
+                <option disabled value="">
+                  Seleccionar marca
+                </option>
                 <option>Toxic-Shine</option>
                 <option>Fullcar</option>
                 <option>Dreams</option>
@@ -197,7 +199,9 @@ function ProductoEdit() {
                 value={values.category}
                 onChange={handleChange}
               >
-                <option disabled>Categorias</option>
+                <option disabled value="">
+                  Seleccionar categoria
+                </option>
                 <option>Interiores</option>
                 <option>Exteriores</option>
                 <option>Línea Profesional</option>

@@ -155,7 +155,9 @@ function ProductoCreate() {
                 value={values.brand}
                 onChange={handleChange}
               >
-                <option disabled>Marcas</option>
+                <option disabled selected value="">
+                  Seleccionar marca
+                </option>
                 <option>Toxic-Shine</option>
                 <option>Fullcar</option>
                 <option>Dreams</option>
@@ -184,7 +186,7 @@ function ProductoCreate() {
                 onChange={handleChange}
               >
                 <option disabled selected value="">
-                  Categorias
+                  Seleccionar categoria
                 </option>
                 <option>Interiores</option>
                 <option>Exteriores</option>

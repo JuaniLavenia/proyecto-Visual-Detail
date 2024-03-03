@@ -16,6 +16,27 @@
   min-height: 60vh;
 }
 
+.rdt_Table .rdt_TableCell {
+  vertical-align: middle;
+  font-size: 14px !important;
+}
+
+.rdt_TableHeadRow {
+  font-size: 14px !important;
+  font-weight: 700 !important;
+  background-color: #4f5d73 !important;
+  color: white;
+}
+
+.rdt_Pagination {
+  background-color: #4f5d73 !important;
+  color: white !important;
+}
+
+.gVtWSU {
+  background-color: #fff004 !important;
+}
+
 @media screen and (max-width: 480px) {
   .table-responsive {
     overflow-x: auto;

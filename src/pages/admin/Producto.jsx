@@ -4,6 +4,7 @@ import { Link } from "react-router-dom";
 import "./producto.css";
 import Swal from "sweetalert2";
 import { AuthContext } from "../../context/AuthContext";
+import DataTable from "react-data-table-component";
 
 function Producto() {
   const [productos, setProductos] = useState([]);
@@ -11,6 +12,90 @@ function Producto() {
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
   const { token, userId } = useContext(AuthContext);
+  const [page, setPage] = useState(1);
+  const [pageSize, setPageSize] = useState(10);
+  const [totalRows, setTotalRows] = useState(0);
+
+  const columns = [
+    {
+      name: "Marca",
+      selector: (row) => row.brand,
+      sortable: true,
+      width: "150px",
+    },
+    {
+      name: "Nombre",
+      selector: (row) => row.name,
+      sortable: true,
+      width: "150px",
+    },
+    {
+      name: "Categoria",
+      selector: (row) => row.category,
+      sortable: true,
+      width: "150px",
+      center: true,
+    },
+    {
+      name: "Precio",
+      selector: (row) => row.price,
+      sortable: true,
+      width: "150px",
+      center: true,
+    },
+    {
+      name: "Stock",
+      selector: (row) => row.stock,
+      sortable: true,
+      width: "100px",
+      center: true,
+    },
+    {
+      name: "Capacidad",
+      selector: (row) => row.capacity,
+      sortable: true,
+      width: "225px",
+      center: true,
+    },
+    {
+      name: "Imagen",
+      cell: (row) => (
+        <img
+          src={`https://visual-detail-backend.onrender.com/img/productos/${row.image}`}
+          width={100}
+          alt={row.name}
+          className="img"
+        />
+      ),
+      sortable: false,
+      width: "300px",
+      center: true,
+    },
+    {
+      name: "Acciones",
+      cell: (row) => (
+        <div className="flex">
+          <Link
+            to={`/adm/productos/edit/${row._id}`}
+            type="button"
+            className="btn btn-warning m-1"
+          >
+            Editar
+          </Link>
+          <button
+            onClick={() => destroy(row._id)}
+            type="button"
+            className="btn btn-danger m-1"
+          >
+            Borrar
+          </button>
+        </div>
+      ),
+      sortable: false,
+      width: "200px",
+      center: true,
+    },
+  ];
 
   const getProductos = () => {
     setIsLoading(true);
@@ -92,6 +177,15 @@ function Producto() {
     }
   };
 
+  const handlePageChange = (newPage) => {
+    setPage(newPage);
+  };
+
+  const handlePerRowsChange = (newPerPage) => {
+    setPageSize(newPerPage);
+    setPage(1);
+  };
+
   return (
     <div className="contentPrinc p-5 bg-dark text-light">
       <div className="list d-flex justify-content-between align-items-center">
@@ -121,27 +215,35 @@ function Producto() {
       </div>
 
       <div className="table-responsive">
-        <table className="table text-light tableBody">
-          <thead className="thead">
-            <tr>
-              <th scope="col">Nombre</th>
-              <th scope="col">Categoria</th>
-              <th scope="col">Precio</th>
-              <th scope="col">Stock</th>
-              <th scope="col">Capacidad</th>
-              <th scope="col">Imagen</th>
-              <th></th>
-            </tr>
-          </thead>
-          <tbody className="tbody">
-            {isLoading ? (
-              <tr>
-                <td colSpan="7" className="text-center">
-                  Cargando productos...
-                </td>
-              </tr>
-            ) : (
-              <>
+        {token && userId === "65dbfbfdbbaccc7f307ebc2e" && (
+          <DataTable
+            columns={columns}
+            data={productos}
+            progressPending={isLoading}
+            progressComponent={
+              <div>
+                <span className="text-center">Cargando productos...</span>
+              </div>
+            }
+            pagination
+            paginationServer
+            paginationPerPage={10}
+            paginationTotalRows={totalRows}
+            paginationResetDefaultPage={false}
+            paginationRowsPerPageOptions={[10, 20, 30, 50]}
+            paginationComponentOptions={{
+              rowsPerPageText: "Filas por página:",
+              rangeSeparatorText: "de",
+              noRowsPerPage: false,
+            }}
+            onChangeRowsPerPage={handlePerRowsChange}
+            onChangePage={handlePageChange}
+            responsive
+            noDataComponent="Sin Resultados"
+          />
+        )}
+
+        {/*
                 {error && (
                   <tr>
                     <td colSpan="7" className="text-center text-danger">
@@ -149,45 +251,7 @@ function Producto() {
                     </td>
                   </tr>
                 )}
-                {token &&
-                  userId === "65dbfbfdbbaccc7f307ebc2e" &&
-                  productos.map((producto) => (
-                    <tr key={producto._id} className="file">
-                      <td scope="row">{producto.name}</td>
-                      <td scope="row">{producto.category}</td>
-                      <td scope="row">$ {producto.price}</td>
-                      <td scope="row">{producto.stock}</td>
-                      <td scope="row">{producto.capacity}</td>
-                      <td scope="row">
-                        <img
-                          src={`https://visual-detail-backend.onrender.com/img/productos/${producto.image}`}
-                          width={100}
-                          alt={producto.nombre}
-                          className="img"
-                        />
-                      </td>
-                      <td scope="row">
-                        <Link
-                          to={`/adm/productos/edit/${producto._id}`}
-                          type="button"
-                          className="btn btn-warning m-1"
-                        >
-                          Editar
-                        </Link>
-                        <button
-                          onClick={() => destroy(producto._id)}
-                          type="button"
-                          className="btn btn-danger m-1"
-                        >
-                          Borrar
-                        </button>
-                      </td>
-                    </tr>
-                  ))}
-              </>
-            )}
-          </tbody>
-        </table>
+      */}
       </div>
     </div>
   );

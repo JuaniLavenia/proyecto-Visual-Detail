@@ -5,6 +5,7 @@ import "./producto.css";
 import Swal from "sweetalert2";
 import { AuthContext } from "../../context/AuthContext";
 import DataTable from "react-data-table-component";
+import Paginador from "../../components/Paginador";
 
 function Producto() {
   const [productos, setProductos] = useState([]);
@@ -12,7 +13,7 @@ function Producto() {
   const [search, setSearch] = useState("");
   const [error, setError] = useState("");
   const { token, userId } = useContext(AuthContext);
-  const [page, setPage] = useState(1);
+  const [currentPage, setCurrentPage] = useState(1);
   const [pageSize, setPageSize] = useState(10);
   const [totalRows, setTotalRows] = useState(0);
 
@@ -97,7 +98,7 @@ function Producto() {
     },
   ];
 
-  const getProductos = () => {
+  const getProductos = (page) => {
     setIsLoading(true);
     axios
       .get(
@@ -106,6 +107,7 @@ function Producto() {
       .then((res) => {
         setProductos(res.data.products);
         setTotalRows(res.data.totalProducts);
+        setCurrentPage(page);
       })
       .catch((error) => {
         setError("No se pudo establecer conexión con el servidor.");
@@ -116,7 +118,7 @@ function Producto() {
   };
 
   useEffect(() => {
-    getProductos();
+    getProductos(currentPage);
   }, []);
 
   const destroy = (id) => {
@@ -183,15 +185,12 @@ function Producto() {
   };
 
   const handlePageChange = (newPage) => {
-    setPage(newPage);
-    getProductos();
+    if (newPage !== currentPage) {
+      getProductos(newPage);
+    }
   };
 
-  const handlePerRowsChange = (newPerPage) => {
-    setPageSize(newPerPage);
-    setPage(1);
-    getProductos();
-  };
+  const totalPages = Math.ceil(totalRows / pageSize);
 
   return (
     <div className="contentPrinc p-5 bg-dark text-light">
@@ -223,31 +222,25 @@ function Producto() {
 
       <div className="table-responsive">
         {token && userId === "65dbfbfdbbaccc7f307ebc2e" && (
-          <DataTable
-            columns={columns}
-            data={productos}
-            progressPending={isLoading}
-            progressComponent={
-              <div>
-                <span className="text-center">Cargando productos...</span>
-              </div>
-            }
-            pagination
-            paginationServer
-            paginationPerPage={10}
-            paginationTotalRows={totalRows}
-            paginationResetDefaultPage={false}
-            paginationRowsPerPageOptions={[10, 20, 30, 50]}
-            paginationComponentOptions={{
-              rowsPerPageText: "Filas por página:",
-              rangeSeparatorText: "de",
-              noRowsPerPage: false,
-            }}
-            onChangeRowsPerPage={handlePerRowsChange}
-            onChangePage={handlePageChange}
-            responsive
-            noDataComponent="Sin Resultados"
-          />
+          <>
+            <DataTable
+              columns={columns}
+              data={productos}
+              progressPending={isLoading}
+              progressComponent={
+                <div>
+                  <span className="text-center">Cargando productos...</span>
+                </div>
+              }
+              responsive
+              noDataComponent="Sin Resultados"
+            />
+            <Paginador
+              currentPage={currentPage}
+              totalPages={totalPages}
+              handlePageChange={handlePageChange}
+            />
+          </>
         )}
 
         {/*

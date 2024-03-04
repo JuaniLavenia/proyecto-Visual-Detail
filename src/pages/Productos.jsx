@@ -15,19 +15,26 @@ function SearchClean() {
   const [selectedBrand, setBrand] = useState("");
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState("");
-  const [pageSize, setPageSize] = useState(10);
   const [totalRows, setTotalRows] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
+  const [currentSize, setCurrentSize] = useState(12);
+
   const { search } = useLocation();
   const queryParams = new URLSearchParams(search);
   const categoriaParam = queryParams.get("category");
   const handlePageChange = (newPage) => {
     if (newPage !== currentPage) {
-      getProductos(newPage);
+      getProductos(newPage, currentSize);
     }
   };
 
-  const totalPages = Math.ceil(totalRows / pageSize);
+  const totalPages = Math.ceil(totalRows / currentSize);
+
+  const handleSizeChange = (size) => {
+    if (size !== currentSize) {
+      getProductos(currentPage, size);
+    }
+  };
 
   useEffect(() => {
     const cartItems = JSON.parse(localStorage.getItem("cartItems")) || [];
@@ -43,7 +50,7 @@ function SearchClean() {
     setFavoritesCount(favCount);
   }, []);
 
-  const getProductos = async (page) => {
+  const getProductos = async (page, pageSize) => {
     setIsLoading(true);
 
     try {
@@ -53,6 +60,7 @@ function SearchClean() {
       setProducts(response.data.products);
       setTotalRows(response.data.totalProducts);
       setCurrentPage(page);
+      setCurrentSize(pageSize);
     } catch (error) {
       setError("No se pudo establecer conexión con el servidor.");
     }
@@ -64,7 +72,7 @@ function SearchClean() {
     if (categoriaParam) {
       handleCategoryClick(categoriaParam);
     } else {
-      getProductos(currentPage);
+      getProductos(currentPage, currentSize);
     }
   }, []);
 
@@ -250,6 +258,8 @@ function SearchClean() {
                   currentPage={currentPage}
                   totalPages={totalPages}
                   handlePageChange={handlePageChange}
+                  itemsPerPage={currentSize}
+                  setItemsPerPage={handleSizeChange}
                 />
                 {products.map((product, index) => (
                   <div className="col-sm-6 col-md-4" key={index}>
@@ -264,6 +274,8 @@ function SearchClean() {
                   currentPage={currentPage}
                   totalPages={totalPages}
                   handlePageChange={handlePageChange}
+                  itemsPerPage={currentSize}
+                  setItemsPerPage={handleSizeChange}
                 />
               </div>
             )}

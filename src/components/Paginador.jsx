@@ -1,9 +1,30 @@
 import React from "react";
 import "./Paginador.css";
 
-const Paginador = ({ currentPage, totalPages, handlePageChange }) => {
+const Paginador = ({
+  currentPage,
+  totalPages,
+  handlePageChange,
+  itemsPerPage,
+  setItemsPerPage,
+}) => {
   return (
     <div className="paginador">
+      <label>Items por página</label>
+      <select
+        value={itemsPerPage}
+        onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
+        className="selectPaginador"
+      >
+        <option value={12} selected>
+          12
+        </option>
+        <option value={18}>18</option>
+        <option value={30}>30</option>
+        <option value={60}>60</option>
+        <option value={90}>90</option>
+        <option value={153}>153</option>
+      </select>
       <button
         onClick={() => handlePageChange(1)}
         disabled={currentPage === 1}

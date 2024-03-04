@@ -14,8 +14,8 @@ function Producto() {
   const [error, setError] = useState("");
   const { token, userId } = useContext(AuthContext);
   const [currentPage, setCurrentPage] = useState(1);
-  const [pageSize, setPageSize] = useState(10);
   const [totalRows, setTotalRows] = useState(0);
+  const [currentSize, setCurrentSize] = useState(12);
 
   const columns = [
     {
@@ -98,7 +98,7 @@ function Producto() {
     },
   ];
 
-  const getProductos = (page) => {
+  const getProductos = (page, pageSize) => {
     setIsLoading(true);
     axios
       .get(
@@ -108,6 +108,7 @@ function Producto() {
         setProductos(res.data.products);
         setTotalRows(res.data.totalProducts);
         setCurrentPage(page);
+        setCurrentSize(pageSize);
       })
       .catch((error) => {
         setError("No se pudo establecer conexión con el servidor.");
@@ -119,7 +120,7 @@ function Producto() {
   };
 
   useEffect(() => {
-    getProductos(currentPage);
+    getProductos(currentPage, currentSize);
   }, []);
 
   const destroy = (id) => {
@@ -187,11 +188,17 @@ function Producto() {
 
   const handlePageChange = (newPage) => {
     if (newPage !== currentPage) {
-      getProductos(newPage);
+      getProductos(newPage, currentSize);
     }
   };
 
-  const totalPages = Math.ceil(totalRows / pageSize);
+  const totalPages = Math.ceil(totalRows / currentSize);
+
+  const handleSizeChange = (size) => {
+    if (size !== currentSize) {
+      getProductos(currentPage, size);
+    }
+  };
 
   return (
     <div className="contentPrinc p-5 bg-dark text-light">
@@ -242,6 +249,8 @@ function Producto() {
                 currentPage={currentPage}
                 totalPages={totalPages}
                 handlePageChange={handlePageChange}
+                itemsPerPage={currentSize}
+                setItemsPerPage={handleSizeChange}
               />
             </>
           ) : (

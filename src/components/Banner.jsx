@@ -12,7 +12,7 @@ const Banner = ({ imagen, categoria }) => {
   return (
     <div className="conteinerBanner">
       <div className="card-banner imgBan">
-        <Link to={`/productos/category/${encodeURIComponent(categoria)}`}>
+        <Link to={`/productos?category=${encodeURIComponent(categoria)}`}>
           <img
             src={imagen}
             className="card-img row bannerImg"
@@ -21,6 +21,7 @@ const Banner = ({ imagen, categoria }) => {
           <div className="imgBanTexto">{estado.categoria}</div>
         </Link>
       </div>
+      <div className="downText">{estado.categoria}</div>
     </div>
   );
 };

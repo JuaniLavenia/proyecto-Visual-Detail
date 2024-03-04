@@ -6,6 +6,7 @@ import CategoryButton from "../components/CategoryBtn";
 import { CartContext } from "../context/ContextProvider";
 import Paginador from "../components/Paginador";
 import Swal from "sweetalert2";
+import { useLocation } from "react-router";
 
 function SearchClean() {
   const { setCartCount, setFavoritesCount } = useContext(CartContext);
@@ -17,7 +18,9 @@ function SearchClean() {
   const [pageSize, setPageSize] = useState(10);
   const [totalRows, setTotalRows] = useState(0);
   const [currentPage, setCurrentPage] = useState(1);
-
+  const { search } = useLocation();
+  const queryParams = new URLSearchParams(search);
+  const categoriaParam = queryParams.get("category");
   const handlePageChange = (newPage) => {
     if (newPage !== currentPage) {
       getProductos(newPage);
@@ -58,7 +61,11 @@ function SearchClean() {
   };
 
   useEffect(() => {
-    getProductos(currentPage);
+    if (categoriaParam) {
+      handleCategoryClick(categoriaParam);
+    } else {
+      getProductos(currentPage);
+    }
   }, []);
 
   const handleCategoryClick = async (category) => {

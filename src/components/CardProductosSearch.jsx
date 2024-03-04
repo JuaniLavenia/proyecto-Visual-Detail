@@ -103,27 +103,43 @@ function CardProductos({
           <strong className="text-muted align-self-center pb-3">|</strong>
           <p className="text-muted text-center w-50">{category}</p>
         </div>
+
+        <div className="card-text d-flex justify-content-center">
+          <p
+            className={
+              stock > 0
+                ? "text-success text-center "
+                : "text-danger text-center "
+            }
+          >
+            {stock > 0 ? "Stock disponible" : "Sin Stock"}
+          </p>
+        </div>
       </div>
       <div className="card-footer">
         <div className="card-price p-1">$ {price}</div>
         <div className="car-buttons btnCardPr d-flex justify-content-center">
-          <button
-            className="btn btn-primary me-2 w-50 btncart"
-            onClick={() =>
-              handleAddToCart({
-                image,
-                name,
-                description,
-                capacity,
-                category,
-                _id,
-                price,
-                stock,
-              })
-            }
-          >
-            Comprar
-          </button>
+          {stock > 0 ? (
+            <button
+              className="btn btn-primary me-2 w-50 btncart"
+              onClick={() =>
+                handleAddToCart({
+                  image,
+                  name,
+                  description,
+                  capacity,
+                  category,
+                  _id,
+                  price,
+                  stock,
+                })
+              }
+            >
+              Comprar
+            </button>
+          ) : (
+            <></>
+          )}
 
           <button
             className="btn btn-warning w-50 btnfav"

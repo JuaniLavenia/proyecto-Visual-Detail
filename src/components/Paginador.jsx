@@ -23,7 +23,7 @@ const Paginador = ({
         <option value={30}>30</option>
         <option value={60}>60</option>
         <option value={90}>90</option>
-        <option value={153}>153</option>
+        <option value={150}>150</option>
       </select>
       <button
         onClick={() => handlePageChange(1)}

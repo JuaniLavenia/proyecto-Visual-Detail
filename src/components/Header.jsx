@@ -370,6 +370,17 @@ function Header() {
                   </button>
                 </Link>
               </div>
+              {token && (
+                <div>
+                  <Link to="/perfil" className="text-decoration-none">
+                    <button className="prof">
+                      <span className="material-icons-outlined">
+                        manage_accounts
+                      </span>
+                    </button>
+                  </Link>
+                </div>
+              )}
             </div>
           </div>
         </section>

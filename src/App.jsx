@@ -14,6 +14,7 @@ import ProductoEdit from "./pages/admin/ProductoEdit";
 import ProductoCreate from "./pages/admin/ProductoCreate";
 import Productos from "./pages/Productos";
 import Contactanos from "./components/Contactanos";
+import Profile from "./pages/Profile";
 
 function App() {
   return (
@@ -32,6 +33,7 @@ function App() {
             <Route path="/carrito" element={<Carrito />} />
             <Route path="/favoritos" element={<Favoritos />} />
             <Route path="/contactanos" element={<Contactanos />} />
+            <Route path="/perfil" element={<Profile />} />
           </Routes>
 
           <Footer />

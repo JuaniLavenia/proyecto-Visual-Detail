@@ -1,0 +1,11 @@
+.color-completado {
+  background-color: lightgreen;
+}
+
+.color-cancelado {
+  background-color: lightcoral;
+}
+
+.color-pendiente {
+  background-color: lightblue;
+}

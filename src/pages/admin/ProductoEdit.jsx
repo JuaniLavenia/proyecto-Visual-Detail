@@ -180,6 +180,8 @@ function ProductoEdit() {
                 <option>Menzerna</option>
                 <option>Meguiars</option>
                 <option>Vonixx</option>
+                <option>Laffitte</option>
+                <option>Stretch</option>
                 <option>Otros</option>
               </select>
             </div>
@@ -206,7 +208,12 @@ function ProductoEdit() {
                 <option>Exteriores</option>
                 <option>Línea Profesional</option>
                 <option>Línea Industrial</option>
-                <option>Perfumes</option>
+                <option>Perfumes y Aromatizantes</option>
+                <option>Pads y Baking Plates</option>
+                <option>Microfibras</option>
+                <option>Aplicadores</option>
+                <option>Cepillos y Brochas</option>
+                <option>Dosificadores y Foams</option>
                 <option>Otros</option>
               </select>
             </div>

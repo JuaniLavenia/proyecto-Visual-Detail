@@ -16,9 +16,7 @@ const Paginador = ({
         onChange={(e) => setItemsPerPage(parseInt(e.target.value))}
         className="selectPaginador"
       >
-        <option value={12} selected>
-          12
-        </option>
+        <option defaultValue={12}>12</option>
         <option value={18}>18</option>
         <option value={30}>30</option>
         <option value={60}>60</option>

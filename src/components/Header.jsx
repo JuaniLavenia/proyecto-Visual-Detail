@@ -45,12 +45,6 @@ function Header() {
     setSearchTerm(event.target.value);
   };
 
-  const buscar = () => {
-    if (searchTerm === "") {
-      navigate("/busqueda");
-    }
-  };
-
   const handleMenuToggle = () => {
     setMenuOpen(!menuOpen);
   };
@@ -338,11 +332,7 @@ function Header() {
                 onChange={handleChangeSearch}
               />
 
-              <Link
-                className="lupa"
-                onClick={buscar}
-                to={`/busqueda/${searchTerm}`}
-              >
+              <Link className="lupa" to={`/productos?search=${searchTerm}`}>
                 <span className="material-icons-outlined">search</span>
               </Link>
             </form>

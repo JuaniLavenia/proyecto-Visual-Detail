@@ -22,6 +22,7 @@ function SearchClean() {
   const { search } = useLocation();
   const queryParams = new URLSearchParams(search);
   const categoriaParam = queryParams.get("category");
+  const searchParam = queryParams.get("search");
   const handlePageChange = (newPage) => {
     if (newPage !== currentPage) {
       getProductos(newPage, currentSize);
@@ -71,10 +72,12 @@ function SearchClean() {
   useEffect(() => {
     if (categoriaParam) {
       handleCategoryClick(categoriaParam);
+    } else if (searchParam) {
+      buscar(searchParam);
     } else {
       getProductos(currentPage, currentSize);
     }
-  }, []);
+  }, [searchParam]);
 
   const handleCategoryClick = async (category) => {
     setIsLoading(true);
@@ -108,6 +111,27 @@ function SearchClean() {
     }
 
     setIsLoading(false);
+  };
+
+  const buscar = (search) => {
+    setIsLoading(true);
+    if (search == "") {
+      getProductos(currentPage, currentSize);
+    } else {
+      axios
+        .get(
+          `https://visual-detail-backend.onrender.com/api/productos/search/${search}`
+        )
+        .then((res) => {
+          setProducts(res.data);
+        })
+        .catch((error) => {
+          setError("No se pudo establecer conexión con el servidor.");
+        })
+        .finally(() => {
+          setIsLoading(false);
+        });
+    }
   };
 
   return (

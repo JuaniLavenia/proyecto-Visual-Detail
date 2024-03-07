@@ -13,7 +13,7 @@ import Producto from "./pages/admin/Producto";
 import ProductoEdit from "./pages/admin/ProductoEdit";
 import ProductoCreate from "./pages/admin/ProductoCreate";
 import Productos from "./pages/Productos";
-import Contactanos from "./components/Contactanos";
+import Contactanos from "./pages/Contactanos";
 import Profile from "./pages/Profile";
 
 function App() {

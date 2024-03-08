@@ -2,11 +2,11 @@ import { useContext, useEffect, useState } from "react";
 import CardProductos from "../components/CardProductosSearch";
 import axios from "axios";
 import "./Productos.css";
-import CategoryButton from "../components/CategoryBtn";
 import { CartContext } from "../context/ContextProvider";
 import Paginador from "../components/Paginador";
 import Swal from "sweetalert2";
 import { useLocation } from "react-router";
+import Filters from "../components/CategoryBtn";
 
 function SearchClean() {
   const { setCartCount, setFavoritesCount } = useContext(CartContext);
@@ -139,133 +139,17 @@ function SearchClean() {
       <div className="p-5 bg-dark text-light cleanSearch">
         <div className="row">
           <div className="col-md-3">
-            <h4 className="text-center">Filtrar por categoría</h4>
+            <h4 className="text-center">Filtrar por categoría o marca</h4>
             <div
-              className="btn-group d-flex text-center mb-4 categorias"
+              className="filtro d-flex justify-content-center align-items-center flex-column"
               role="group"
               aria-label="Basic example"
             >
-              <CategoryButton
-                categoria="Interiores"
+              <Filters
                 handleCategoryClick={handleCategoryClick}
-                activeCategory={categoria}
-              >
-                Interiores
-              </CategoryButton>
-              <CategoryButton
-                categoria="Exteriores"
-                handleCategoryClick={handleCategoryClick}
-                activeCategory={categoria}
-              >
-                Exteriores
-              </CategoryButton>
-              <CategoryButton
-                categoria="Línea Profesional"
-                handleCategoryClick={handleCategoryClick}
-                activeCategory={categoria}
-              >
-                Línea Profesional
-              </CategoryButton>
-              <CategoryButton
-                categoria="Línea Industrial"
-                handleCategoryClick={handleCategoryClick}
-                activeCategory={categoria}
-              >
-                Línea Industrial
-              </CategoryButton>
-              <CategoryButton
-                categoria="Perfumes"
-                handleCategoryClick={handleCategoryClick}
-                activeCategory={categoria}
-              >
-                Perfumes
-              </CategoryButton>
-              <CategoryButton
-                categoria="Otros"
-                handleCategoryClick={handleCategoryClick}
-                activeCategory={categoria}
-              >
-                Otros
-              </CategoryButton>
-              <CategoryButton
-                categoria="Productos"
-                handleCategoryClick={handleCategoryClick}
-                activeCategory={categoria}
-                onClick={getProductos}
-              >
-                Todos los productos
-              </CategoryButton>
-            </div>
-            <h4 className="text-center">Filtrar por marca</h4>
-            <div
-              className="btn-group d-flex text-center mb-4 categorias"
-              role="group"
-              aria-label="Basic example"
-            >
-              <CategoryButton
-                categoria="Toxic-Shine"
-                handleCategoryClick={handleBrandClick}
-                activeCategory={selectedBrand}
-              >
-                Toxic-Shine
-              </CategoryButton>
-
-              <CategoryButton
-                categoria="Fullcar"
-                handleCategoryClick={handleBrandClick}
-                activeCategory={selectedBrand}
-              >
-                Fullcar
-              </CategoryButton>
-              <CategoryButton
-                categoria="Dreams"
-                handleCategoryClick={handleBrandClick}
-                activeCategory={selectedBrand}
-              >
-                Dreams
-              </CategoryButton>
-              <CategoryButton
-                categoria="Ternnova"
-                handleCategoryClick={handleBrandClick}
-                activeCategory={selectedBrand}
-              >
-                Ternnova
-              </CategoryButton>
-              <CategoryButton
-                categoria="Drop"
-                handleCategoryClick={handleBrandClick}
-                activeCategory={selectedBrand}
-              >
-                Drop
-              </CategoryButton>
-              <CategoryButton
-                categoria="Menzerna"
-                handleCategoryClick={handleBrandClick}
-                activeCategory={selectedBrand}
-              >
-                Menzerna
-              </CategoryButton>
-              <CategoryButton
-                categoria="Meguiars"
-                handleCategoryClick={handleBrandClick}
-                activeCategory={selectedBrand}
-              >
-                Meguiars
-              </CategoryButton>
-              <CategoryButton
-                categoria="Vonixx"
-                handleCategoryClick={handleBrandClick}
-                activeCategory={selectedBrand}
-              >
-                Vonixx
-              </CategoryButton>
-              <CategoryButton
-                categoria="Otros"
-                handleCategoryClick={handleBrandClick}
-                activeCategory={selectedBrand}
-              >
-                Otros
-              </CategoryButton>
+                handleBrandClick={handleBrandClick}
+                getProductos={getProductos}
+              />
             </div>
           </div>
 

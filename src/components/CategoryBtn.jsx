@@ -59,9 +59,11 @@ function Filters({ handleCategoryClick, handleBrandClick, getProductos }) {
   ];
 
   const clearFilters = () => {
-    setActiveCategory(null);
-    setActiveBrand(null);
-    getProductos(1, 12);
+    if (activeBrand || activeCategory) {
+      setActiveCategory(null);
+      setActiveBrand(null);
+      getProductos(1, 12);
+    }
   };
 
   return (

@@ -9,6 +9,7 @@
 .cleanSearch {
   min-width: 380px;
   height: 100%;
+  min-height: 60vh;
 }
 .loading {
   min-height: 50vh;

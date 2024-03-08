@@ -15,28 +15,37 @@ import ProductoCreate from "./pages/admin/ProductoCreate";
 import Productos from "./pages/Productos";
 import Contactanos from "./pages/Contactanos";
 import Profile from "./pages/Profile";
+import { UserProvider } from "./context/UserContext";
 
 function App() {
   return (
     <>
       <AuthContextProvider>
         <CartContextProvider>
-          <Header />
+          <UserProvider>
+            <Header />
 
-          <Routes>
-            <Route path="/" element={<HomePage />} />
-            <Route path="/adm/productos" element={<Producto />} />
-            <Route path="/adm/productos/edit/:id" element={<ProductoEdit />} />
-            <Route path="/adm/productos/create" element={<ProductoCreate />} />
-            <Route path="/productos" element={<Productos />} />
-            <Route path="/login" element={<Login />} />
-            <Route path="/carrito" element={<Carrito />} />
-            <Route path="/favoritos" element={<Favoritos />} />
-            <Route path="/contactanos" element={<Contactanos />} />
-            <Route path="/perfil" element={<Profile />} />
-          </Routes>
+            <Routes>
+              <Route path="/" element={<HomePage />} />
+              <Route path="/adm/productos" element={<Producto />} />
+              <Route
+                path="/adm/productos/edit/:id"
+                element={<ProductoEdit />}
+              />
+              <Route
+                path="/adm/productos/create"
+                element={<ProductoCreate />}
+              />
+              <Route path="/productos" element={<Productos />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/carrito" element={<Carrito />} />
+              <Route path="/favoritos" element={<Favoritos />} />
+              <Route path="/contactanos" element={<Contactanos />} />
+              <Route path="/perfil" element={<Profile />} />
+            </Routes>
 
-          <Footer />
+            <Footer />
+          </UserProvider>
         </CartContextProvider>
       </AuthContextProvider>
     </>

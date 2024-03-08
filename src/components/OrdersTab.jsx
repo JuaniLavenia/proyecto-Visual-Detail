@@ -2,10 +2,12 @@ import React, { useEffect, useState, useContext } from "react";
 import axios from "axios";
 import { AuthContext } from "../context/AuthContext";
 import "./OrdersTab.css";
+import { useUserContext } from "../context/UserContext";
 
 const OrdersTab = () => {
-  const [orders, setOrders] = useState([]);
+  const { ordersInfo, updateOrders } = useUserContext();
   const { userId } = useContext(AuthContext);
+  const [error, setError] = useState();
 
   const cancelarPedido = async (pedidoId) => {
     try {
@@ -17,7 +19,7 @@ const OrdersTab = () => {
         `https://visual-detail-backend.onrender.com/api/pedidos/${userId}`
       );
 
-      setOrders(response.data.pedidos);
+      updateOrders(response.data.pedidos);
     } catch (error) {
       console.error("Error cancelling order:", error);
     }
@@ -36,51 +38,66 @@ const OrdersTab = () => {
     }
   };
 
-  useEffect(() => {
-    const fetchOrders = async () => {
-      try {
+  const fetchOrders = async () => {
+    try {
+      if (ordersInfo) {
+        return;
+      } else {
         const response = await axios.get(
           `https://visual-detail-backend.onrender.com/api/pedidos/${userId}`
         );
-        setOrders(response.data.pedidos);
-      } catch (error) {
-        console.error("Error fetching orders:", error);
+        updateOrders(response.data.pedidos);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching orders:", error);
+      setError("Hubo un error al cargar la información del usuario");
+    }
+  };
 
-    fetchOrders();
-  }, [userId]);
+  useEffect(() => {
+    if (userId) {
+      fetchOrders();
+    } else {
+      setError("Debes volver a iniciar sesion");
+    }
+  }, []);
 
   return (
     <div className="container mt-4">
       <h2 className="mb-4">Lista de Pedidos</h2>
-      {orders.map((order) => (
-        <div
-          key={order._id}
-          className={`card mb-4 ${getCardColorClass(order.estado)}`}
-        >
-          <div className="card-body">
-            <h5 className="card-title">
-              Pedido N°{order.numeroPedido} - Estado: {order.estado}
-            </h5>
-            <ul className="list-group">
-              {order.productos.map((producto, index) => (
-                <li key={index} className="list-group-item">
-                  {producto.nombre} - Cantidad: {producto.cantidad}
-                </li>
-              ))}
-            </ul>
-            {order.estado === "Pendiente" && (
-              <button
-                className="btn btn-danger mt-3"
-                onClick={() => cancelarPedido(order._id)}
-              >
-                Cancelar Pedido
-              </button>
-            )}
+      {error ? (
+        <p>{error}</p>
+      ) : ordersInfo.length > 0 ? (
+        ordersInfo.map((order) => (
+          <div
+            key={order._id}
+            className={`card mb-4 ${getCardColorClass(order.estado)}`}
+          >
+            <div className="card-body">
+              <h5 className="card-title">
+                Pedido N°{order.numeroPedido} - Estado: {order.estado}
+              </h5>
+              <ul className="list-group">
+                {order.productos.map((producto, index) => (
+                  <li key={index} className="list-group-item">
+                    {producto.nombre} - Cantidad: {producto.cantidad}
+                  </li>
+                ))}
+              </ul>
+              {order.estado === "Pendiente" && (
+                <button
+                  className="btn btn-danger mt-3"
+                  onClick={() => cancelarPedido(order._id)}
+                >
+                  Cancelar Pedido
+                </button>
+              )}
+            </div>
           </div>
-        </div>
-      ))}
+        ))
+      ) : (
+        <p>No se encontraron pedidos.</p>
+      )}
     </div>
   );
 };

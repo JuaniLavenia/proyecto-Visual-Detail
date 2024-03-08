@@ -1,30 +1,44 @@
 import React, { useContext, useEffect, useState } from "react";
 import axios from "axios";
+import { useUserContext } from "../context/UserContext";
 import { AuthContext } from "../context/AuthContext";
 
 const PersonalInfoTab = () => {
-  const [userInfo, setUserInfo] = useState();
+  const { userInfo, updateUser } = useUserContext();
   const { userId } = useContext(AuthContext);
+  const [error, setError] = useState();
 
-  useEffect(() => {
-    const fetchUserInfo = async () => {
-      try {
+  const fetchUserInfo = async () => {
+    try {
+      if (userInfo) {
+        return;
+      } else {
         const response = await axios.get(
           `https://visual-detail-backend.onrender.com/api/user/${userId}`
         );
-        setUserInfo(response.data.usuario);
-      } catch (error) {
-        console.error("Error fetching user info:", error);
+        const newUserInfo = response.data.usuario;
+        updateUser(newUserInfo);
       }
-    };
+    } catch (error) {
+      console.error("Error fetching user info:", error);
+      setError("Hubo un error al cargar la información del usuario");
+    }
+  };
 
-    fetchUserInfo();
-  }, [userId]);
+  useEffect(() => {
+    if (userId) {
+      fetchUserInfo();
+    } else {
+      setError("Debes volver a iniciar sesion");
+    }
+  }, []);
 
   return (
     <div>
       <h2>Información Personal</h2>
-      {userInfo ? (
+      {error ? (
+        <p>{error}</p>
+      ) : userInfo ? (
         <div>
           <p>
             <strong>Email:</strong> {userInfo.email}

@@ -4,9 +4,11 @@ import axios from "axios";
 import Swal from "sweetalert2";
 import { AuthContext } from "../context/AuthContext";
 import "./Login.css";
+import { CartContext } from "../context/ContextProvider";
 
 function Login() {
   const { login } = useContext(AuthContext);
+  const { setCartCount, setFavoritesCount } = useContext(CartContext);
   const [isLoading, setIsLoading] = useState(false);
   const [isLoginForm, setLoginForm] = useState(true);
 
@@ -46,6 +48,34 @@ function Login() {
             localStorage.setItem("token", token);
             login(token, userId);
 
+            axios
+              .get(
+                `https://visual-detail-backend.onrender.com/api/cart/${userId}`
+              )
+              .then((cartRes) => {
+                const itemsCart = cartRes.data.data.products;
+                const cartCount = itemsCart.reduce(
+                  (count, item) => count + item.quantity,
+                  0
+                );
+                setCartCount(cartCount);
+              })
+              .catch((cartErr) => {
+                console.error("Error fetching cart data:", cartErr);
+              });
+
+            axios
+              .get(
+                `https://visual-detail-backend.onrender.com/api/favorites/${userId}`
+              )
+              .then((favRes) => {
+                const favItems = favRes.data.data.products || [];
+                setFavoritesCount(favItems.length);
+              })
+              .catch((favErr) => {
+                console.error("Error fetching favorites data:", favErr);
+              });
+
             Swal.fire({
               position: "center",
               icon: "success",
@@ -53,6 +83,7 @@ function Login() {
               showConfirmButton: false,
               timer: 1500,
             });
+
             setValues({ email: "", password: "" });
             setValuesR({ email: "", password: "", password_confirmation: "" });
             navigate("/");

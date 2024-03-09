@@ -9,34 +9,78 @@ import axios from "axios";
 
 function Carrito() {
   const { setCartCount } = useContext(CartContext);
+  const { userId } = useContext(AuthContext);
   const [showModal, setShowModal] = useState(false);
   const [cartItems, setCartItems] = useState([]);
-  const { userId } = useContext(AuthContext);
   const [isLoading, setIsLoading] = useState(false);
   const navigate = useNavigate();
 
-  useEffect(() => {
-    const cartItems = JSON.parse(localStorage.getItem("cartItems")) || [];
-
-    const cartCount = cartItems.reduce(
-      (count, item) => count + item.quantity,
-      0
-    );
-
-    setCartCount(cartCount);
-  }, []);
-
-  useEffect(() => {
-    const items = JSON.parse(localStorage.getItem("cartItems"));
-    if (items) {
+  const fetchCartItems = async () => {
+    try {
+      const response = await axios.get(
+        `https://visual-detail-backend.onrender.com/api/cart/${userId}`
+      );
+      const items = response.data.data.products || [];
       setCartItems(items);
+      const cartCount = items.reduce((count, item) => count + item.quantity, 0);
+      setCartCount(cartCount);
+    } catch (error) {
+      console.error("Error fetching cart items:", error);
+    }
+  };
+
+  useEffect(() => {
+    if (userId) {
+      fetchCartItems();
     }
   }, []);
+
+  const handleRemoveFromCart = (producto) => {
+    Swal.fire({
+      title: "Eliminar producto",
+      text: `¿Estás seguro que deseas eliminar ${producto.name} del carrito?`,
+      icon: "warning",
+      showCancelButton: true,
+      confirmButtonText: "Eliminar",
+      cancelButtonText: "Cancelar",
+    }).then(async (result) => {
+      if (result.isConfirmed) {
+        try {
+          await axios.delete(
+            `https://visual-detail-backend.onrender.com/api/cart/${userId}/${producto._id}`
+          );
+
+          setCartItems((prevItems) =>
+            prevItems.filter((item) => item._id !== producto._id)
+          );
+
+          const cartCount = cartItems.reduce(
+            (count, item) => count + item.quantity,
+            0
+          );
+
+          setCartCount(cartCount);
+
+          Swal.fire({
+            position: "center",
+            icon: "success",
+            title: "Se borró el producto con éxito",
+            showConfirmButton: false,
+            timer: 1500,
+          });
+
+          fetchCartItems();
+        } catch (error) {
+          console.error("Error removing from cart:", error);
+        }
+      }
+    });
+  };
 
   const calculateTotal = () => {
     let total = 0;
     cartItems.forEach((item) => {
-      total += item.price * item.quantity;
+      total += item.product.price * item.quantity;
     });
     return total;
   };
@@ -59,41 +103,6 @@ function Carrito() {
 
   const handleCloseModal = () => {
     setShowModal(false);
-    localStorage.removeItem("validation");
-    localStorage.removeItem("validation2");
-  };
-
-  const handleRemoveFromCart = (producto) => {
-    Swal.fire({
-      title: "Eliminar producto",
-      text: `¿Estás seguro que deseas eliminar ${producto.name} del carrito?`,
-      icon: "warning",
-      showCancelButton: true,
-      confirmButtonText: "Eliminar",
-      cancelButtonText: "Cancelar",
-    }).then((result) => {
-      if (result.isConfirmed) {
-        const newCartItems = cartItems.filter(
-          (item) => item._id !== producto._id
-        );
-        if (newCartItems.length !== cartItems.length) {
-          setCartItems(newCartItems);
-          localStorage.setItem("cartItems", JSON.stringify(newCartItems));
-          const count = newCartItems.reduce(
-            (count, item) => count + item.quantity,
-            0
-          );
-          setCartCount(count);
-          Swal.fire({
-            position: "center",
-            icon: "success",
-            title: "Se borró el producto con éxito",
-            showConfirmButton: false,
-            timer: 1500,
-          });
-        }
-      }
-    });
   };
 
   const handlePayment = async () => {
@@ -104,8 +113,8 @@ function Carrito() {
         {
           usuario: userId,
           productos: cartItems.map((item) => ({
-            nombre: item.name,
-            cantidad: item.quantity,
+            nombre: item.product.name,
+            cantidad: item.product.quantity,
           })),
         }
       );
@@ -113,7 +122,7 @@ function Carrito() {
       if (response.status === 201) {
         setIsLoading(false);
         const whatsappLink = `https://wa.me/+543812026631?text=Hola!%20Quisiera%20realizar%20el%20siguiente%20pedido:%0A${cartItems
-          .map((item) => `. ${item.name} (${item.quantity})`)
+          .map((item) => `. ${item.product.name} (${item.product.quantity})`)
           .join("%0A")}`;
         window.location.href = whatsappLink;
       } else {
@@ -131,24 +140,38 @@ function Carrito() {
     }
   };
 
-  const handleQuantityChange = (e, index) => {
+  const handleQuantityChange = async (e, index, productId) => {
     const newCartItems = [...cartItems];
     const value = parseInt(e.target.value);
+
     if (!isNaN(value) && value >= 0) {
       newCartItems[index].quantity = value;
       setCartItems(newCartItems);
-      localStorage.setItem("cartItems", JSON.stringify(newCartItems));
-      const count = newCartItems.reduce(
-        (count, item) => count + item.quantity,
-        0
-      );
-      setCartCount(count);
+
+      try {
+        await axios.post(
+          "https://visual-detail-backend.onrender.com/api/cart",
+          {
+            userId,
+            productId,
+            quantity: value,
+          }
+        );
+
+        const cartCount = newCartItems.reduce(
+          (count, item) => count + item.quantity,
+          0
+        );
+        setCartCount(cartCount);
+      } catch (error) {
+        console.error("Error updating quantity in cart:", error);
+      }
     }
   };
 
   const handleCopyToClipboard = () => {
     const orderDetail = cartItems
-      .map((item) => `${item.name} (${item.quantity})`)
+      .map((item) => `${item.product.name} (${item.product.quantity})`)
       .join("\n");
     navigator.clipboard.writeText(
       `Hola! Quisiera realizar el siguiente pedido:\n${orderDetail}`
@@ -175,18 +198,18 @@ function Carrito() {
                 >
                   <div className="card-image">
                     <img
-                      src={`https://visual-detail-backend.onrender.com/img/productos/${item.image}`}
-                      alt={item.name}
+                      src={`https://visual-detail-backend.onrender.com/img/productos/${item.product.image}`}
+                      alt={item.product.name}
                     />
                   </div>
                   <div className="card-details">
                     <div className="card-name">
-                      {item.name} x({item.quantity})
+                      {item.product.name} x({item.quantity})
                     </div>
                     <div className="card-buttons buttonsCart d-flex">
                       <button
                         className="btn btn-danger"
-                        onClick={() => handleRemoveFromCart(item)}
+                        onClick={() => handleRemoveFromCart(item.product)}
                       >
                         Eliminar
                       </button>
@@ -210,13 +233,15 @@ function Carrito() {
                       type="number"
                       id={`quantity_${index}`}
                       value={item.quantity}
-                      onChange={(e) => handleQuantityChange(e, index)}
+                      onChange={(e) =>
+                        handleQuantityChange(e, index, item.product._id)
+                      }
                       min={1}
-                      max={item.stock}
+                      max={item.product.stock}
                       className="customInput"
                     />
                   </div>
-                  <div className="card-price">$ {item.price}</div>
+                  <div className="card-price">$ {item.product.price}</div>
                 </div>
               </div>
             ))}
@@ -246,7 +271,9 @@ function Carrito() {
               <p>Detalle del Pedido:</p>
               <ul>
                 {cartItems.map((item, index) => (
-                  <li key={index}>{`${item.name} (${item.quantity})`}</li>
+                  <li
+                    key={index}
+                  >{`${item.product.name} (${item.quantity})`}</li>
                 ))}
               </ul>
               <Button variant="secondary" onClick={handleCopyToClipboard}>

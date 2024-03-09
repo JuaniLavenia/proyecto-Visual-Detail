@@ -3,23 +3,30 @@ import "./Favoritos.css";
 import Swal from "sweetalert2";
 import { Link } from "react-router-dom";
 import { CartContext } from "../context/ContextProvider";
+import axios from "axios";
+import { AuthContext } from "../context/AuthContext";
 
 function Favoritos() {
   const { setCartCount, setFavoritesCount } = useContext(CartContext);
+  const { userId } = useContext(AuthContext);
   const [favorites, setFavorites] = useState([]);
 
+  const fetchFavorites = async () => {
+    try {
+      const response = await axios.get(
+        `https://visual-detail-backend.onrender.com/api/favorites/${userId}`
+      );
+      const favItems = response.data.data.products || [];
+      setFavorites(favItems);
+      setFavoritesCount(favItems.length);
+    } catch (error) {
+      console.error("Error fetching favorites:", error);
+    }
+  };
+
   useEffect(() => {
-    const favItems = JSON.parse(localStorage.getItem("favItems")) || [];
-
-    const favCount = favItems.length;
-
-    setFavoritesCount(favCount);
-  }, []);
-
-  useEffect(() => {
-    const items = JSON.parse(localStorage.getItem("favItems"));
-    if (items) {
-      setFavorites(items);
+    if (userId) {
+      fetchFavorites();
     }
   }, []);
 
@@ -31,19 +38,18 @@ function Favoritos() {
       showCancelButton: true,
       confirmButtonText: "Eliminar",
       cancelButtonText: "Cancelar",
-    }).then((result) => {
+    }).then(async (result) => {
       if (result.isConfirmed) {
-        const newFavItems = favorites.filter(
-          (item) => item._id !== producto._id
-        );
-        if (newFavItems.length !== favorites.length) {
-          setFavorites(newFavItems);
-          localStorage.setItem("favItems", JSON.stringify(newFavItems));
-          const count = newFavItems.reduce(
-            (count, item) => count + item.quantity,
-            0
+        try {
+          await axios.delete(
+            `https://visual-detail-backend.onrender.com/api/favorites/${userId}/${producto._id}`
           );
-          setFavoritesCount(count);
+
+          setFavorites((prevFavorites) =>
+            prevFavorites.filter((item) => item._id !== producto._id)
+          );
+          setFavoritesCount((prevCount) => prevCount - 1);
+
           Swal.fire({
             position: "center",
             icon: "success",
@@ -51,51 +57,56 @@ function Favoritos() {
             showConfirmButton: false,
             timer: 1500,
           });
+          fetchFavorites();
+        } catch (error) {
+          console.error("Error removing favorite:", error);
         }
       }
     });
   };
 
-  const handleAddToCart = (product) => {
-    let cart = JSON.parse(localStorage.getItem("cartItems")) || [];
+  const handleAddToCart = async (productId) => {
+    try {
+      if (userId) {
+        await axios.post(
+          "https://visual-detail-backend.onrender.com/api/cart",
+          {
+            userId,
+            productId,
+            quantity: 1,
+          }
+        );
 
-    let existingProduct = cart.find((p) => p._id === product._id);
+        Swal.fire({
+          position: "center",
+          icon: "success",
+          title: "Se agregó el producto al carrito",
+          showConfirmButton: false,
+          timer: 1500,
+        });
 
-    if (existingProduct) {
-      Swal.fire({
-        position: "center",
-        icon: "info",
-        title: "Ya tienes este producto en el carrito",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    } else {
-      cart.push({ ...product, quantity: 1 });
-      Swal.fire({
-        position: "center",
-        icon: "success",
-        title: "Se agregó el producto al carrito",
-        showConfirmButton: false,
-        timer: 1500,
-      });
+        const response = await axios.get(
+          `https://visual-detail-backend.onrender.com/api/cart/${userId}`
+        );
+        const itemsCart = response.data.data.products;
+        const cartCount = itemsCart.reduce(
+          (count, item) => count + item.quantity,
+          0
+        );
+        setCartCount(cartCount);
+      } else {
+        Swal.fire({
+          position: "center",
+          icon: "info",
+          title: "Debe iniciar sesión!",
+          showConfirmButton: false,
+          timer: 2500,
+        });
+        return;
+      }
+    } catch (error) {
+      console.error("Error al agregar el producto al carrito:", error);
     }
-
-    localStorage.setItem("cartItems", JSON.stringify(cart));
-
-    const cartCount = cart.reduce((count, item) => count + item.quantity, 0);
-    setCartCount(cartCount);
-  };
-
-  const addToCart = (product) => {
-    handleAddToCart(product);
-  };
-
-  const calculateTotal = () => {
-    let total = 0;
-    favorites.forEach((item) => {
-      total += item.price * item.quantity;
-    });
-    return total;
   };
 
   return (
@@ -107,17 +118,22 @@ function Favoritos() {
               <div className="cardFav" key={index}>
                 <div className="cardFavorites bg-dark text-light">
                   <img
-                    src={`https://visual-detail-backend.onrender.com/img/productos/${item.image}`}
-                    alt={item.name}
+                    src={`https://visual-detail-backend.onrender.com/img/productos/${item.product.image}`}
+                    alt={item.product.name}
                     className="imgFav"
                   />
                   <div className="card-body">
-                    <h3 className="card-title titl">{item.name}</h3>
-                    <p className="card-text descrpt mt-4">{item.description}</p>
+                    <h3 className="card-title titl">
+                      {item.product.name} -
+                      <span className="text-muted"> {item.product.brand}</span>
+                    </h3>
+                    <p className="card-text descrpt mt-4">
+                      {item.product.description}
+                    </p>
                     <div className="cardBtnFav">
                       <button
                         className="btn btn-danger"
-                        onClick={() => removeFavorite(item)}
+                        onClick={() => removeFavorite(item.product)}
                       >
                         Eliminar
                       </button>
@@ -132,21 +148,18 @@ function Favoritos() {
 
                       <button
                         className="btn btn-warning"
-                        onClick={() => addToCart(item)}
+                        onClick={() => handleAddToCart(item.product)}
                       >
                         Comprar
                       </button>
                     </div>
                   </div>
                   <div className="card-footer">
-                    <div className="cardPriceFav">$ {item.price}</div>
+                    <div className="cardPriceFav">$ {item.product.price}</div>
                   </div>
                 </div>
               </div>
             ))}
-            <h3 className="itemCardTotal text-center mt-4" id="itemTotal">
-              Total ${calculateTotal()}
-            </h3>
           </>
         ) : (
           <p className="text-center">No tienes favoritos guardados.</p>

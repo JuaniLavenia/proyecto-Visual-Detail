@@ -9,7 +9,6 @@ import { useLocation } from "react-router";
 import Filters from "../components/CategoryBtn";
 
 function SearchClean() {
-  const { setCartCount, setFavoritesCount } = useContext(CartContext);
   const [products, setProducts] = useState([]);
   const [categoria, setCategoria] = useState("");
   const [selectedBrand, setBrand] = useState("");
@@ -36,20 +35,6 @@ function SearchClean() {
       getProductos(currentPage, size);
     }
   };
-
-  useEffect(() => {
-    const cartItems = JSON.parse(localStorage.getItem("cartItems")) || [];
-    const favItems = JSON.parse(localStorage.getItem("favItems")) || [];
-
-    const cartCount = cartItems.reduce(
-      (count, item) => count + item.quantity,
-      0
-    );
-    const favCount = favItems.length;
-
-    setCartCount(cartCount);
-    setFavoritesCount(favCount);
-  }, []);
 
   const getProductos = async (page, pageSize) => {
     setIsLoading(true);
@@ -171,11 +156,7 @@ function SearchClean() {
                 />
                 {products.map((product, index) => (
                   <div className="col-sm-6 col-md-4" key={index}>
-                    <CardProductos
-                      {...product}
-                      setCartCount={setCartCount}
-                      setFavoritesCount={setFavoritesCount}
-                    />
+                    <CardProductos {...product} />
                   </div>
                 ))}
                 <Paginador

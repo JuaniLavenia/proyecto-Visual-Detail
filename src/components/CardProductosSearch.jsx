@@ -2,6 +2,8 @@ import { useContext, useState } from "react";
 import "./CardProductosSearch.css";
 import Swal from "sweetalert2";
 import { CartContext } from "../context/ContextProvider";
+import axios from "axios";
+import { AuthContext } from "../context/AuthContext";
 
 function CardProductos({
   image,
@@ -12,65 +14,93 @@ function CardProductos({
   _id,
   price,
   stock,
+  brand,
 }) {
   const [mostrarComponente, setMostrarComponente] = useState(false);
   const { setCartCount, setFavoritesCount } = useContext(CartContext);
-  const handleAddToCart = (product) => {
-    let cart = JSON.parse(localStorage.getItem("cartItems")) || [];
+  const { userId } = useContext(AuthContext);
 
-    let existingProduct = cart.find((p) => p._id === product._id);
+  const handleAddToCart = async (productId) => {
+    try {
+      if (userId) {
+        await axios.post(
+          "https://visual-detail-backend.onrender.com/api/cart",
+          {
+            userId,
+            productId,
+            quantity: 1,
+          }
+        );
 
-    if (existingProduct) {
-      Swal.fire({
-        position: "center",
-        icon: "info",
-        title: "Ya tienes este producto en el carrito",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    } else {
-      cart.push({ ...product, quantity: 1 });
-      Swal.fire({
-        position: "center",
-        icon: "success",
-        title: "Se agregó el producto al carrito",
-        showConfirmButton: false,
-        timer: 1500,
-      });
+        Swal.fire({
+          position: "center",
+          icon: "success",
+          title: "Se agregó el producto al carrito",
+          showConfirmButton: false,
+          timer: 1500,
+        });
+
+        const response = await axios.get(
+          `https://visual-detail-backend.onrender.com/api/cart/${userId}`
+        );
+        const itemsCart = response.data.data.products;
+        const cartCount = itemsCart.reduce(
+          (count, item) => count + item.quantity,
+          0
+        );
+        setCartCount(cartCount);
+      } else {
+        Swal.fire({
+          position: "center",
+          icon: "info",
+          title: "Debe iniciar sesión!",
+          showConfirmButton: false,
+          timer: 2500,
+        });
+        return;
+      }
+    } catch (error) {
+      console.error("Error al agregar el producto al carrito:", error);
     }
-
-    localStorage.setItem("cartItems", JSON.stringify(cart));
-
-    const cartCount = cart.reduce((count, item) => count + item.quantity, 0);
-    setCartCount(cartCount);
   };
 
-  const addFavorite = (favorite) => {
-    let fav = JSON.parse(localStorage.getItem("favItems")) || [];
+  const handleAddToFavorites = async (productId) => {
+    try {
+      if (userId) {
+        await axios.post(
+          "https://visual-detail-backend.onrender.com/api/favorites",
+          {
+            userId,
+            productId,
+          }
+        );
 
-    let existingProduct = fav.find((p) => p._id === favorite._id);
+        Swal.fire({
+          position: "center",
+          icon: "success",
+          title: "Se agregó el producto a favoritos",
+          showConfirmButton: false,
+          timer: 1500,
+        });
 
-    if (existingProduct) {
-      Swal.fire({
-        icon: "error",
-        title: "Oops...",
-        text: "El producto ya existe en favoritos",
-      });
-    } else {
-      fav.push({ ...favorite, quantity: 1 });
-      localStorage.setItem("favItems", JSON.stringify(fav));
-      Swal.fire({
-        position: "center",
-        icon: "success",
-        title: "Se agregó a favoritos",
-        showConfirmButton: false,
-        timer: 1500,
-      });
+        const response = await axios.get(
+          `https://visual-detail-backend.onrender.com/api/favorites/${userId}`
+        );
+        const favItems = response.data.data.products || [];
+        setFavoritesCount(favItems.length);
+      } else {
+        Swal.fire({
+          position: "center",
+          icon: "info",
+          title: "Debe iniciar sesión!",
+          showConfirmButton: false,
+          timer: 2500,
+        });
+        return;
+      }
+    } catch (error) {
+      console.error("Error al agregar el producto a favoritos:", error);
     }
-
-    const favoritesCount = fav.length;
-    const updatedFavCount = favoritesCount;
-    setFavoritesCount(updatedFavCount);
   };
 
   return (
@@ -103,7 +133,9 @@ function CardProductos({
           <strong className="text-muted align-self-center pb-3">|</strong>
           <p className="text-muted text-center w-50">{category}</p>
         </div>
-
+        <div className="card-text d-flex justify-content-center">
+          <p className="text-muted text-center">{brand}</p>
+        </div>
         <div className="card-text d-flex justify-content-center">
           <p
             className={
@@ -122,18 +154,7 @@ function CardProductos({
           {stock > 0 ? (
             <button
               className="btn btn-primary me-2 w-50 btncart"
-              onClick={() =>
-                handleAddToCart({
-                  image,
-                  name,
-                  description,
-                  capacity,
-                  category,
-                  _id,
-                  price,
-                  stock,
-                })
-              }
+              onClick={() => handleAddToCart(_id)}
             >
               Comprar
             </button>
@@ -144,15 +165,7 @@ function CardProductos({
           <button
             className="btn btn-warning w-50 btnfav"
             onClick={() => {
-              addFavorite({
-                image,
-                name,
-                description,
-                capacity,
-                category,
-                _id,
-                price,
-              });
+              handleAddToFavorites(_id);
             }}
           >
             <span className="material-icons-outlined">favorite</span>

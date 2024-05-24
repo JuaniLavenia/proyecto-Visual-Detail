@@ -118,7 +118,11 @@ function Favoritos() {
               <div className="cardFav" key={index}>
                 <div className="cardFavorites bg-dark text-light">
                   <img
-                    src={`https://visual-detail-backend.onrender.com/img/productos/${item.product.image}`}
+                    src={
+                      item.product.image?.startsWith("http")
+                        ? item.product.image
+                        : `https://visual-detail-backend.onrender.com/img/productos/${item.product.image}`
+                    }
                     alt={item.product.name}
                     className="imgFav"
                   />

@@ -62,15 +62,16 @@ function Producto() {
       name: "Imagen",
       cell: (row) => (
         <img
-          src={`https://visual-detail-backend.onrender.com/img/productos/${row.image}`}
+          src={
+            row.image?.startsWith("http")
+              ? row.image
+              : `https://visual-detail-backend.onrender.com/img/productos/${row.image}`
+          }
           width={100}
           alt={row.name}
           className="img"
         />
       ),
-      sortable: false,
-      width: "300px",
-      center: true,
     },
     {
       name: "Acciones",

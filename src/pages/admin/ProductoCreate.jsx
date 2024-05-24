@@ -14,6 +14,7 @@ function ProductoCreate() {
     category: "",
     brand: "",
     capacity: "",
+    imageUrl: "",
   });
 
   const [image, setImage] = useState();
@@ -26,12 +27,26 @@ function ProductoCreate() {
     const formData = new FormData();
     formData.append("name", values.name);
     formData.append("description", values.description);
-    formData.append("image", image);
     formData.append("price", values.price);
     formData.append("stock", values.stock);
     formData.append("category", values.category);
     formData.append("brand", values.brand);
     formData.append("capacity", values.capacity);
+
+    if (image) {
+      formData.append("image", image);
+    } else if (values.imageUrl && values.imageUrl != "") {
+      formData.append("imageUrl", values.imageUrl);
+    }
+
+    if (image && values.imageUrl) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Por favor, sube una imagen o proporciona un enlace, no ambos.",
+      });
+      return;
+    }
 
     setIsLoading(true);
 
@@ -50,13 +65,12 @@ function ProductoCreate() {
         Swal.fire({
           position: "top-center",
           icon: "success",
-          title: "Se creo el producto con exito",
+          title: "Se creó el producto con éxito",
           showConfirmButton: false,
           timer: 1500,
         });
         navigate("/adm/productos");
       })
-
       .catch((err) => {
         Swal.fire({
           icon: "error",
@@ -129,7 +143,7 @@ function ProductoCreate() {
 
           <div className="mb-3">
             <label htmlFor="image" className="form-label">
-              Imagen
+              Imagen (Archivo)
             </label>
             <input
               accept="image/png, image/svg, image/jpg, image/jpeg"
@@ -138,6 +152,19 @@ function ProductoCreate() {
               id="image"
               name="image"
               onChange={handleChangeFile}
+            />
+          </div>
+          <div className="mb-3">
+            <label htmlFor="imageUrl" className="form-label">
+              Imagen (URL)
+            </label>
+            <input
+              type="url"
+              className="form-control"
+              id="imageUrl"
+              name="imageUrl"
+              value={values.imageUrl || ""}
+              onChange={handleChange}
             />
           </div>
 

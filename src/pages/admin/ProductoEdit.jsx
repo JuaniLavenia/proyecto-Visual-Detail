@@ -14,6 +14,7 @@ function ProductoEdit() {
     category: "",
     brand: "",
     capacity: "",
+    imageUrl: "",
   });
   const [image, setImage] = useState();
   const [isLoading, setIsLoading] = useState(false);
@@ -41,12 +42,26 @@ function ProductoEdit() {
     const formData = new FormData();
     formData.append("name", values.name);
     formData.append("description", values.description);
-    formData.append("image", image);
     formData.append("price", values.price);
     formData.append("stock", values.stock);
     formData.append("category", values.category);
     formData.append("brand", values.brand);
     formData.append("capacity", values.capacity);
+
+    if (image) {
+      formData.append("image", image);
+    } else if (values.imageUrl && values.imageUrl != "") {
+      formData.append("imageUrl", values.imageUrl);
+    }
+
+    if (image && values.imageUrl) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Por favor, sube una imagen o proporciona un enlace, no ambos.",
+      });
+      return;
+    }
 
     setIsLoading(true);
 
@@ -143,7 +158,7 @@ function ProductoEdit() {
 
           <div className="mb-3">
             <label htmlFor="image" className="form-label">
-              Imagen
+              Imagen (Archivo)
             </label>
             <input
               accept="image/png, image/svg, image/jpg, image/jpeg"
@@ -152,6 +167,19 @@ function ProductoEdit() {
               id="image"
               name="image"
               onChange={handleChangeFile}
+            />
+          </div>
+          <div className="mb-3">
+            <label htmlFor="imageUrl" className="form-label">
+              Imagen (URL)
+            </label>
+            <input
+              type="url"
+              className="form-control"
+              id="imageUrl"
+              name="imageUrl"
+              value={values.imageUrl || ""}
+              onChange={handleChange}
             />
           </div>
 

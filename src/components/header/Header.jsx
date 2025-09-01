@@ -13,6 +13,9 @@ function Header() {
   const { token, logout, userId } = useContext(AuthContext);
   const [searchTerm, setSearchTerm] = useState("");
   const [menuOpen, setMenuOpen] = useState(false);
+  const [showNavSect2, setShowNavSect2] = useState(true);
+  const [lastScrollY, setLastScrollY] = useState(window.scrollY);
+  const [hoverNavSect2, setHoverNavSect2] = useState(false);
   const navigate = useNavigate();
 
   useEffect(() => {
@@ -28,6 +31,40 @@ function Header() {
     setCartCount(cartCount);
     setFavoritesCount(favCount);
   }, [setCartCount, setFavoritesCount]);
+
+  useEffect(() => {
+    const handleScroll = () => {
+      const currentScrollY = window.scrollY;
+      if (currentScrollY === 0) {
+        setShowNavSect2(true); // show when at top
+      } else if (currentScrollY > lastScrollY && currentScrollY > 50) {
+        setShowNavSect2(false); // hide when scrolling down
+      }
+      setLastScrollY(currentScrollY);
+    };
+
+    window.addEventListener("scroll", handleScroll);
+    return () => window.removeEventListener("scroll", handleScroll);
+  }, [lastScrollY]);
+
+  useEffect(() => {
+    const header = document.querySelector("header.allHeader");
+    if (!header) return;
+
+    const handleMouseEnter = () => setHoverNavSect2(true);
+    const handleMouseLeave = () => setHoverNavSect2(false);
+
+    header.addEventListener("mouseenter", handleMouseEnter);
+    header.addEventListener("mouseleave", handleMouseLeave);
+
+    return () => {
+      header.removeEventListener("mouseenter", handleMouseEnter);
+      header.removeEventListener("mouseleave", handleMouseLeave);
+    };
+  }, []);
+
+  // Combina el estado de scroll y hover para mostrar navSect2
+  const shouldShowNavSect2 = showNavSect2 || hoverNavSect2;
 
   const handleLogout = () => {
     localStorage.removeItem("token");
@@ -62,11 +99,19 @@ function Header() {
           id="overlay"
         ></div>
 
-        <section className="px-3 py-1 navSect1">
+        <section
+          className={`px-3 py-1 navSect1${
+            showNavSect2 ? "" : " navSect1-compact"
+          }`}
+        >
           <nav className="navbar navbar-expand-lg navbar-dark">
             <div className="container-fluid">
               <Link className="navbar-brand" to="/">
-                <img className="img-nav" src={visual} alt="" />
+                <img
+                  className={`img-nav ${showNavSect2 ? "" : "collapsed"}`}
+                  src={visual}
+                  alt=""
+                />
               </Link>
               <button
                 className="navbar-toggler"
@@ -85,7 +130,13 @@ function Header() {
               >
                 <ul className="navbar-nav me-auto mb-2 mb-lg-0">
                   <li>
-                    <Link to="/" className="nav-link text-light">
+                    <Link
+                      to="/"
+                      className={`nav-link text-light${
+                        showNavSect2 ? "" : " hide-text"
+                      }`}
+                      title="Inicio"
+                    >
                       <svg
                         className="bi d-block mx-auto mb-1"
                         width="30px"
@@ -108,7 +159,13 @@ function Header() {
                     </Link>
                   </li>
                   <li className="nav-item">
-                    <Link className="nav-link text-light" to="/productos">
+                    <Link
+                      className={`nav-link text-light${
+                        showNavSect2 ? "" : " hide-text"
+                      }`}
+                      to="/productos"
+                      title="Productos"
+                    >
                       <svg
                         className="bi d-block mx-auto mb-1"
                         width="30px"
@@ -132,9 +189,12 @@ function Header() {
                   </li>
                   <li className="nav-item">
                     <Link
-                      className="nav-link text-light"
+                      className={`nav-link text-light${
+                        showNavSect2 ? "" : " hide-text"
+                      }`}
                       target="_blank"
                       to="https://goo.gl/maps/pyTLGSD6mtBn7HvN9"
+                      title="Ubicanos"
                     >
                       <svg
                         className="bi d-block mx-auto mb-1"
@@ -165,10 +225,13 @@ function Header() {
                   </li>
                   <li className="nav-item">
                     <Link
-                      className="nav-link text-light"
+                      className={`nav-link text-light${
+                        showNavSect2 ? "" : " hide-text"
+                      }`}
                       to="/contactanos"
                       data-toggle="modal"
                       data-target="#modalContact"
+                      title="Contactanos"
                     >
                       <svg
                         className="bi d-block mx-auto mb-1"
@@ -201,9 +264,12 @@ function Header() {
                   <li className="nav-item" id="login-register">
                     {token ? (
                       <Link
-                        className="nav-link text-light"
+                        className={`nav-link text-light${
+                          showNavSect2 ? "" : " hide-text"
+                        }`}
                         to="/"
                         onClick={handleLogout}
+                        title="Cerrar Sesión"
                       >
                         <svg
                           className="bi d-block mx-auto mb-1"
@@ -233,7 +299,13 @@ function Header() {
                         Cerrar Sesión
                       </Link>
                     ) : (
-                      <Link className="nav-link text-light" to="/login">
+                      <Link
+                        className={`nav-link text-light${
+                          showNavSect2 ? "" : " hide-text"
+                        }`}
+                        to="/login"
+                        title="Iniciar Sesión"
+                      >
                         <svg
                           className="bi d-block mx-auto mb-1"
                           width="30px"
@@ -258,7 +330,13 @@ function Header() {
                   </li>
                   <li className="nav-item" id="pag-admin">
                     {token && userId === "65dbfbfdbbaccc7f307ebc2e" && (
-                      <Link className="nav-link text-light" to="/adm/productos">
+                      <Link
+                        className={`nav-link text-light${
+                          showNavSect2 ? "" : " hide-text"
+                        }`}
+                        to="/adm/productos"
+                        title="Administrador"
+                      >
                         <svg
                           className="bi d-block mx-auto mb-1"
                           width="30px"
@@ -325,9 +403,17 @@ function Header() {
             </div>
           </nav>
         </section>
-        <section className="px-3 py-2 navSect2">
+        <section
+          className={`px-3 py-2 navSect2${
+            showNavSect2 || hoverNavSect2 ? "" : " navSect2-hidden"
+          }`}
+        >
           <div className="container d-flex flex-wrap searchIcons">
-            <form className="d-flex search" role="search" onSubmit={handleSearchSubmit}>
+            <form
+              className="d-flex search"
+              role="search"
+              onSubmit={handleSearchSubmit}
+            >
               <input
                 className="searchbar"
                 type="search"

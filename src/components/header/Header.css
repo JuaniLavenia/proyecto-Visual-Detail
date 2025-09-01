@@ -194,3 +194,29 @@
     display: none;
   }
 }
+
+.navSect2-hidden {
+  transform: translateY(-100%);
+  opacity: 0;
+  transition: transform 0.3s, opacity 0.3s;
+  pointer-events: none;
+}
+
+.navSect1-compact {
+  min-height: 56px !important;
+  padding-top: 4px !important;
+  padding-bottom: 4px !important;
+  transition: height 0.3s, padding 0.3s;
+}
+.hide-text {
+  font-size: 0 !important;
+  color: transparent !important;
+  transition: font-size 0.3s, color 0.3s;
+}
+.hide-text svg {
+  font-size: 30px !important;
+  color: #fff !important;
+}
+.img-nav.collapsed {
+  width: 50px;
+}

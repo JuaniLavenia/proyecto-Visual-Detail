@@ -166,7 +166,8 @@ function Producto() {
     setSearch(event.target.value);
   };
 
-  const buscar = () => {
+  const buscar = (e) => {
+    e.preventDefault();
     setIsLoading(true);
     if (search == "") {
       getProductos();
@@ -210,7 +211,7 @@ function Producto() {
         </Link>
       </div>
 
-      <div className="input-group mb-5">
+      <form className="d-flex search mb-5" role="search-adm" onSubmit={buscar}>
         <input
           type="search"
           className="form-control"
@@ -227,7 +228,7 @@ function Producto() {
         >
           {isLoading ? "Buscando..." : "Buscar"}
         </button>
-      </div>
+      </form>
 
       <div className="table-responsive">
         {token &&

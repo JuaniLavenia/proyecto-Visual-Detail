@@ -87,16 +87,8 @@ function HomePage() {
               <p>FULLCAR</p>
             </div>
             <div className="carousel__elemento">
-              <img src={Dream} alt="DREAMS DETAILING PRODUCTS" />
-              <p>DREAMS DETAILING PRODUCTS</p>
-            </div>
-            <div className="carousel__elemento">
               <img src={Ternnova} alt="TERNNOVA" />
               <p>TERNNOVA</p>
-            </div>
-            <div className="carousel__elemento">
-              <img src={Drop} alt="DROP DETAILING PRODUCTS" />
-              <p>DROP DETAILING PRODUCTS</p>
             </div>
             <div className="carousel__elemento">
               <img src={Menzerna} alt="MENZERNA" />

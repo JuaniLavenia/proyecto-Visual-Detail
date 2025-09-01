@@ -1,5 +1,5 @@
-import "./Header.css";
-import Visual from "../assets/img/visual.png";
+import "../header/Header";
+import Visual from "../../assets/img/visual.png";
 
 function Footer() {
   return (

@@ -1,9 +1,9 @@
 import { useContext, useState } from "react";
 import "./CardProductosSearch.css";
 import Swal from "sweetalert2";
-import { CartContext } from "../context/ContextProvider";
+import { CartContext } from "../../context/ContextProvider";
 import axios from "axios";
-import { AuthContext } from "../context/AuthContext";
+import { AuthContext } from "../../context/AuthContext";
 
 function CardProductos({
   image,

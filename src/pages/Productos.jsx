@@ -1,5 +1,5 @@
 import { useContext, useEffect, useState } from "react";
-import CardProductos from "../components/CardProductosSearch";
+import CardProductos from "../components/plp/CardProductosSearch";
 import axios from "axios";
 import "./Productos.css";
 import { CartContext } from "../context/ContextProvider";

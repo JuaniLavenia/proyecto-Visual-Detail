@@ -16,7 +16,35 @@ function Header() {
   const [showNavSect2, setShowNavSect2] = useState(true);
   const [lastScrollY, setLastScrollY] = useState(window.scrollY);
   const [hoverNavSect2, setHoverNavSect2] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+
   const navigate = useNavigate();
+
+  const handleLogout = () => {
+    localStorage.removeItem("token");
+    localStorage.removeItem("isAdmin");
+    logout("");
+    Swal.fire({
+      position: "center",
+      icon: "success",
+      title: "Se cerró la sesion",
+      showConfirmButton: false,
+      timer: 1500,
+    });
+  };
+
+  const handleChangeSearch = (event) => {
+    setSearchTerm(event.target.value);
+  };
+
+  const handleMenuToggle = () => {
+    setMenuOpen(!menuOpen);
+  };
+
+  const handleSearchSubmit = (event) => {
+    event.preventDefault();
+    navigate(`/productos?search=${searchTerm}`);
+  };
 
   useEffect(() => {
     const cartItems = JSON.parse(localStorage.getItem("cartItems")) || [];
@@ -63,33 +91,14 @@ function Header() {
     };
   }, []);
 
-  // Combina el estado de scroll y hover para mostrar navSect2
-  const shouldShowNavSect2 = showNavSect2 || hoverNavSect2;
-
-  const handleLogout = () => {
-    localStorage.removeItem("token");
-    logout("");
-    Swal.fire({
-      position: "center",
-      icon: "success",
-      title: "Se cerró la sesion",
-      showConfirmButton: false,
-      timer: 1500,
-    });
-  };
-
-  const handleChangeSearch = (event) => {
-    setSearchTerm(event.target.value);
-  };
-
-  const handleMenuToggle = () => {
-    setMenuOpen(!menuOpen);
-  };
-
-  const handleSearchSubmit = (event) => {
-    event.preventDefault();
-    navigate(`/productos?search=${searchTerm}`);
-  };
+  useEffect(() => {
+    const adminStatus = localStorage.getItem("isAdmin");
+    if (adminStatus === "true") {
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
+    }
+  }, [userId]);
 
   return (
     <>
@@ -329,7 +338,7 @@ function Header() {
                     )}
                   </li>
                   <li className="nav-item" id="pag-admin">
-                    {token && userId === "65dbfbfdbbaccc7f307ebc2e" && (
+                    {token && isAdmin && (
                       <Link
                         className={`nav-link text-light${
                           showNavSect2 ? "" : " hide-text"

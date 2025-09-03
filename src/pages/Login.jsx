@@ -46,6 +46,11 @@ function Login() {
           .then((res) => {
             const { token, userId } = res.data;
             localStorage.setItem("token", token);
+            if (userId === "65dbfbfdbbaccc7f307ebc2e") {
+              localStorage.setItem("isAdmin", "true");
+            } else {
+              localStorage.setItem("isAdmin", "false");
+            }
             login(token, userId);
 
             axios

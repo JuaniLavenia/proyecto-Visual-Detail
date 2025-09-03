@@ -1,11 +1,12 @@
 import axios from "axios";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect, useContext, useRef } from "react";
 import { Link } from "react-router-dom";
 import "./producto.css";
 import Swal from "sweetalert2";
 import { AuthContext } from "../../context/AuthContext";
 import DataTable from "react-data-table-component";
 import Paginador from "../../components/Paginador";
+import { Modal, Button } from "react-bootstrap"; // Asegúrate de tener react-bootstrap instalado
 
 function Producto() {
   const [productos, setProductos] = useState([]);
@@ -16,6 +17,11 @@ function Producto() {
   const [currentPage, setCurrentPage] = useState(1);
   const [totalRows, setTotalRows] = useState(0);
   const [currentSize, setCurrentSize] = useState(12);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [showModal, setShowModal] = useState(false);
+  const [excelFile, setExcelFile] = useState(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const fileInputRef = useRef();
 
   const columns = [
     {
@@ -120,10 +126,6 @@ function Producto() {
       });
   };
 
-  useEffect(() => {
-    getProductos(currentPage, currentSize);
-  }, []);
-
   const destroy = (id) => {
     Swal.fire({
       title: "¿Está seguro?",
@@ -202,13 +204,88 @@ function Producto() {
     }
   };
 
+  const handleOpenModal = () => setShowModal(true);
+  const handleCloseModal = () => {
+    setShowModal(false);
+    setExcelFile(null);
+    if (fileInputRef.current) fileInputRef.current.value = "";
+  };
+
+  const handleFileChange = (e) => {
+    setExcelFile(e.target.files[0]);
+  };
+
+  const handleUpload = async () => {
+    if (!excelFile) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "Debe seleccionar un archivo Excel.",
+      });
+      return;
+    }
+    setIsUploading(true);
+    const formData = new FormData();
+    formData.append("file", excelFile);
+
+    try {
+      await axios.post(
+        "https://visual-detail-backend.onrender.com/api/productos/bulk-upload",
+        formData,
+        {
+          headers: {
+            "Content-Type": "multipart/form-data",
+          },
+        }
+      );
+      Swal.fire({
+        position: "center",
+        icon: "success",
+        title: "Planilla subida correctamente",
+        showConfirmButton: false,
+        timer: 1500,
+      });
+      handleCloseModal();
+      getProductos(currentPage, currentSize);
+    } catch (error) {
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: "No se pudo subir la planilla.",
+      });
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
+  useEffect(() => {
+    getProductos(currentPage, currentSize);
+  }, []);
+
+  useEffect(() => {
+    const adminStatus = localStorage.getItem("isAdmin");
+    if (adminStatus === "true") {
+      setIsAdmin(true);
+    } else {
+      setIsAdmin(false);
+    }
+  }, [userId]);
+
   return (
     <div className="contentPrinc p-5 bg-dark text-light">
       <div className="list d-flex justify-content-between align-items-center">
         <h1 className="text-center">Lista de productos</h1>
-        <Link to="/adm/productos/create" className="btn btn-primary float-end">
-          Crear
-        </Link>
+        <div>
+          <Link
+            to="/adm/productos/create"
+            className="btn btn-primary float-end me-2"
+          >
+            Crear
+          </Link>
+          <Button variant="success" onClick={handleOpenModal}>
+            Subir Excel
+          </Button>
+        </div>
       </div>
 
       <form className="d-flex search mb-5" role="search-adm" onSubmit={buscar}>
@@ -232,7 +309,7 @@ function Producto() {
 
       <div className="table-responsive">
         {token &&
-          userId === "65dbfbfdbbaccc7f307ebc2e" &&
+          isAdmin &&
           (productos.length > 0 ? (
             <>
               <DataTable
@@ -263,6 +340,33 @@ function Producto() {
             )
           ))}
       </div>
+
+      <Modal show={showModal} onHide={handleCloseModal}>
+        <Modal.Header closeButton className="bg-dark text-light">
+          <Modal.Title>Subir planilla Excel</Modal.Title>
+        </Modal.Header>
+        <Modal.Body className="bg-dark text-light">
+          <input
+            type="file"
+            accept=".xlsx,.xls"
+            onChange={handleFileChange}
+            ref={fileInputRef}
+            className="form-control"
+          />
+        </Modal.Body>
+        <Modal.Footer className="bg-dark text-light">
+          <Button variant="secondary" onClick={handleCloseModal}>
+            Cancelar
+          </Button>
+          <Button
+            variant="primary"
+            onClick={handleUpload}
+            disabled={isUploading}
+          >
+            {isUploading ? "Subiendo..." : "Guardar"}
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </div>
   );
 }

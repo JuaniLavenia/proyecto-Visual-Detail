@@ -1,0 +1,233 @@
+.cleanSearch {
+  min-height: 100vh;
+  background: #0a0a0f;
+}
+
+/* Products Page Specific Styles */
+.products-page {
+  min-height: 100vh;
+  background: linear-gradient(180deg, #0a0a0f 0%, #111118 100%);
+}
+
+/* Custom scrollbar for filters */
+.filter-scroll::-webkit-scrollbar {
+  width: 6px;
+}
+
+.filter-scroll::-webkit-scrollbar-track {
+  background: rgba(255, 255, 255, 0.05);
+  border-radius: 3px;
+}
+
+.filter-scroll::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.2);
+  border-radius: 3px;
+}
+
+.filter-scroll::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.3);
+}
+
+/* Grid animation for products */
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.product-card {
+  animation: fadeInUp 0.4s ease forwards;
+}
+
+.product-card:nth-child(1) { animation-delay: 0.05s; }
+.product-card:nth-child(2) { animation-delay: 0.1s; }
+.product-card:nth-child(3) { animation-delay: 0.15s; }
+.product-card:nth-child(4) { animation-delay: 0.2s; }
+.product-card:nth-child(5) { animation-delay: 0.25s; }
+.product-card:nth-child(6) { animation-delay: 0.3s; }
+.product-card:nth-child(7) { animation-delay: 0.35s; }
+.product-card:nth-child(8) { animation-delay: 0.4s; }
+
+/* Pagination enhancements */
+.pagination-btn {
+  position: relative;
+  overflow: hidden;
+}
+
+.pagination-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(90deg, transparent, rgba(255,255,255,0.1), transparent);
+  transform: translateX(-100%);
+  transition: transform 0.5s;
+}
+
+.pagination-btn:hover::before {
+  transform: translateX(100%);
+}
+
+/* Responsive adjustments */
+@media (max-width: 1023px) {
+  .products-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+  }
+}
+
+@media (max-width: 639px) {
+  .products-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .page-header {
+    padding: 1.5rem;
+  }
+}
+
+/* Loading shimmer effect */
+.loading-shimmer {
+  position: relative;
+  overflow: hidden;
+}
+
+.loading-shimmer::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.05),
+    transparent
+  );
+  animation: shimmer 1.5s infinite;
+}
+
+@keyframes shimmer {
+  0% { transform: translateX(-100%); }
+  100% { transform: translateX(100%); }
+}
+
+/* Filter section animations */
+.filter-section-enter {
+  max-height: 0;
+  opacity: 0;
+  transition: all 0.3s ease-out;
+}
+
+.filter-section-enter-active {
+  max-height: 500px;
+  opacity: 1;
+}
+
+.filter-section-exit {
+  max-height: 500px;
+  opacity: 1;
+  transition: all 0.3s ease-in;
+}
+
+.filter-section-exit-active {
+  max-height: 0;
+  opacity: 0;
+}
+
+/* Category/Brand pills active state */
+.filter-pill {
+  position: relative;
+  overflow: hidden;
+}
+
+.filter-pill::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, transparent 40%, rgba(234, 179, 8, 0.1) 100%);
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.filter-pill:hover::before {
+  opacity: 1;
+}
+
+/* Empty state animation */
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-10px); }
+}
+
+.empty-state-icon {
+  animation: float 3s ease-in-out infinite;
+}
+
+/* Page transition */
+.page-content-enter {
+  opacity: 0;
+}
+
+.page-content-enter-active {
+  opacity: 1;
+  transition: opacity 0.3s ease-in;
+}
+
+/* Mobile filter drawer */
+.mobile-filter-drawer {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* Results count animation */
+.results-count {
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+/* Modal animations */
+@keyframes modalIn {
+  from {
+    opacity: 0;
+    transform: scale(0.95);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+
+@keyframes modalBackdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+.animate-in {
+  animation: modalIn 0.2s ease-out forwards;
+}
+
+.fade-in {
+  animation: modalBackdropIn 0.2s ease-out forwards;
+}
+
+.zoom-in-95 {
+  --tw-enter-scale: 0.95;
+}

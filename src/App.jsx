@@ -1,54 +1,63 @@
-import "./App.css";
-import "bootstrap/dist/css/bootstrap.min.css";
-import { Route, Routes } from "react-router";
-import HomePage from "./pages/Home";
-import Footer from "./components/footer/Footer";
-import { CartContextProvider } from "./context/ContextProvider";
-import { AuthContextProvider } from "./context/AuthContext";
-import Header from "./components/header/Header";
-import Login from "./pages/Login";
-import Favoritos from "./pages/Favoritos";
-import Carrito from "./pages/Carrito";
-import Producto from "./pages/admin/Producto";
-import ProductoEdit from "./pages/admin/ProductoEdit";
-import ProductoCreate from "./pages/admin/ProductoCreate";
-import Productos from "./pages/Productos";
-import Contactanos from "./pages/Contactanos";
-import Profile from "./pages/Profile";
-import { UserProvider } from "./context/UserContext";
+import { Suspense, lazy } from 'react';
+import { Routes, Route } from 'react-router';
+import './App.css';
+import 'bootstrap/dist/css/bootstrap.min.css';
+import LoadingSpinner from './components/common/LoadingSpinner';
+import ErrorBoundary from './components/common/ErrorBoundary';
+
+// Lazy loading de todas las páginas
+const HomePage = lazy(() => import('./pages/Home'));
+const Login = lazy(() => import('./pages/Auth'));
+const Products = lazy(() => import('./pages/Products'));
+const ProductDetail = lazy(() => import('./pages/ProductDetail'));
+const Cart = lazy(() => import('./pages/Cart'));
+const Favorites = lazy(() => import('./pages/Favorites'));
+const Contact = lazy(() => import('./pages/Contact'));
+const Profile = lazy(() => import('./pages/Profile'));
+const AdminProducts = lazy(() => import('./pages/admin/Products'));
+const ProductEdit = lazy(() => import('./pages/admin/Products/ProductEdit'));
+const ProductCreate = lazy(() => import('./pages/admin/Products/ProductCreate'));
+
+// Layout components
+const Header = lazy(() => import('./components/layout/Header'));
+const Footer = lazy(() => import('./components/layout/Footer'));
+
+// Componente de fallback para Suspense
+function PageLoader() {
+  return (
+    <div className="min-h-screen flex items-center justify-center">
+      <LoadingSpinner size="lg" text="Cargando página..." />
+    </div>
+  );
+}
 
 function App() {
   return (
-    <>
-      <AuthContextProvider>
-        <CartContextProvider>
-          <UserProvider>
-            <Header />
-
-            <Routes>
-              <Route path="/" element={<HomePage />} />
-              <Route path="/adm/productos" element={<Producto />} />
-              <Route
-                path="/adm/productos/edit/:id"
-                element={<ProductoEdit />}
-              />
-              <Route
-                path="/adm/productos/create"
-                element={<ProductoCreate />}
-              />
-              <Route path="/productos" element={<Productos />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/carrito" element={<Carrito />} />
-              <Route path="/favoritos" element={<Favoritos />} />
-              <Route path="/contactanos" element={<Contactanos />} />
-              <Route path="/perfil" element={<Profile />} />
-            </Routes>
-
-            <Footer />
-          </UserProvider>
-        </CartContextProvider>
-      </AuthContextProvider>
-    </>
+    <ErrorBoundary>
+      <Suspense fallback={<PageLoader />}>
+        <Header />
+        
+        <main className="min-h-screen">
+          <Routes>
+            <Route path="/" element={<HomePage />} />
+            <Route path="/productos" element={<Products />} />
+            <Route path="/productos/:id" element={<ProductDetail />} />
+            <Route path="/login" element={<Login />} />
+            <Route path="/carrito" element={<Cart />} />
+            <Route path="/favoritos" element={<Favorites />} />
+            <Route path="/contactanos" element={<Contact />} />
+            <Route path="/perfil" element={<Profile />} />
+            
+            {/* Rutas de Admin */}
+            <Route path="/adm/productos" element={<AdminProducts />} />
+            <Route path="/adm/productos/edit/:id" element={<ProductEdit />} />
+            <Route path="/adm/productos/create" element={<ProductCreate />} />
+          </Routes>
+        </main>
+        
+        <Footer />
+      </Suspense>
+    </ErrorBoundary>
   );
 }
 

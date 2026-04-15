@@ -3,6 +3,7 @@ import { useState } from "react";
 import OrdersTab from "./components/OrdersTab";
 import PersonalInfoTab from "./components/PersonalInfoTab";
 import { Link } from "react-router-dom";
+import { ArrowLeft, Package, User } from "../../components/common/Icons";
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState("pedidos");
@@ -17,9 +18,7 @@ const Profile = () => {
               to="/"
               className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
-              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
-              </svg>
+              <ArrowLeft className="w-5 h-5" />
             </Link>
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold text-white">
@@ -44,9 +43,7 @@ const Profile = () => {
                 : "bg-gray-900/50 text-white/70 border border-white/10 hover:bg-gray-800/50 hover:border-white/20"
             }`}
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
-            </svg>
+            <Package className="w-5 h-5" />
             Mis Pedidos
           </button>
           <button
@@ -57,9 +54,7 @@ const Profile = () => {
                 : "bg-gray-900/50 text-white/70 border border-white/10 hover:bg-gray-800/50 hover:border-white/20"
             }`}
           >
-            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
-              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
-            </svg>
+            <User className="w-5 h-5" />
             Información Personal
           </button>
         </div>

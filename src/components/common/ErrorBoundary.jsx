@@ -32,7 +32,7 @@ export default class ErrorBoundary extends Component {
                 className="w-8 h-8 text-red-600"
                 fill="none"
                 viewBox="0 0 24 24"
-                stroke="currentColor"
+                stroke="white"
               >
                 <path
                   strokeLinecap="round"

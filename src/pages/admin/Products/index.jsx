@@ -4,6 +4,16 @@ import useSWR, { mutate } from "swr";
 import axios from "axios";
 import Swal from "sweetalert2";
 import useAuthStore from "../../../stores/useAuthStore";
+import AdminActionsMenu from "../../../components/common/AdminActionsMenu";
+import {
+  Edit,
+  Delete,
+  Package,
+  Dollar,
+  Cube,
+  Exclamation,
+  Search,
+} from "../../../components/common/Icons";
 import "./index.css";
 
 const API_BASE = "https://visual-detail-backend.onrender.com";
@@ -205,87 +215,69 @@ function AdminProducto() {
                 {totalRows} producto{totalRows !== 1 ? "s" : ""} en total
               </p>
             </div>
-            <div className="flex items-center gap-3">
-              <button
-                onClick={handleExportXLSX}
-                disabled={isExporting}
-                className="px-4 py-2.5 bg-blue-600 hover:bg-blue-500 text-white font-medium rounded-xl transition-colors flex items-center gap-2 disabled:opacity-50"
-              >
-                {isExporting ? (
-                  <svg
-                    className="animate-spin w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                    />
-                  </svg>
-                ) : (
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5M12 12.75l-3-3m0 0l3-3m-3 3h12.75"
-                    />
-                  </svg>
-                )}
-                Exportar Excel
-              </button>
-              <button
-                onClick={handleOpenModal}
-                className="px-4 py-2.5 bg-green-600 hover:bg-green-500 text-white font-medium rounded-xl transition-colors flex items-center gap-2"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M3 16.5v2.25A2.25 2.25 0 005.25 21h13.5A2.25 2.25 0 0021 18.75V16.5m-13.5-9L12 3m0 0l4.5 4.5M12 3v13.5"
-                  />
-                </svg>
-                Importar Excel
-              </button>
-              <Link
-                to="/adm/productos/create"
-                className="px-4 py-2.5 bg-yellow-500 hover:bg-yellow-400 text-white font-medium rounded-xl transition-colors flex items-center gap-2"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M12 4.5v15m6-6h-15"
-                  />
-                </svg>
-                Nuevo Producto
-              </Link>
+            <AdminActionsMenu
+              onExport={() => handleExportXLSX()}
+              onImport={handleOpenModal}
+            />
+          </div>
+
+          {/* KPI Cards */}
+          <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
+            <div className="bg-gray-800/30 border border-white/5 rounded-xl p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-yellow-500/10 rounded-lg text-yellow-400">
+                  <Package className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-white/50 text-xs">Total Productos</p>
+                  <p className="text-xl font-bold text-white">{totalRows}</p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-gray-800/30 border border-white/5 rounded-xl p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-green-500/10 rounded-lg text-green-400">
+                  <Cube className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-white/50 text-xs">En Stock</p>
+                  <p className="text-xl font-bold text-white">
+                    {products.filter((p) => p.stock > 0).length}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-gray-800/30 border border-white/5 rounded-xl p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-red-500/10 rounded-lg text-red-400">
+                  <Exclamation className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-white/50 text-xs">Sin Stock</p>
+                  <p className="text-xl font-bold text-white">
+                    {products.filter((p) => !p.stock || p.stock === 0).length}
+                  </p>
+                </div>
+              </div>
+            </div>
+            <div className="bg-gray-800/30 border border-white/5 rounded-xl p-4">
+              <div className="flex items-center gap-3">
+                <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
+                  <Dollar className="w-6 h-6" />
+                </div>
+                <div>
+                  <p className="text-white/50 text-xs">Valor Stock</p>
+                  <p className="text-xl font-bold text-white">
+                    $
+                    {products
+                      .reduce(
+                        (acc, p) => acc + (p.price || 0) * (p.stock || 0),
+                        0,
+                      )
+                      .toLocaleString("es-AR", { maximumFractionDigits: 0 })}
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -300,19 +292,7 @@ function AdminProducto() {
                   onChange={(e) => setSearch(e.target.value)}
                   className="w-full px-4 py-3 pl-12 bg-gray-800/50 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-yellow-500/50"
                 />
-                <svg
-                  className="absolute left-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="currentColor"
-                  strokeWidth={1.5}
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.196 10.196z"
-                  />
-                </svg>
+                <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
               </div>
               <button
                 type="submit"
@@ -366,123 +346,142 @@ function AdminProducto() {
         ) : (
           <>
             {/* Desktop Table */}
-            <div className="hidden lg:block bg-gray-900/50 border border-white/5 rounded-2xl overflow-hidden">
-              <table className="w-full">
-                <thead className="bg-gray-800/50 border-b border-white/5">
-                  <tr>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-white/70">
-                      Imagen
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-white/70">
-                      Nombre
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-white/70">
-                      Marca
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-white/70">
-                      Categoría
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-white/70">
-                      Precio
-                    </th>
-                    <th className="px-6 py-4 text-left text-sm font-semibold text-white/70">
-                      Stock
-                    </th>
-                    <th className="px-6 py-4 text-right text-sm font-semibold text-white/70">
-                      Acciones
-                    </th>
-                  </tr>
-                </thead>
-                <tbody className="divide-y divide-white/5">
-                  {products.map((product) => (
-                    <tr
-                      key={product._id}
-                      className="hover:bg-white/5 transition-colors"
-                    >
-                      <td className="px-6 py-4">
-                        <img
-                          src={
-                            product.image?.startsWith("http")
-                              ? product.image
-                              : `${API_BASE}/img/productos/${product.image}`
-                          }
-                          alt={product.name}
-                          className="w-14 h-14 object-cover rounded-lg"
-                        />
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-white font-medium">
-                          {product.name}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="px-2 py-1 bg-yellow-500/10 text-yellow-400 text-xs rounded-full">
-                          {product.brand}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-white/70 text-sm">
-                          {product.category}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span className="text-white font-semibold">
-                          ${product.price?.toLocaleString("es-AR")}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <span
-                          className={`inline-flex items-center px-2 py-1 rounded-full text-xs font-medium ${product.stock > 0 ? "bg-green-500/10 text-green-400" : "bg-red-500/10 text-red-400"}`}
-                        >
-                          {product.stock > 0 ? product.stock : "Sin stock"}
-                        </span>
-                      </td>
-                      <td className="px-6 py-4">
-                        <div className="flex items-center justify-end gap-2">
-                          <Link
-                            to={`/adm/productos/edit/${product._id}`}
-                            className="p-2 text-yellow-400 hover:bg-yellow-500/10 rounded-lg transition-colors"
-                            title="Editar"
-                          >
-                            <svg
-                              className="w-5 h-5"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={1.5}
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M16.862 4.487l1.687-1.688a1.875 1.875 0 112.652 2.652L10.582 16.07a4.5 4.5 0 01-1.897 1.13L6 18l.8-2.685a4.5 4.5 0 011.13-1.897l8.932-8.931zm0 0L19.5 7.125"
-                              />
-                            </svg>
-                          </Link>
-                          <button
-                            onClick={() => destroy(product._id)}
-                            className="p-2 text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
-                            title="Eliminar"
-                          >
-                            <svg
-                              className="w-5 h-5"
-                              fill="none"
-                              viewBox="0 0 24 24"
-                              stroke="currentColor"
-                              strokeWidth={1.5}
-                            >
-                              <path
-                                strokeLinecap="round"
-                                strokeLinejoin="round"
-                                d="M14.74 9l-.346 9m-4.788 0L9.26 9m9.968-3.21c.342.052.682.107 1.022.166m-1.022-.165L18.16 19.673a2.25 2.25 0 01-2.244 2.077H8.084a2.25 2.25 0 01-2.244-2.077L4.772 5.79m14.456 0a2.25 2.25 0 00-2.244-2.077L4.772 5.79m-2.244 2.077L4.772 5.79m0 0a2.25 2.25 0 012.244-2.077L4.772 5.79"
-                              />
-                            </svg>
-                          </button>
-                        </div>
-                      </td>
+            <div className="hidden lg:block bg-gray-900/30 border border-white/5 rounded-2xl overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full">
+                  <thead className="bg-gray-800/40 border-b border-white/5">
+                    <tr>
+                      <th className="px-4 py-3.5 text-left text-xs font-semibold text-white/50 uppercase tracking-wider">
+                        Imagen
+                      </th>
+                      <th className="px-4 py-3.5 text-left text-xs font-semibold text-white/50 uppercase tracking-wider">
+                        Producto
+                      </th>
+                      <th className="px-4 py-3.5 text-left text-xs font-semibold text-white/50 uppercase tracking-wider">
+                        Marca
+                      </th>
+                      <th className="px-4 py-3.5 text-left text-xs font-semibold text-white/50 uppercase tracking-wider">
+                        Categoría
+                      </th>
+                      <th className="px-4 py-3.5 text-left text-xs font-semibold text-white/50 uppercase tracking-wider">
+                        Precio
+                      </th>
+                      <th className="px-4 py-3.5 text-center text-xs font-semibold text-white/50 uppercase tracking-wider">
+                        Stock
+                      </th>
+                      <th className="px-4 py-3.5 text-right text-xs font-semibold text-white/50 uppercase tracking-wider">
+                        Acciones
+                      </th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody className="divide-y divide-white/5">
+                    {products.map((product, index) => (
+                      <tr
+                        key={product._id}
+                        className="hover:bg-white/5 transition-all duration-200 group"
+                        style={{ animationDelay: `${index * 0.03}s` }}
+                      >
+                        <td className="px-4 py-3.5">
+                          <div className="relative">
+                            <img
+                              src={
+                                product.image?.startsWith("http")
+                                  ? product.image
+                                  : `${API_BASE}/img/productos/${product.image}`
+                              }
+                              alt={product.name}
+                              className="w-12 h-12 object-cover rounded-lg ring-1 ring-white/10 group-hover:ring-yellow-500/30 transition-all"
+                              onError={(e) => {
+                                e.target.style.display = "none";
+                                e.target.nextSibling.style.display = "flex";
+                              }}
+                            />
+                            <div className="w-12 h-12 bg-gray-800 rounded-lg hidden items-center justify-center">
+                              <svg
+                                className="w-6 h-6 text-white/20"
+                                fill="none"
+                                viewBox="0 0 24 24"
+                                stroke="white"
+                              >
+                                <path
+                                  strokeLinecap="round"
+                                  strokeLinejoin="round"
+                                  strokeWidth={1}
+                                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
+                                />
+                              </svg>
+                            </div>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <div className="max-w-xs">
+                            <span className="text-white font-medium block truncate">
+                              {product.name}
+                            </span>
+                            {product.capacity && (
+                              <span className="text-white/40 text-xs">
+                                {product.capacity}
+                              </span>
+                            )}
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className="inline-flex items-center px-2.5 py-1 rounded-md bg-yellow-500/10 text-yellow-400 text-xs font-medium">
+                            {product.brand}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className="text-white/60 text-sm">
+                            {product.category}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <span className="text-white font-semibold">
+                            ${product.price?.toLocaleString("es-AR")}
+                          </span>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <div className="flex items-center justify-center">
+                            <span
+                              className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${product.stock > 0 ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}
+                            >
+                              {product.stock > 0 ? (
+                                <>
+                                  <span className="w-1.5 h-1.5 bg-green-400 rounded-full mr-1.5"></span>
+                                  {product.stock}
+                                </>
+                              ) : (
+                                <>
+                                  <span className="w-1.5 h-1.5 bg-red-400 rounded-full mr-1.5"></span>
+                                  Sin stock
+                                </>
+                              )}
+                            </span>
+                          </div>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          <div className="flex items-center justify-end gap-1.5">
+                            <Link
+                              to={`/adm/productos/edit/${product._id}`}
+                              className="p-2 text-yellow-400/70 hover:text-yellow-400 hover:bg-yellow-500/10 rounded-lg transition-all"
+                              title="Editar"
+                            >
+                              <Edit className="w-4.5 h-4.5" />
+                            </Link>
+                            <button
+                              onClick={() => destroy(product._id)}
+                              className="p-2 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
+                              title="Eliminar"
+                            >
+                              <Delete className="w-4.5 h-4.5" />
+                            </button>
+                          </div>
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
 
             {/* Mobile Cards */}
@@ -555,7 +554,7 @@ function AdminProducto() {
                       className="w-5 h-5"
                       fill="none"
                       viewBox="0 0 24 24"
-                      stroke="currentColor"
+                      stroke="white"
                     >
                       <path
                         strokeLinecap="round"
@@ -591,7 +590,7 @@ function AdminProducto() {
                       className="w-5 h-5"
                       fill="none"
                       viewBox="0 0 24 24"
-                      stroke="currentColor"
+                      stroke="white"
                     >
                       <path
                         strokeLinecap="round"
@@ -628,7 +627,7 @@ function AdminProducto() {
                   className="w-5 h-5"
                   fill="none"
                   viewBox="0 0 24 24"
-                  stroke="currentColor"
+                  stroke="white"
                 >
                   <path
                     strokeLinecap="round"
@@ -675,7 +674,7 @@ function AdminProducto() {
                         cx="12"
                         cy="12"
                         r="10"
-                        stroke="currentColor"
+                        stroke="white"
                         strokeWidth="4"
                       />
                       <path

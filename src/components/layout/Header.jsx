@@ -5,215 +5,11 @@ import useCartStore from "../../stores/useCartStore";
 import useFavoritesStore from "../../stores/useFavoritesStore";
 import Swal from "sweetalert2";
 import visual from "../../assets/img/visual.png";
-
-// Icon Components - más limpios y reutilizables
-const Icons = {
-  Home: () => (
-    <svg
-      className="w-6 h-6"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="white"
-      strokeWidth={1.5}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M2.25 12l8.954-8.955c.44-.439 1.152-.439 1.591 0L21.75 12M4.5 9.75v10.125c0 .621.504 1.125 1.125 1.125H9.75v-4.875c0-.621.504-1.125 1.125-1.125h2.25c.621 0 1.125.504 1.125 1.125V21h4.125c.621 0 1.125-.504 1.125-1.125V9.75M8.25 21h8.25"
-      />
-    </svg>
-  ),
-  Products: () => (
-    <svg
-      className="w-6 h-6"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="white"
-      strokeWidth={1.5}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
-      />
-    </svg>
-  ),
-  Location: () => (
-    <svg
-      className="w-6 h-6"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="white"
-      strokeWidth={1.5}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M15 10.5a3 3 0 11-6 0 3 3 0 016 0z"
-      />
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M19.5 10.5c0 7.142-7.5 11.25-7.5 11.25S4.5 17.642 4.5 10.5a7.5 7.5 0 1115 0z"
-      />
-    </svg>
-  ),
-  Contact: () => (
-    <svg
-      className="w-6 h-6"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="white"
-      strokeWidth={1.5}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M21.75 6.75v10.5a2.25 2.25 0 01-2.25 2.25h-15a2.25 2.25 0 01-2.25-2.25V6.75m19.5 0A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25m19.5 0v.243a2.25 2.25 0 01-1.07 1.916l-7.5 4.615a2.25 2.25 0 01-2.36 0L3.32 8.91a2.25 2.25 0 01-1.07-1.916V6.75"
-      />
-    </svg>
-  ),
-  User: () => (
-    <svg
-      className="w-6 h-6"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="white"
-      strokeWidth={1.5}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-      />
-    </svg>
-  ),
-  Logout: () => (
-    <svg
-      width="25px"
-      height="25px"
-      strokeWidth="1.5"
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      color="#fff"
-    >
-      <path
-        d="M12 12H19M19 12L16 15M19 12L16 9"
-        stroke="white"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      ></path>
-      <path
-        d="M19 6V5C19 3.89543 18.1046 3 17 3H7C5.89543 3 5 3.89543 5 5V19C5 20.1046 5.89543 21 7 21H17C18.1046 21 19 20.1046 19 19V18"
-        stroke="white"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      ></path>
-    </svg>
-  ),
-  Admin: () => (
-    <svg
-      className="w-6 h-6"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="white"
-      strokeWidth={1.5}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M10.325 4.317c.426-1.756 2.924-1.756 3.35 0a1.724 1.724 0 002.573 1.066c1.543-.94 3.31.826 2.37 2.37a1.724 1.724 0 001.065 2.572c1.756.426 1.756 2.924 0 3.35a1.724 1.724 0 00-1.066 2.573c.94 1.543-.826 3.31-2.37 2.37a1.724 1.724 0 00-2.572 1.065c-.426 1.756-2.924 1.756-3.35 0a1.724 1.724 0 00-2.573-1.066c-1.543.94-3.31-.826-2.37-2.37a1.724 1.724 0 00-1.065-2.572c-1.756-.426-1.756-2.924 0-3.35a1.724 1.724 0 001.066-2.573c-.94-1.543.826-3.31 2.37-2.37.996.608 2.296.07 2.572-1.065z"
-      />
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M15 12a3 3 0 11-6 0 3 3 0 016 0z"
-      />
-    </svg>
-  ),
-  Cart: () => (
-    <svg
-      className="w-6 h-6"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="white"
-      strokeWidth={1.5}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"
-      />
-    </svg>
-  ),
-  Heart: () => (
-    <svg
-      className="w-6 h-6"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="white"
-      strokeWidth={1.5}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
-      />
-    </svg>
-  ),
-  Search: () => (
-    <svg
-      className="w-5 h-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="white"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M21 21l-5.197-5.197m0 0A7.5 7.5 0 105.196 5.196a7.5 7.5 0 0010.196 10.196z"
-      />
-    </svg>
-  ),
-  Menu: () => (
-    <svg
-      className="w-6 h-6"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="white"
-      strokeWidth={1.5}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-      />
-    </svg>
-  ),
-  CreditCard: () => (
-    <svg
-      className="w-8 h-8"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="white"
-      strokeWidth={1.5}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M2.25 8.25h19.5M2.25 9h19.5m-16.5 5.25h6m-6 2.25h3m-3.75 3h15a2.25 2.25 0 002.25-2.25V6.75A2.25 2.25 0 0019.5 4.5h-15a2.25 2.25 0 00-2.25 2.25v10.5A2.25 2.25 0 004.5 19.5z"
-      />
-    </svg>
-  ),
-};
+import { Home, Grid, Location, Contact, User, Logout, Settings, ShoppingCart, Heart, Search, Menu, CreditCard, Close } from "../common/Icons";
 
 function NavLink({ to, icon, children, onClick, external, badge }) {
   const navigate = useNavigate();
-  
+
   const content = (
     <>
       <span className="flex-shrink-0">{icon}</span>
@@ -232,7 +28,7 @@ function NavLink({ to, icon, children, onClick, external, badge }) {
   const handleClick = (e) => {
     // If external link, let browser handle it
     if (external) return;
-    
+
     // Close menu first, then navigate
     if (onClick) {
       onClick();
@@ -328,20 +124,20 @@ function Header() {
 
             {/* Desktop Navigation - Center */}
             <div className="hidden lg:flex items-center space-x-1">
-              <NavLink to="/" icon={<Icons.Home />}>
+              <NavLink to="/" icon={<Home className="w-6 h-6" />}>
                 Inicio
               </NavLink>
-              <NavLink to="/productos" icon={<Icons.Products />}>
+              <NavLink to="/productos" icon={<Grid className="w-6 h-6" />}>
                 Productos
               </NavLink>
               <NavLink
                 to="https://goo.gl/maps/pyTLGSD6mtBn7HvN9"
                 external
-                icon={<Icons.Location />}
+                icon={<Location className="w-6 h-6" />}
               >
                 Ubicación
               </NavLink>
-              <NavLink to="/contactanos" icon={<Icons.Contact />}>
+              <NavLink to="/contactanos" icon={<Contact className="w-6 h-6" />}>
                 Contacto
               </NavLink>
 
@@ -350,18 +146,18 @@ function Header() {
                   <NavLink
                     to="/"
                     onClick={handleLogout}
-                    icon={<Icons.Logout />}
+                    icon={<Logout className="w-6 h-6" />}
                   >
                     Cerrar Sesión
                   </NavLink>
                   {isAdmin && (
-                    <NavLink to="/adm/productos" icon={<Icons.Admin />}>
+                    <NavLink to="/adm/productos" icon={<Settings className="w-6 h-6" />}>
                       Admin
                     </NavLink>
                   )}
                 </>
               ) : (
-                <NavLink to="/login" icon={<Icons.User />}>
+                <NavLink to="/login" icon={<User className="w-6 h-6" />}>
                   Iniciar Sesión
                 </NavLink>
               )}
@@ -380,13 +176,13 @@ function Header() {
                     placeholder="Buscar productos..."
                     value={searchTerm}
                     onChange={(e) => setSearchTerm(e.target.value)}
-                    className="w-40 lg:w-56 pl-4 pr-10 py-2 bg-white/10 border border-white/20 rounded-full text-white placeholder-white/50 focus:outline-none focus:bg-white/20 focus:border-yellow-400 transition-all"
+                    className="w-40 lg:w-56 pl-4 pr-10 py-2 bg-gray-800/50 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-yellow-500/50"
                   />
                   <button
                     type="submit"
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-white/70 hover:text-yellow-400 transition-colors"
                   >
-                    <Icons.Search />
+                    <Search className="w-5 h-5" />
                   </button>
                 </div>
               </form>
@@ -398,7 +194,7 @@ function Header() {
                   to="/carrito"
                   className="relative p-2.5 text-white/80 hover:text-yellow-400 hover:bg-white/10 rounded-full transition-all"
                 >
-                  <Icons.Cart />
+                  <ShoppingCart className="w-6 h-6" />
                   {cartCount > 0 && (
                     <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold flex items-center justify-center rounded-full">
                       {cartCount > 9 ? "9+" : cartCount}
@@ -411,7 +207,7 @@ function Header() {
                   to="/favoritos"
                   className="relative p-2.5 text-white/80 hover:text-red-500 hover:bg-white/10 rounded-full transition-all"
                 >
-                  <Icons.Heart />
+                  <Heart className="w-6 h-6" />
                   {favoritesCount > 0 && (
                     <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold flex items-center justify-center rounded-full">
                       {favoritesCount > 9 ? "9+" : favoritesCount}
@@ -425,7 +221,7 @@ function Header() {
                     to="/perfil"
                     className="p-2.5 text-white/80 hover:text-blue-400 hover:bg-white/10 rounded-full transition-all"
                   >
-                    <Icons.User />
+                    <User className="w-6 h-6" />
                   </Link>
                 )}
               </div>
@@ -436,21 +232,9 @@ function Header() {
                 className="lg:hidden p-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-all"
               >
                 {mobileMenuOpen ? (
-                  <svg
-                    className="w-6 h-6"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="white"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M6 18L18 6M6 6l12 12"
-                    />
-                  </svg>
+                  <Close className="w-6 h-6" />
                 ) : (
-                  <Icons.Menu />
+                  <Menu className="w-6 h-6" />
                 )}
               </button>
             </div>
@@ -458,7 +242,7 @@ function Header() {
 
           {/* Payment Info Bar */}
           <div className="hidden lg:flex items-center justify-center py-2 border-t border-white/10">
-            <Icons.CreditCard />
+            <CreditCard className="w-6 h-6" />
             <span className="ml-2 text-sm text-white/70">
               Aceptamos todos los medios de pago: Efectivo, Crédito, Débito y
               Mercado Pago
@@ -485,21 +269,21 @@ function Header() {
                   className="w-full pl-10 pr-4 py-3 bg-white/10 border border-white/20 rounded-xl text-white placeholder-white/50 focus:outline-none focus:bg-white/20 focus:border-yellow-400"
                 />
                 <span className="absolute left-3 top-1/2 -translate-y-1/2 text-white/50">
-                  <Icons.Search />
+                  <Search className="w-5 h-5" />
                 </span>
               </div>
             </form>
 
             <NavLink
               to="/"
-              icon={<Icons.Home />}
+              icon={<Home className="w-6 h-6" />}
               onClick={() => setMobileMenuOpen(false)}
             >
               Inicio
             </NavLink>
             <NavLink
               to="/productos"
-              icon={<Icons.Products />}
+              icon={<Grid className="w-6 h-6" />}
               onClick={() => setMobileMenuOpen(false)}
             >
               Productos
@@ -507,13 +291,13 @@ function Header() {
             <NavLink
               to="https://goo.gl/maps/pyTLGSD6mtBn7HvN9"
               external
-              icon={<Icons.Location />}
+              icon={<Location className="w-6 h-6" />}
             >
               Ubicación
             </NavLink>
             <NavLink
               to="/contactanos"
-              icon={<Icons.Contact />}
+              icon={<Contact className="w-6 h-6" />}
               onClick={() => setMobileMenuOpen(false)}
             >
               Contacto
@@ -529,14 +313,14 @@ function Header() {
                     handleLogout();
                     setMobileMenuOpen(false);
                   }}
-                  icon={<Icons.Logout />}
+                  icon={<Logout className="w-6 h-6" />}
                 >
                   Cerrar Sesión
                 </NavLink>
                 {isAdmin && (
                   <NavLink
                     to="/adm/productos"
-                    icon={<Icons.Admin />}
+                    icon={<Settings className="w-6 h-6" />}
                     onClick={() => setMobileMenuOpen(false)}
                   >
                     Panel Admin
@@ -546,7 +330,7 @@ function Header() {
             ) : (
               <NavLink
                 to="/login"
-                icon={<Icons.User />}
+                icon={<User className="w-6 h-6" />}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Iniciar Sesión

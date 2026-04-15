@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import useAuthStore from "../../../stores/useAuthStore";
 import { useUserContext } from "../../../context/UserContext";
+import { Check, Close, Clock } from "../../../components/common/Icons";
 import "./OrdersTab.css";
 
 const API_BASE = "https://visual-detail-backend.onrender.com/api";
@@ -71,53 +72,11 @@ const OrdersTab = () => {
   const getStatusIcon = (estado) => {
     switch (estado) {
       case "Completado":
-        return (
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-        );
+        return <Check className="w-5 h-5" />;
       case "Cancelado":
-        return (
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-        );
+        return <Close className="w-5 h-5" />;
       case "Pendiente":
-        return (
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              strokeWidth={2}
-              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
-            />
-          </svg>
-        );
+        return <Clock className="w-5 h-5" />;
       default:
         return null;
     }

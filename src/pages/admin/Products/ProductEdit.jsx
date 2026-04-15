@@ -3,6 +3,13 @@ import { useNavigate, useParams, Link } from "react-router-dom";
 import axios from "axios";
 import Swal from "sweetalert2";
 import useAuthStore from "../../../stores/useAuthStore";
+import {
+  ArrowLeft,
+  Settings,
+  Check,
+  Image,
+  Spinner,
+} from "../../../components/common/Icons";
 import "./index.css";
 
 const API_BASE = "https://visual-detail-backend.onrender.com";
@@ -195,25 +202,7 @@ function ProductoEdit() {
     return (
       <div className="min-h-screen bg-gray-950 pt-20 lg:pt-24 flex items-center justify-center">
         <div className="text-center">
-          <svg
-            className="animate-spin w-10 h-10 text-yellow-500 mx-auto mb-4"
-            fill="none"
-            viewBox="0 0 24 24"
-          >
-            <circle
-              className="opacity-25"
-              cx="12"
-              cy="12"
-              r="10"
-              stroke="currentColor"
-              strokeWidth="4"
-            />
-            <path
-              className="opacity-75"
-              fill="currentColor"
-              d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-            />
-          </svg>
+          <Spinner className="w-10 h-10 text-yellow-500 mx-auto mb-4" />
           <p className="text-white/50">Cargando producto...</p>
         </div>
       </div>
@@ -230,19 +219,7 @@ function ProductoEdit() {
               to="/adm/productos"
               className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
-              <svg
-                className="w-5 h-5"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  strokeWidth={2}
-                  d="M10 19l-7-7m0 0l7-7m-7 7h18"
-                />
-              </svg>
+              <ArrowLeft className="w-5 h-5" />
             </Link>
             <h1 className="text-2xl lg:text-3xl font-bold text-white">
               Editar producto
@@ -258,24 +235,7 @@ function ProductoEdit() {
           {/* Basic Info Card */}
           <div className="bg-gray-900/50 border border-white/5 rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-white mb-5 flex items-center gap-2">
-              <svg
-                className="w-5 h-5 text-yellow-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M11.25 11.25l.041-.02a.375.375 0 011.424.125l.125.125.041-.02a.375.375 0 01.125.424l-.125.125-.125.125-.041.02a.375.375 0 01-.125.424l-.125.125a.75.75 0 01-.125.424l-.041.02-.041.02a.375.375 0 01-.424-.125l-.125-.125-.125-.125-.02-.041a.375.375 0 01-.124-.424l.125-.125a.75.75 0 01.124-.424l.041-.02.041-.02a.375.375 0 01.424.124l.125.125.125.125.041.02a.375.375 0 01.124.424l-.125.125z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 18.75a6 6 0 006 6h.75a6 6 0 006-6v-.375a6 6 0 00-6-6h-.75a6 6 0 00-6 6v.375z"
-                />
-              </svg>
+              <Settings className="w-5 h-5 text-yellow-400" />
               Información básica
             </h2>
 
@@ -330,24 +290,7 @@ function ProductoEdit() {
           {/* Category & Brand Card */}
           <div className="bg-gray-900/50 border border-white/5 rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-white mb-5 flex items-center gap-2">
-              <svg
-                className="w-5 h-5 text-yellow-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a12.84 12.84 0 003.748.599l4.852-.672a11.88 11.88 0 00-1.693-1.694l-.672-.672a11.88 11.88 0 01-.33-2.607c.372-1.018.308-1.938-.33-2.607L12.16 6.34c-.699-.699-.872-1.78-.33-2.607a12.84 12.84 0 00-.748-3.748l-.672-4.852A2.25 2.25 0 009.568 3z"
-                />
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M6 6h.008v.008H6V6z"
-                />
-              </svg>
+              <Settings className="w-5 h-5 text-yellow-400" />
               Categorización
             </h2>
 
@@ -411,19 +354,7 @@ function ProductoEdit() {
           {/* Price & Stock Card */}
           <div className="bg-gray-900/50 border border-white/5 rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-white mb-5 flex items-center gap-2">
-              <svg
-                className="w-5 h-5 text-yellow-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M12 6v12m-3-2.818l.879.659c1.171.879 3.07.879 4.242 0 1.172-.879 1.172-2.303 0-3.182C13.536 12.219 12.768 12 12 12c-.725 0-1.45-.22-2.003-.659-1.106-.879-1.106-2.303 0-3.182s2.9-.879 4.006 0l.415.33M21 12a9 9 0 11-18 0 9 9 0 0118 0z"
-                />
-              </svg>
+              <Settings className="w-5 h-5 text-yellow-400" />
               Precio y Stock
             </h2>
 
@@ -504,19 +435,7 @@ function ProductoEdit() {
           {/* Image Card */}
           <div className="bg-gray-900/50 border border-white/5 rounded-2xl p-6">
             <h2 className="text-lg font-semibold text-white mb-5 flex items-center gap-2">
-              <svg
-                className="w-5 h-5 text-yellow-400"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M2.25 15.75l5.159-5.159a2.25 2.25 0 013.182 0l5.159 5.159m-1.5-1.5l1.409-1.409a2.25 2.25 0 013.182 0l2.909 2.909m-18 3.75h16.5a1.5 1.5 0 001.5-1.5V6a1.5 1.5 0 00-1.5-1.5H3.75A1.5 1.5 0 002.25 6v12a1.5 1.5 0 001.5 1.5zm10.5-11.25h.008v.008h-.008V8.25zm.375 0a.375.375 0 11-.75 0 .375.375 0 01.75 0z"
-                />
-              </svg>
+              <Image className="w-5 h-5 text-yellow-400" />
               Imagen del producto
             </h2>
 
@@ -601,42 +520,12 @@ function ProductoEdit() {
             >
               {isLoading ? (
                 <>
-                  <svg
-                    className="animate-spin w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                  >
-                    <circle
-                      className="opacity-25"
-                      cx="12"
-                      cy="12"
-                      r="10"
-                      stroke="currentColor"
-                      strokeWidth="4"
-                    />
-                    <path
-                      className="opacity-75"
-                      fill="currentColor"
-                      d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                    />
-                  </svg>
+                  <Spinner className="w-5 h-5" />
                   Guardando...
                 </>
               ) : (
                 <>
-                  <svg
-                    className="w-5 h-5"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                    strokeWidth={1.5}
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      d="M4.5 12.75l6 6 9-13.5"
-                    />
-                  </svg>
+                  <Check className="w-5 h-5" />
                   Guardar cambios
                 </>
               )}

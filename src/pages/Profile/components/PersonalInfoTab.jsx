@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import axios from "axios";
 import { useUserContext } from "../../../context/UserContext";
 import useAuthStore from "../../../stores/useAuthStore";
+import { User, Logout } from "../../../components/common/Icons";
 
 const API_BASE = "https://visual-detail-backend.onrender.com/api";
 // const API_BASE = "http://localhost:5000/api";
@@ -84,19 +85,7 @@ const PersonalInfoTab = () => {
       <div className="bg-gray-800/30 border border-white/5 rounded-xl p-6">
         <div className="flex items-center gap-4 mb-6">
           <div className="w-16 h-16 bg-yellow-500/20 rounded-full flex items-center justify-center text-yellow-400">
-            <svg
-              className="w-8 h-8"
-              fill="none"
-              viewBox="0 0 24 24"
-              stroke="currentColor"
-              strokeWidth={1.5}
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z"
-              />
-            </svg>
+            <User className="w-8 h-8" />
           </div>
           <div>
             <h3 className="text-white font-semibold text-lg">
@@ -147,19 +136,7 @@ const PersonalInfoTab = () => {
           onClick={logout}
           className="w-full py-3 px-4 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
         >
-          <svg
-            className="w-5 h-5"
-            fill="none"
-            viewBox="0 0 24 24"
-            stroke="currentColor"
-            strokeWidth={1.5}
-          >
-            <path
-              strokeLinecap="round"
-              strokeLinejoin="round"
-              d="M15.75 9V5.25A2.25 2.25 0 0013.5 3h-6a2.25 2.25 0 00-2.25 2.25v13.5A2.25 2.25 0 007.5 21h6a2.25 2.25 0 002.25-2.25V9M4.5 9l9-9m0 0h6m-6 0v6"
-            />
-          </svg>
+          <Logout className="w-5 h-5" />
           Cerrar Sesión
         </button>
       </div>

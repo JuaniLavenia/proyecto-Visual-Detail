@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Filter, Category, Circle, Star } from "../common/Icons";
 
 function FilterButton({ children, active, onClick, icon }) {
   return (
@@ -118,24 +119,7 @@ function Filters({
               <div className="flex flex-wrap gap-2">
                 {activeCategory && (
                   <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-500/20 text-yellow-400 text-sm rounded-full">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M9.568 3H5.25A2.25 2.25 0 003 5.25v4.318c0 .597.237 1.17.659 1.591l9.581 9.581c.699.699 1.78.872 2.607.33a12.84 12.84 0 003.748.599l4.852-.672a11.88 11.88 0 00-1.693-1.694l-.672-.672a11.88 11.88 0 01-.33-2.607c.372-1.018.308-1.938-.33-2.607L12.16 6.34c-.699-.699-.872-1.78-.33-2.607a12.84 12.84 0 00-.748-3.748l-.672-4.852A2.25 2.25 0 009.568 3z"
-                      />
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M6 6h.008v.008H6V6z"
-                      />
-                    </svg>
+                    <Circle className="w-4 h-4" />
                     {activeCategory}
                     <button
                       onClick={() => handleCategorySelect(activeCategory)}
@@ -147,19 +131,7 @@ function Filters({
                 )}
                 {activeBrand && (
                   <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-400 text-sm rounded-full">
-                    <svg
-                      className="w-4 h-4"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                      stroke="currentColor"
-                      strokeWidth={1.5}
-                    >
-                      <path
-                        strokeLinecap="round"
-                        strokeLinejoin="round"
-                        d="M13.19 8.688a4.5 4.5 0 011.242 7.244l-4.5 4.5a4.5 4.5 0 01-6.364-6.364l1.757-1.757m13.35-.622l1.757-1.757a4.5 4.5 0 00-6.364-6.364l-4.5 4.5a4.5 4.5 0 001.242 7.244"
-                      />
-                    </svg>
+                    <Category className="w-4 h-4" />
                     {activeBrand}
                     <button
                       onClick={() => handleBrandSelect(activeBrand)}
@@ -181,7 +153,7 @@ function Filters({
                 className="w-4 h-4"
                 fill="none"
                 viewBox="0 0 24 24"
-                stroke="currentColor"
+                stroke="white"
                 strokeWidth={1.5}
               >
                 <path
@@ -199,21 +171,7 @@ function Filters({
           {/* Brands */}
           <FilterSection
             title="Marcas"
-            icon={
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="currentColor"
-                strokeWidth={1.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"
-                />
-              </svg>
-            }
+            icon={<Star className="w-4 h-4" />}
             items={brands}
             activeItem={activeBrand}
             onItemClick={handleBrandSelect}

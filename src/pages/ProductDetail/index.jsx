@@ -8,60 +8,17 @@ import LoadingSpinner from "../../components/common/LoadingSpinner";
 import useAuthStore from "../../stores/useAuthStore";
 import useFavoritesStore from "../../stores/useFavoritesStore";
 import useCartStore from "../../stores/useCartStore";
+import {
+  Heart,
+  ShoppingCart,
+  ArrowLeft,
+  Image,
+} from "../../components/common/Icons";
 
 const API_BASE = "https://visual-detail-backend.onrender.com";
 // const API_BASE = "http://localhost:5000";
 
 const fetcher = (url) => axios.get(url).then((res) => res.data);
-
-// Icons
-const Icons = {
-  Heart: ({ filled }) => (
-    <svg
-      className="w-6 h-6"
-      viewBox="0 0 24 24"
-      fill={filled ? "currentColor" : "none"}
-      stroke="currentColor"
-      strokeWidth={1.5}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M21 8.25c0-2.485-2.099-4.5-4.688-4.5-1.935 0-3.597 1.126-4.312 2.733-.715-1.607-2.377-2.733-4.313-2.733C5.1 3.75 3 5.765 3 8.25c0 7.22 9 12 9 12s9-4.78 9-12z"
-      />
-    </svg>
-  ),
-  Cart: () => (
-    <svg
-      className="w-6 h-6"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth={1.5}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M2.25 3h1.386c.51 0 .955.343 1.087.835l.383 1.437M7.5 14.25a3 3 0 00-3 3h15.75m-12.75-3h11.218c1.121-2.3 2.1-4.684 2.924-7.138a60.114 60.114 0 00-16.536-1.84M7.5 14.25L5.106 5.272M6 20.25a.75.75 0 11-1.5 0 .75.75 0 011.5 0zm12.75 0a.75.75 0 11-1.5 0 .75.75 0 011.5 0z"
-      />
-    </svg>
-  ),
-  ArrowLeft: () => (
-    <svg
-      className="w-5 h-5"
-      fill="none"
-      viewBox="0 0 24 24"
-      stroke="currentColor"
-      strokeWidth={2}
-    >
-      <path
-        strokeLinecap="round"
-        strokeLinejoin="round"
-        d="M10.5 19.5L3 12m0 0l7.5-7.5M3 12h18"
-      />
-    </svg>
-  ),
-};
 
 function ProductDetailPage() {
   const { id } = useParams();
@@ -221,19 +178,7 @@ function ProductDetailPage() {
                 />
               ) : (
                 <div className="w-full h-full flex items-center justify-center p-8">
-                  <svg
-                    className="w-24 h-24 text-white/10"
-                    fill="none"
-                    viewBox="0 0 24 24"
-                    stroke="currentColor"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={1}
-                      d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z"
-                    />
-                  </svg>
+                  <Image className="w-24 h-24 text-white/10" />
                 </div>
               )}
 

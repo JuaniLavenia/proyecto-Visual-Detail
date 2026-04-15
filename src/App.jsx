@@ -17,6 +17,7 @@ const Profile = lazy(() => import('./pages/Profile'));
 const AdminProducts = lazy(() => import('./pages/admin/Products'));
 const ProductEdit = lazy(() => import('./pages/admin/Products/ProductEdit'));
 const ProductCreate = lazy(() => import('./pages/admin/Products/ProductCreate'));
+const AdminUsers = lazy(() => import('./pages/admin/Users'));
 
 // Layout components
 const Header = lazy(() => import('./components/layout/Header'));
@@ -52,6 +53,7 @@ function App() {
             <Route path="/adm/productos" element={<AdminProducts />} />
             <Route path="/adm/productos/edit/:id" element={<ProductEdit />} />
             <Route path="/adm/productos/create" element={<ProductCreate />} />
+            <Route path="/adm/usuarios" element={<AdminUsers />} />
           </Routes>
         </main>
         

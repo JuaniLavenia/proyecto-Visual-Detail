@@ -5,8 +5,6 @@ import Swal from "sweetalert2";
 import useAuthStore from "../../../stores/useAuthStore";
 import {
   Users,
-  UserCheck,
-  UserGroup,
   ShoppingCart,
   ArrowLeft,
 } from "../../../components/common/Icons";
@@ -162,7 +160,7 @@ function UsersAdmin() {
             <div className="bg-gray-800/30 border border-white/5 rounded-xl p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
-                  <UserGroup className="w-6 h-6" />
+                  <Users className="w-6 h-6" />
                 </div>
                 <div>
                   <p className="text-white/50 text-xs">Minoristas</p>
@@ -175,7 +173,7 @@ function UsersAdmin() {
             <div className="bg-gray-800/30 border border-white/5 rounded-xl p-4">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-green-500/10 rounded-lg text-green-400">
-                  <UserCheck className="w-6 h-6" />
+                  <Users className="w-6 h-6" />
                 </div>
                 <div>
                   <p className="text-white/50 text-xs">Mayoristas</p>

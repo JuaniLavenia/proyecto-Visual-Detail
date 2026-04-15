@@ -212,6 +212,8 @@ const Icons = {
 };
 
 function NavLink({ to, icon, children, onClick, external, badge }) {
+  const navigate = useNavigate();
+  
   const content = (
     <>
       <span className="flex-shrink-0">{icon}</span>
@@ -225,7 +227,19 @@ function NavLink({ to, icon, children, onClick, external, badge }) {
   );
 
   const baseClass =
-    "flex items-center px-4 py-2.5 text-white no-underline hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200";
+    "flex items-center px-4 py-2.5 text-white no-underline hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 cursor-pointer";
+
+  const handleClick = (e) => {
+    // If external link, let browser handle it
+    if (external) return;
+    
+    // Close menu first, then navigate
+    if (onClick) {
+      onClick();
+    }
+    // Navigate to the new page
+    navigate(to);
+  };
 
   if (external) {
     return (
@@ -234,24 +248,17 @@ function NavLink({ to, icon, children, onClick, external, badge }) {
         target="_blank"
         rel="noopener noreferrer"
         className={baseClass}
+        onClick={onClick}
       >
         {content}
       </a>
     );
   }
 
-  if (onClick) {
-    return (
-      <button onClick={onClick} className={`${baseClass} w-full text-left`}>
-        {content}
-      </button>
-    );
-  }
-
   return (
-    <Link to={to} className={baseClass}>
+    <div className={baseClass} onClick={handleClick}>
       {content}
-    </Link>
+    </div>
   );
 }
 
@@ -299,6 +306,7 @@ function Header() {
       {/* Glassmorphism Nav */}
       <nav
         className={`
+          relative
           transition-all duration-300
           ${
             isScrolled

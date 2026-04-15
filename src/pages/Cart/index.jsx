@@ -1,9 +1,9 @@
-import "./Carrito.css";
+import "./index.css";
 import { useState, useEffect } from "react";
 import { Button, Modal } from "react-bootstrap";
 import Swal from "sweetalert2";
 import { Link, useNavigate } from "react-router-dom";
-import useAuthStore from "../stores/useAuthStore";
+import useAuthStore from "../../stores/useAuthStore";
 import axios from "axios";
 
 const API_BASE = "https://visual-detail-backend.onrender.com";

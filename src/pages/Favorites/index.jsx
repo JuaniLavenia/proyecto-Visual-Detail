@@ -1,8 +1,8 @@
 import { useEffect, useState } from "react";
-import "./Favoritos.css";
+import "./index.css";
 import Swal from "sweetalert2";
 import { Link } from "react-router-dom";
-import useAuthStore from "../stores/useAuthStore";
+import useAuthStore from "../../stores/useAuthStore";
 import axios from "axios";
 
 const API_BASE = "https://visual-detail-backend.onrender.com";

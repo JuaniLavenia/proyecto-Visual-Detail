@@ -2,24 +2,25 @@ import { Suspense, lazy } from 'react';
 import { Routes, Route } from 'react-router';
 import './App.css';
 import 'bootstrap/dist/css/bootstrap.min.css';
-import LoadingSpinner from './components/ui/LoadingSpinner';
-import ErrorBoundary from './components/ui/ErrorBoundary';
+import LoadingSpinner from './components/common/LoadingSpinner';
+import ErrorBoundary from './components/common/ErrorBoundary';
 
 // Lazy loading de todas las páginas
 const HomePage = lazy(() => import('./pages/Home'));
-const Login = lazy(() => import('./pages/Login'));
-const Productos = lazy(() => import('./pages/Productos'));
-const Carrito = lazy(() => import('./pages/Carrito'));
-const Favoritos = lazy(() => import('./pages/Favoritos'));
-const Contactanos = lazy(() => import('./pages/Contactanos'));
+const Login = lazy(() => import('./pages/Auth'));
+const Products = lazy(() => import('./pages/Products'));
+const ProductDetail = lazy(() => import('./pages/ProductDetail'));
+const Cart = lazy(() => import('./pages/Cart'));
+const Favorites = lazy(() => import('./pages/Favorites'));
+const Contact = lazy(() => import('./pages/Contact'));
 const Profile = lazy(() => import('./pages/Profile'));
-const Producto = lazy(() => import('./pages/admin/Producto'));
-const ProductoEdit = lazy(() => import('./pages/admin/ProductoEdit'));
-const ProductoCreate = lazy(() => import('./pages/admin/ProductoCreate'));
+const AdminProducts = lazy(() => import('./pages/admin/Products'));
+const ProductEdit = lazy(() => import('./pages/admin/Products/ProductEdit'));
+const ProductCreate = lazy(() => import('./pages/admin/Products/ProductCreate'));
 
 // Layout components
-const Header = lazy(() => import('./components/header/Header'));
-const Footer = lazy(() => import('./components/footer/Footer'));
+const Header = lazy(() => import('./components/layout/Header'));
+const Footer = lazy(() => import('./components/layout/Footer'));
 
 // Componente de fallback para Suspense
 function PageLoader() {
@@ -39,17 +40,18 @@ function App() {
         <main className="min-h-screen">
           <Routes>
             <Route path="/" element={<HomePage />} />
-            <Route path="/productos" element={<Productos />} />
+            <Route path="/productos" element={<Products />} />
+            <Route path="/productos/:id" element={<ProductDetail />} />
             <Route path="/login" element={<Login />} />
-            <Route path="/carrito" element={<Carrito />} />
-            <Route path="/favoritos" element={<Favoritos />} />
-            <Route path="/contactanos" element={<Contactanos />} />
+            <Route path="/carrito" element={<Cart />} />
+            <Route path="/favoritos" element={<Favorites />} />
+            <Route path="/contactanos" element={<Contact />} />
             <Route path="/perfil" element={<Profile />} />
             
             {/* Rutas de Admin */}
-            <Route path="/adm/productos" element={<Producto />} />
-            <Route path="/adm/productos/edit/:id" element={<ProductoEdit />} />
-            <Route path="/adm/productos/create" element={<ProductoCreate />} />
+            <Route path="/adm/productos" element={<AdminProducts />} />
+            <Route path="/adm/productos/edit/:id" element={<ProductEdit />} />
+            <Route path="/adm/productos/create" element={<ProductCreate />} />
           </Routes>
         </main>
         

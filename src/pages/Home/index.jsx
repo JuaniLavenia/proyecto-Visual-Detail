@@ -7,14 +7,14 @@ import "swiper/css/navigation";
 import "swiper/css/pagination";
 
 // Images
-import Ternnova from "../assets/img/ternnova-carr.png";
-import Fullcar from "../assets/img/fullcar-carr.png";
-import Toxic from "../assets/img/toxic-carr.png";
-import Drop from "../assets/img/drop-carr.png";
-import Dream from "../assets/img/dream-carr.png";
-import Megui from "../assets/img/meguiars-carr.png";
-import Menzerna from "../assets/img/menzerna-carr.png";
-import Vonixx from "../assets/img/vonixx-carr.png";
+import Ternnova from "../../assets/img/ternnova-carr.png";
+import Fullcar from "../../assets/img/fullcar-carr.png";
+import Toxic from "../../assets/img/toxic-carr.png";
+import Drop from "../../assets/img/drop-carr.png";
+import Dream from "../../assets/img/dream-carr.png";
+import Megui from "../../assets/img/meguiars-carr.png";
+import Menzerna from "../../assets/img/menzerna-carr.png";
+import Vonixx from "../../assets/img/vonixx-carr.png";
 
 // Categories data
 const categories = [

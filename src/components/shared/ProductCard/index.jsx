@@ -1,10 +1,10 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import "./CardProductosSearch.css";
+import "./index.css";
 import Swal from "sweetalert2";
-import useAuthStore from "../../stores/useAuthStore";
-import useFavoritesStore from "../../stores/useFavoritesStore";
-import useCartStore from "../../stores/useCartStore";
+import useAuthStore from "../../../stores/useAuthStore";
+import useFavoritesStore from "../../../stores/useFavoritesStore";
+import useCartStore from "../../../stores/useCartStore";
 import axios from "axios";
 
 const API_BASE = "https://visual-detail-backend.onrender.com";

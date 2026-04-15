@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import axios from "axios";
-import { useUserContext } from "../context/UserContext";
-import useAuthStore from "../stores/useAuthStore";
+import { useUserContext } from "../../../context/UserContext";
+import useAuthStore from "../../../stores/useAuthStore";
 
 const API_BASE = "https://visual-detail-backend.onrender.com/api";
 // const API_BASE = "http://localhost:5000/api";

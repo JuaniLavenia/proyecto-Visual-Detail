@@ -1,6 +1,6 @@
-import "./Productos.css";
+import "./index.css";
 
-function Productos({ name, image, description, muted }) {
+function ProductDetail({ name, image, description, muted }) {
   return (
     <div className="contenedor-cards">
       <div className="card card-productos mb-3 bg-dark">
@@ -27,4 +27,4 @@ function Productos({ name, image, description, muted }) {
   );
 }
 
-export default Productos;
+export default ProductDetail;

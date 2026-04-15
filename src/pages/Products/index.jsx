@@ -3,10 +3,10 @@ import useSWR from "swr";
 import CardProductos, {
   ProductCardSkeleton,
   ProductCardEmpty,
-} from "../components/plp/CardProductosSearch";
-import Filters from "../components/CategoryBtn";
+} from "../../components/shared/ProductCard";
+import Filters from "../../components/shared/CategoryBtn";
 import axios from "axios";
-import "./Productos.css";
+import "./index.css";
 
 const API_BASE = "https://visual-detail-backend.onrender.com/api";
 // const API_BASE = "http://localhost:5000/api";

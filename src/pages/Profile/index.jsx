@@ -1,7 +1,7 @@
-import "./Profile.css";
+import "./index.css";
 import { useState } from "react";
-import OrdersTab from "../components/OrdersTab";
-import PersonalInfoTab from "../components/PersonalInfoTab";
+import OrdersTab from "./components/OrdersTab";
+import PersonalInfoTab from "./components/PersonalInfoTab";
 import { Link } from "react-router-dom";
 
 const Profile = () => {

@@ -1,120 +1,33 @@
-@import url("https://fonts.googleapis.com/css2?family=Rubik:wght@300&display=swap");
+/* Login/Register Page - Minimal CSS - mostly handled by Tailwind in component */
 
-:root {
-  --color-l1: #fff004;
-  --color-l2: #00b3f5;
-  --color-bg: rgb(36, 35, 35);
-  --font-family: "Rubik", sans-serif;
-}
-
-* {
-  font-family: var(--font-family);
-}
-
-.login {
-  background-color: white;
-  color: black;
-  display: flex;
-  flex-direction: column;
-  justify-content: center;
-  height: 520px;
-  border: 1px solid #ddd;
-  border-radius: 8px;
-  padding: 20px;
-  box-shadow: 0px 0px 10px rgba(0, 0, 0, 0.1);
-  transition: opacity 0.5s ease-in-out;
-}
-
-.login.hidden {
+/* Animations for form transitions */
+.login-card-enter {
   opacity: 0;
-  pointer-events: none;
+  transform: translateY(10px);
 }
 
-.mainDiv {
-  background-color: black;
-  background-image: url(https://cdn.shopify.com/s/files/1/0272/1346/3623/files/DSC6756-Edit_1024x1024.jpg?v=1634901495);
-  background-position: center;
-  background-repeat: no-repeat;
-  background-size: cover;
-  padding-bottom: 3rem;
-  display: flex;
-  justify-content: center;
-  align-items: center;
-  position: relative;
+.login-card-enter-active {
+  opacity: 1;
+  transform: translateY(0);
+  transition: all 0.3s ease-out;
 }
 
-.mainDiv::before {
-  content: "";
-  position: absolute;
-  top: 0;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  background-color: rgba(0, 0, 0, 0.8);
-  z-index: -1;
+/* Input autofill fix */
+input:-webkit-autofill,
+input:-webkit-autofill:hover,
+input:-webkit-autofill:focus {
+  -webkit-box-shadow: 0 0 0 1000px #1f2937 inset !important;
+  -webkit-text-fill-color: white !important;
+  caret-color: white !important;
 }
 
-.divError {
-  display: none;
-  color: red;
+/* Focus ring animation */
+@keyframes focusPulse {
+  0% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0.4); }
+  70% { box-shadow: 0 0 0 4px rgba(234, 179, 8, 0); }
+  100% { box-shadow: 0 0 0 0 rgba(234, 179, 8, 0); }
 }
 
-.form-label {
-  margin: 0.5rem;
-  border-radius: 20px;
-  padding: 0.5rem;
-  font-size: 0.9rem;
-}
-.loginInput {
-  width: 100%;
-  padding: 8px;
-  margin-bottom: 10px;
-  box-sizing: border-box;
-  border-radius: 8px;
-}
-
-.btn-inicio-sesion {
-  background: var(--color-l2);
-  color: white;
-}
-
-.btn-contrasena {
-  color: white;
-  text-decoration: none;
-}
-
-.btn-registrarse {
-  background: var(--color-l1);
-  color: black;
-}
-
-.btnsDiv {
-  display: flex;
-  justify-content: space-between;
-}
-
-.password_comfirmation {
-  padding-left: 15px;
-}
-
-@media (max-width: 768px) {
-  .login {
-    width: 80%;
-  }
-}
-
-/* Estilos específicos para dispositivos extra pequeños */
-@media (max-width: 480px) {
-  .login {
-    width: 100%;
-  }
-
-  .btnsDiv {
-    flex-direction: column;
-  }
-
-  .btn {
-    width: 100%;
-    margin-bottom: 10px;
-  }
+.form-input:focus {
+  animation: focusPulse 1s ease-out;
 }

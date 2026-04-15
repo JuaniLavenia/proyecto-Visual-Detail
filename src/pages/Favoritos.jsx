@@ -1,24 +1,22 @@
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import "./Favoritos.css";
 import Swal from "sweetalert2";
 import { Link } from "react-router-dom";
-import { CartContext } from "../context/ContextProvider";
+import useAuthStore from "../stores/useAuthStore";
 import axios from "axios";
-import { AuthContext } from "../context/AuthContext";
+
+const API_BASE = "https://visual-detail-backend.onrender.com";
+// const API_BASE = "http://localhost:5000";
 
 function Favoritos() {
-  const { setCartCount, setFavoritesCount } = useContext(CartContext);
-  const { userId } = useContext(AuthContext);
+  const { userId } = useAuthStore();
   const [favorites, setFavorites] = useState([]);
 
   const fetchFavorites = async () => {
     try {
-      const response = await axios.get(
-        `https://visual-detail-backend.onrender.com/api/favorites/${userId}`
-      );
+      const response = await axios.get(`${API_BASE}/api/favorites/${userId}`);
       const favItems = response.data.data.products || [];
       setFavorites(favItems);
-      setFavoritesCount(favItems.length);
     } catch (error) {
       console.error("Error fetching favorites:", error);
     }
@@ -42,13 +40,12 @@ function Favoritos() {
       if (result.isConfirmed) {
         try {
           await axios.delete(
-            `https://visual-detail-backend.onrender.com/api/favorites/${userId}/${producto._id}`
+            `${API_BASE}/api/favorites/${userId}/${producto._id}`,
           );
 
           setFavorites((prevFavorites) =>
-            prevFavorites.filter((item) => item._id !== producto._id)
+            prevFavorites.filter((item) => item._id !== producto._id),
           );
-          setFavoritesCount((prevCount) => prevCount - 1);
 
           Swal.fire({
             position: "center",
@@ -68,14 +65,11 @@ function Favoritos() {
   const handleAddToCart = async (productId) => {
     try {
       if (userId) {
-        await axios.post(
-          "https://visual-detail-backend.onrender.com/api/cart",
-          {
-            userId,
-            productId,
-            quantity: 1,
-          }
-        );
+        await axios.post(`${API_BASE}/api/cart`, {
+          userId,
+          productId,
+          quantity: 1,
+        });
 
         Swal.fire({
           position: "center",
@@ -84,16 +78,6 @@ function Favoritos() {
           showConfirmButton: false,
           timer: 1500,
         });
-
-        const response = await axios.get(
-          `https://visual-detail-backend.onrender.com/api/cart/${userId}`
-        );
-        const itemsCart = response.data.data.products;
-        const cartCount = itemsCart.reduce(
-          (count, item) => count + item.quantity,
-          0
-        );
-        setCartCount(cartCount);
       } else {
         Swal.fire({
           position: "center",
@@ -121,7 +105,7 @@ function Favoritos() {
                     src={
                       item.product.image?.startsWith("http")
                         ? item.product.image
-                        : `https://visual-detail-backend.onrender.com/img/productos/${item.product.image}`
+                        : `${API_BASE}/img/productos/${item.product.image}`
                     }
                     alt={item.product.name}
                     className="imgFav"

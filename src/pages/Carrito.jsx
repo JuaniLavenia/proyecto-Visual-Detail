@@ -1,15 +1,16 @@
 import "./Carrito.css";
-import { useState, useEffect, useContext } from "react";
+import { useState, useEffect } from "react";
 import { Button, Modal } from "react-bootstrap";
 import Swal from "sweetalert2";
 import { Link, useNavigate } from "react-router-dom";
-import { CartContext } from "../context/ContextProvider";
-import { AuthContext } from "../context/AuthContext";
+import useAuthStore from "../stores/useAuthStore";
 import axios from "axios";
 
+const API_BASE = "https://visual-detail-backend.onrender.com";
+// const API_BASE = "http://localhost:5000";
+
 function Carrito() {
-  const { setCartCount } = useContext(CartContext);
-  const { userId } = useContext(AuthContext);
+  const { userId } = useAuthStore();
   const [showModal, setShowModal] = useState(false);
   const [cartItems, setCartItems] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
@@ -17,13 +18,9 @@ function Carrito() {
 
   const fetchCartItems = async () => {
     try {
-      const response = await axios.get(
-        `https://visual-detail-backend.onrender.com/api/cart/${userId}`
-      );
+      const response = await axios.get(`${API_BASE}/api/cart/${userId}`);
       const items = response.data.data.products || [];
       setCartItems(items);
-      const cartCount = items.reduce((count, item) => count + item.quantity, 0);
-      setCartCount(cartCount);
     } catch (error) {
       console.error("Error fetching cart items:", error);
     }
@@ -46,20 +43,11 @@ function Carrito() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await axios.delete(
-            `https://visual-detail-backend.onrender.com/api/cart/${userId}/${producto._id}`
-          );
+          await axios.delete(`${API_BASE}/api/cart/${userId}/${producto._id}`);
 
           setCartItems((prevItems) =>
-            prevItems.filter((item) => item._id !== producto._id)
+            prevItems.filter((item) => item._id !== producto._id),
           );
-
-          const cartCount = cartItems.reduce(
-            (count, item) => count + item.quantity,
-            0
-          );
-
-          setCartCount(cartCount);
 
           Swal.fire({
             position: "center",
@@ -108,16 +96,13 @@ function Carrito() {
   const handlePayment = async () => {
     setIsLoading(true);
     try {
-      const response = await axios.post(
-        "https://visual-detail-backend.onrender.com/api/pedidos",
-        {
-          usuario: userId,
-          productos: cartItems.map((item) => ({
-            nombre: item.product.name,
-            cantidad: item.product.quantity,
-          })),
-        }
-      );
+      const response = await axios.post(`${API_BASE}/api/pedidos`, {
+        usuario: userId,
+        productos: cartItems.map((item) => ({
+          nombre: item.product.name,
+          cantidad: item.product.quantity,
+        })),
+      });
 
       if (response.status === 201) {
         setIsLoading(false);
@@ -149,20 +134,11 @@ function Carrito() {
       setCartItems(newCartItems);
 
       try {
-        await axios.post(
-          "https://visual-detail-backend.onrender.com/api/cart",
-          {
-            userId,
-            productId,
-            quantity: value,
-          }
-        );
-
-        const cartCount = newCartItems.reduce(
-          (count, item) => count + item.quantity,
-          0
-        );
-        setCartCount(cartCount);
+        await axios.post(`${API_BASE}/api/cart`, {
+          userId,
+          productId,
+          quantity: value,
+        });
       } catch (error) {
         console.error("Error updating quantity in cart:", error);
       }
@@ -174,7 +150,7 @@ function Carrito() {
       .map((item) => `${item.product.name} (${item.product.quantity})`)
       .join("\n");
     navigator.clipboard.writeText(
-      `Hola! Quisiera realizar el siguiente pedido:\n${orderDetail}`
+      `Hola! Quisiera realizar el siguiente pedido:\n${orderDetail}`,
     );
     Swal.fire({
       position: "center",
@@ -201,7 +177,7 @@ function Carrito() {
                       src={
                         item.product.image?.startsWith("http")
                           ? item.product.image
-                          : `https://visual-detail-backend.onrender.com/img/productos/${item.product.image}`
+                          : `${API_BASE}/img/productos/${item.product.image}`
                       }
                       alt={item.product.name}
                     />

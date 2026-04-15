@@ -1,121 +1,71 @@
 import "./Profile.css";
-import React, { useState } from "react";
+import { useState } from "react";
 import OrdersTab from "../components/OrdersTab";
 import PersonalInfoTab from "../components/PersonalInfoTab";
-import { Button } from "react-bootstrap";
+import { Link } from "react-router-dom";
 
 const Profile = () => {
   const [activeTab, setActiveTab] = useState("pedidos");
 
-  const handleTabChange = (tab) => {
-    setActiveTab(tab);
-  };
-
   return (
-    <div className="bg-dark">
-      <div className="user-profile-container bg-light text-dark">
-        <h1 className="text-center">Bienvenido a tu perfil</h1>
-        <div className="tab-buttons">
-          <Button
-            variant={activeTab === "pedidos" ? "warning" : "secondary"}
-            className="w-50"
-            onClick={() => handleTabChange("pedidos")}
-          >
-            <svg
-              width="20px"
-              height="20px"
-              viewBox="0 0 24 24"
-              strokeWidth="1.5"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              color="#000000"
+    <div className="min-h-screen bg-gray-950 pt-20 lg:pt-24 pb-12">
+      {/* Header */}
+      <div className="bg-gradient-to-b from-gray-900 to-gray-950 border-b border-white/5">
+        <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+          <div className="flex items-center gap-4">
+            <Link
+              to="/"
+              className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
-              <path
-                d="M9 6L20 6"
-                stroke="#000000"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              ></path>
-              <path
-                d="M5 6.01L5.01 5.99889"
-                stroke="#000000"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              ></path>
-              <path
-                d="M5 12.01L5.01 11.9989"
-                stroke="#000000"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              ></path>
-              <path
-                d="M3.80005 17.8L4.60005 18.6L6.60004 16.6"
-                stroke="#000000"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              ></path>
-              <path
-                d="M9 12L20 12"
-                stroke="#000000"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              ></path>
-              <path
-                d="M9 18L20 18"
-                stroke="#000000"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              ></path>
-            </svg>
-          </Button>
-          <Button
-            variant={
-              activeTab === "informacion-personal" ? "warning" : "secondary"
-            }
-            className="w-50"
-            onClick={() => handleTabChange("informacion-personal")}
+              <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M10 19l-7-7m0 0l7-7m-7 7h18" />
+              </svg>
+            </Link>
+            <div>
+              <h1 className="text-2xl lg:text-3xl font-bold text-white">
+                Mi Perfil
+              </h1>
+              <p className="text-white/50 mt-1">
+                Gestiona tus pedidos y información personal
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      {/* Tab Navigation */}
+      <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+        <div className="flex gap-4 mb-8">
+          <button
+            onClick={() => setActiveTab("pedidos")}
+            className={`flex-1 py-4 px-6 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-3 ${
+              activeTab === "pedidos"
+                ? "bg-yellow-500 text-gray-900 shadow-lg shadow-yellow-500/20"
+                : "bg-gray-900/50 text-white/70 border border-white/10 hover:bg-gray-800/50 hover:border-white/20"
+            }`}
           >
-            <svg
-              width="20px"
-              height="20px"
-              strokeWidth="1.5"
-              viewBox="0 0 24 24"
-              fill="none"
-              xmlns="http://www.w3.org/2000/svg"
-              color="#000000"
-            >
-              <path
-                d="M12 11.5V16.5"
-                stroke="#000000"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              ></path>
-              <path
-                d="M12 7.51L12.01 7.49889"
-                stroke="#000000"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              ></path>
-              <path
-                d="M12 22C17.5228 22 22 17.5228 22 12C22 6.47715 17.5228 2 12 2C6.47715 2 2 6.47715 2 12C2 17.5228 6.47715 22 12 22Z"
-                stroke="#000000"
-                strokeWidth="1.5"
-                strokeLinecap="round"
-                strokeLinejoin="round"
-              ></path>
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M20.25 7.5l-.625 10.632a2.25 2.25 0 01-2.247 2.118H6.622a2.25 2.25 0 01-2.247-2.118L3.75 7.5M10 11.25h4M3.375 7.5h17.25c.621 0 1.125-.504 1.125-1.125v-1.5c0-.621-.504-1.125-1.125-1.125H3.375c-.621 0-1.125.504-1.125 1.125v1.5c0 .621.504 1.125 1.125 1.125z" />
             </svg>
-          </Button>
+            Mis Pedidos
+          </button>
+          <button
+            onClick={() => setActiveTab("informacion-personal")}
+            className={`flex-1 py-4 px-6 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-3 ${
+              activeTab === "informacion-personal"
+                ? "bg-yellow-500 text-gray-900 shadow-lg shadow-yellow-500/20"
+                : "bg-gray-900/50 text-white/70 border border-white/10 hover:bg-gray-800/50 hover:border-white/20"
+            }`}
+          >
+            <svg className="w-5 h-5" fill="none" viewBox="0 0 24 24" stroke="currentColor" strokeWidth={1.5}>
+              <path strokeLinecap="round" strokeLinejoin="round" d="M15.75 6a3.75 3.75 0 11-7.5 0 3.75 3.75 0 017.5 0zM4.501 20.118a7.5 7.5 0 0114.998 0A17.933 17.933 0 0112 21.75c-2.676 0-5.216-.584-7.499-1.632z" />
+            </svg>
+            Información Personal
+          </button>
         </div>
 
-        <div className="tab-content">
+        {/* Tab Content */}
+        <div className="bg-gray-900/50 border border-white/5 rounded-2xl p-6">
           {activeTab === "pedidos" && <OrdersTab />}
           {activeTab === "informacion-personal" && <PersonalInfoTab />}
         </div>

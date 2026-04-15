@@ -1,103 +1,244 @@
-import React, { useEffect, useState, useContext } from "react";
+import { useEffect, useState } from "react";
 import axios from "axios";
-import { AuthContext } from "../context/AuthContext";
-import "./OrdersTab.css";
+import useAuthStore from "../stores/useAuthStore";
 import { useUserContext } from "../context/UserContext";
+import "./OrdersTab.css";
+
+const API_BASE = "https://visual-detail-backend.onrender.com/api";
+// const API_BASE = "http://localhost:5000/api";
 
 const OrdersTab = () => {
   const { ordersInfo, updateOrders } = useUserContext();
-  const { userId } = useContext(AuthContext);
-  const [error, setError] = useState();
-
-  const cancelarPedido = async (pedidoId) => {
-    try {
-      await axios.put(
-        `https://visual-detail-backend.onrender.com/api/pedido/cancelar/${pedidoId}`
-      );
-
-      const response = await axios.get(
-        `https://visual-detail-backend.onrender.com/api/pedidos/${userId}`
-      );
-
-      updateOrders(response.data.pedidos);
-    } catch (error) {
-      console.error("Error cancelling order:", error);
-    }
-  };
-
-  const getCardColorClass = (estado) => {
-    switch (estado) {
-      case "Completado":
-        return "color-completado";
-      case "Cancelado":
-        return "color-cancelado";
-      case "Pendiente":
-        return "color-pendiente";
-      default:
-        return "";
-    }
-  };
+  const { userId } = useAuthStore();
+  const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const fetchOrders = async () => {
+    if (!userId) {
+      setError("Debes iniciar sesión nuevamente");
+      return;
+    }
+
+    if (ordersInfo && ordersInfo.length > 0) {
+      return; // Ya tenemos datos
+    }
+
+    setIsLoading(true);
     try {
-      if (ordersInfo) {
-        return;
-      } else {
-        const response = await axios.get(
-          `https://visual-detail-backend.onrender.com/api/pedidos/${userId}`
-        );
-        updateOrders(response.data.pedidos);
-      }
-    } catch (error) {
-      console.error("Error fetching orders:", error);
-      setError("Hubo un error al cargar la información del usuario");
+      const response = await axios.get(`${API_BASE}/pedidos/${userId}`);
+      updateOrders(response.data.pedidos || []);
+    } catch (err) {
+      console.error("Error fetching orders:", err);
+      setError("No se pudieron cargar los pedidos");
+    } finally {
+      setIsLoading(false);
     }
   };
 
   useEffect(() => {
-    if (userId) {
-      fetchOrders();
-    } else {
-      setError("Debes volver a iniciar sesion");
+    fetchOrders();
+  }, [userId]);
+
+  const getStatusStyle = (estado) => {
+    switch (estado) {
+      case "Completado":
+        return {
+          bg: "bg-green-500/10",
+          text: "text-green-400",
+          border: "border-green-500/20",
+        };
+      case "Cancelado":
+        return {
+          bg: "bg-red-500/10",
+          text: "text-red-400",
+          border: "border-red-500/20",
+        };
+      case "Pendiente":
+        return {
+          bg: "bg-yellow-500/10",
+          text: "text-yellow-400",
+          border: "border-yellow-500/20",
+        };
+      default:
+        return {
+          bg: "bg-gray-500/10",
+          text: "text-gray-400",
+          border: "border-gray-500/20",
+        };
     }
-  }, []);
+  };
+
+  const getStatusIcon = (estado) => {
+    switch (estado) {
+      case "Completado":
+        return (
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        );
+      case "Cancelado":
+        return (
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M10 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2m7-2a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        );
+      case "Pendiente":
+        return (
+          <svg
+            className="w-5 h-5"
+            fill="none"
+            viewBox="0 0 24 24"
+            stroke="currentColor"
+          >
+            <path
+              strokeLinecap="round"
+              strokeLinejoin="round"
+              strokeWidth={2}
+              d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"
+            />
+          </svg>
+        );
+      default:
+        return null;
+    }
+  };
+
+  if (isLoading) {
+    return (
+      <div className="space-y-4">
+        {[1, 2, 3].map((i) => (
+          <div
+            key={i}
+            className="h-32 bg-gray-800/50 rounded-xl animate-pulse"
+          />
+        ))}
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-5xl mb-4">⚠️</div>
+        <h3 className="text-lg font-semibold text-white mb-2">{error}</h3>
+        <button
+          onClick={fetchOrders}
+          className="mt-4 px-6 py-2 bg-yellow-500 text-gray-900 font-semibold rounded-lg hover:bg-yellow-400"
+        >
+          Reintentar
+        </button>
+      </div>
+    );
+  }
+
+  if (!ordersInfo || ordersInfo.length === 0) {
+    return (
+      <div className="text-center py-12">
+        <div className="text-5xl mb-4">📦</div>
+        <h3 className="text-lg font-semibold text-white mb-2">
+          No tienes pedidos
+        </h3>
+        <p className="text-white/50">
+          Cuando realices un pedido, aparecerá aquí
+        </p>
+      </div>
+    );
+  }
 
   return (
-    <div className="container mt-4">
-      <h2 className="mb-4">Lista de Pedidos</h2>
-      {error ? (
-        <p>{error}</p>
-      ) : ordersInfo.length > 0 ? (
-        ordersInfo.map((order) => (
+    <div className="space-y-4">
+      <h2 className="text-xl font-semibold text-white mb-6">Mis Pedidos</h2>
+
+      {ordersInfo.map((order) => {
+        const statusStyle = getStatusStyle(order.estado);
+
+        return (
           <div
             key={order._id}
-            className={`card mb-4 ${getCardColorClass(order.estado)}`}
+            className={`bg-gray-800/30 border ${statusStyle.border} rounded-xl p-5 hover:bg-gray-800/50 transition-colors`}
           >
-            <div className="card-body">
-              <h5 className="card-title">
-                Pedido N°{order.numeroPedido} - Estado: {order.estado}
-              </h5>
-              <ul className="list-group">
-                {order.productos.map((producto, index) => (
-                  <li key={index} className="list-group-item">
-                    {producto.nombre} - Cantidad: {producto.cantidad}
-                  </li>
-                ))}
-              </ul>
+            {/* Header */}
+            <div className="flex items-center justify-between mb-4">
+              <div>
+                <h3 className="text-white font-semibold">
+                  Pedido #{order.numeroPedido}
+                </h3>
+                <p className="text-white/50 text-sm">ID: {order._id}</p>
+              </div>
+              <div
+                className={`flex items-center gap-2 px-3 py-1.5 ${statusStyle.bg} ${statusStyle.text} rounded-full text-sm font-medium`}
+              >
+                {getStatusIcon(order.estado)}
+                {order.estado}
+              </div>
+            </div>
+
+            {/* Products */}
+            <div className="space-y-2 mb-4">
+              <p className="text-white/50 text-sm font-medium">Productos:</p>
+              {order.productos?.map((producto, index) => (
+                <div
+                  key={index}
+                  className="flex items-center justify-between py-2 px-3 bg-gray-900/30 rounded-lg"
+                >
+                  <span className="text-white">{producto.nombre}</span>
+                  <span className="text-white/50 text-sm">
+                    x{producto.cantidad}
+                  </span>
+                </div>
+              ))}
+            </div>
+
+            {/* Total & Actions */}
+            <div className="flex items-center justify-between pt-4 border-t border-white/5">
+              <div className="text-white font-semibold">
+                Total: ${order.total?.toLocaleString("es-AR") || "0"}
+              </div>
+
               {order.estado === "Pendiente" && (
                 <button
-                  className="btn btn-danger mt-3"
-                  onClick={() => cancelarPedido(order._id)}
+                  onClick={async () => {
+                    try {
+                      await axios.put(
+                        `${API_BASE}/pedido/cancelar/${order._id}`,
+                      );
+                      const response = await axios.get(
+                        `${API_BASE}/pedidos/${userId}`,
+                      );
+                      updateOrders(response.data.pedidos || []);
+                    } catch (err) {
+                      console.error("Error cancelling order:", err);
+                    }
+                  }}
+                  className="px-4 py-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg text-sm font-medium transition-colors"
                 >
                   Cancelar Pedido
                 </button>
               )}
             </div>
           </div>
-        ))
-      ) : (
-        <p>No se encontraron pedidos.</p>
-      )}
+        );
+      })}
     </div>
   );
 };

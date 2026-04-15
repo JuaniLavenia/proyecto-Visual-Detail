@@ -1,0 +1,38 @@
+@import "tailwindcss";
+
+@theme {
+  --color-primary: #1a1a2e;
+  --color-secondary: #16213e;
+  --color-accent: #0f3460;
+  --color-highlight: #e94560;
+  --font-rubik: "Rubik", sans-serif;
+}
+
+@layer base {
+  html {
+    font-family: var(--font-rubik);
+  }
+
+  body {
+    @apply bg-gray-50 text-gray-900;
+  }
+
+  /* Eliminar underline de todos los Links */
+  a {
+    text-decoration: none !important;
+  }
+  header a,
+  footer a {
+    color: white !important;
+  }
+
+  .space-y-3 {
+    padding: 0 !important;
+  }
+  /* Estilos para Links en modo oscuro */
+  .dark-links a,
+  a.text-white,
+  a.text-light {
+    color: white;
+  }
+}

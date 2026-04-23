@@ -127,7 +127,7 @@ function UsersAdmin() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <div className="flex items-center gap-4">
               <Link
-                to="/adm/productos"
+                to="/adm/dashboard"
                 className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />

@@ -11,16 +11,35 @@ const useCartStore = create(
       items: [],
       isLoading: false,
 
+      // Sincronizar con datos del backend
+      syncFromBackend: (backendItems) => {
+        set({
+          items: backendItems.map(item => ({
+            _id: item.product._id,
+            name: item.product.name,
+            price: item.product.price,
+            precioMayorista: item.product.precioMayorista,
+            stock: item.product.stock,
+            image: item.product.image,
+            brand: item.product.brand,
+            category: item.product.category,
+            capacity: item.product.capacity,
+            quantity: item.quantity,
+          })),
+        });
+      },
+
       // Agregar item al carrito
       addItem: (product) => {
         const items = get().items;
-        const existingItem = items.find(item => item.id === product.id);
+        const productId = product._id || product.id;
+        const existingItem = items.find(item => (item._id || item.id) === productId);
 
         if (existingItem) {
           // Si ya existe, incrementar cantidad
           set({
             items: items.map(item =>
-              item.id === product.id
+              (item._id || item.id) === productId
                 ? { ...item, quantity: item.quantity + (product.quantity || 1) }
                 : item
             ),
@@ -36,7 +55,7 @@ const useCartStore = create(
       // Remover item del carrito
       removeItem: (productId) => {
         set({
-          items: get().items.filter(item => item.id !== productId),
+          items: get().items.filter(item => (item._id || item.id) !== productId),
         });
       },
 
@@ -48,7 +67,7 @@ const useCartStore = create(
         }
         set({
           items: get().items.map(item =>
-            item.id === productId ? { ...item, quantity } : item
+            (item._id || item.id) === productId ? { ...item, quantity } : item
           ),
         });
       },
@@ -58,15 +77,10 @@ const useCartStore = create(
         set({ items: [] });
       },
 
-      // Obtener cantidad total de items
-      getTotalItems: () => {
-        return get().items.reduce((total, item) => total + item.quantity, 0);
-      },
-
       // Obtener precio total
       getTotalPrice: () => {
         return get().items.reduce(
-          (total, item) => total + (item.precio * item.quantity),
+          (total, item) => total + ((item.price || item.precio) * item.quantity),
           0
         );
       },

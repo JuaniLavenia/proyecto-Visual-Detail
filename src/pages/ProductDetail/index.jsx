@@ -18,13 +18,14 @@ import {
 const API_BASE = "https://visual-detail-backend.onrender.com";
 // const API_BASE = "http://localhost:5000";
 
-const fetcher = (url) => axios.get(url).then((res) => res.data);
+const fetcher = (url) => axios.get(url).then((res) => res.data.data);
 
 function ProductDetailPage() {
   const { id } = useParams();
-  const { token } = useAuthStore();
+  const { token, userId } = useAuthStore();
+  const favoriteItems = useFavoritesStore((state) => state.items);
+  const addItem = useCartStore((state) => state.addItem);
 
-  const [isFavorite, setIsFavorite] = useState(false);
   const [imageError, setImageError] = useState(false);
 
   const {
@@ -46,12 +47,16 @@ function ProductDetailPage() {
     }
 
     try {
-      const { userId } = useAuthStore.getState();
       await axios.post(`${API_BASE}/api/cart`, {
         userId,
         productId: id,
         quantity: 1,
       });
+
+      // Sync Zustand for badge
+      const res = await axios.get(`${API_BASE}/api/cart/${userId}`);
+      const backendItems = res.data.data.products || [];
+      useCartStore.getState().syncFromBackend(backendItems);
 
       Swal.fire({
         position: "center",
@@ -85,22 +90,23 @@ function ProductDetailPage() {
     }
 
     try {
-      const { userId } = useAuthStore.getState();
+      await axios.post(`${API_BASE}/api/favorites`, {
+        userId,
+        productId: id,
+      });
 
-      if (!isFavorite) {
-        await axios.post(`${API_BASE}/api/favorites`, {
-          userId,
-          productId: id,
-        });
-        setIsFavorite(true);
-        Swal.fire({
-          position: "center",
-          icon: "success",
-          title: "Agregado a favoritos",
-          showConfirmButton: false,
-          timer: 1200,
-        });
-      }
+      // Sync Zustand with backend
+      const res = await axios.get(`${API_BASE}/api/favorites/${userId}`);
+      const favBackendItems = res.data.data.products || [];
+      useFavoritesStore.getState().syncFromBackend(favBackendItems);
+
+      Swal.fire({
+        position: "center",
+        icon: "success",
+        title: "Agregado a favoritos",
+        showConfirmButton: false,
+        timer: 1200,
+      });
     } catch (error) {
       console.error("Error al gestionar favorito:", error);
     }
@@ -160,7 +166,7 @@ function ProductDetailPage() {
           href="/productos"
           className="inline-flex items-center gap-2 text-white/60 hover:text-yellow-400 mb-6 transition-colors"
         >
-          <Icons.ArrowLeft />
+          <ArrowLeft />
           Volver a productos
         </a>
 
@@ -197,13 +203,15 @@ function ProductDetailPage() {
               {token && (
                 <button
                   className={`absolute top-4 left-4 p-3 rounded-full transition-all ${
-                    isFavorite
+                    favoriteItems.some((f) => f._id === product._id)
                       ? "bg-red-500 text-white"
                       : "bg-white/10 text-white/60 hover:bg-white/20"
                   }`}
                   onClick={handleToggleFavorite}
                 >
-                  <Icons.Heart filled={isFavorite} />
+                  <Heart
+                    filled={favoriteItems.some((f) => f._id === product._id)}
+                  />
                 </button>
               )}
             </div>
@@ -233,8 +241,29 @@ function ProductDetailPage() {
               </div>
 
               {/* Price */}
-              <div className="text-4xl font-bold text-white mb-6">
-                ${product.price?.toLocaleString("es-AR")}
+              <div className="mb-4">
+                {product.precioMayorista ? (
+                  <div className="flex items-baseline gap-4">
+                    <div>
+                      <p className="text-white/50 text-xs mb-1">Por Menor</p>
+                      <div className="text-3xl font-bold text-white">
+                        ${product.price?.toLocaleString("es-AR")}
+                      </div>
+                    </div>
+                    <div>
+                      <p className="text-green-400/70 text-xs mb-1">
+                        Mayorista
+                      </p>
+                      <div className="text-2xl font-bold text-green-400">
+                        ${product.precioMayorista?.toLocaleString("es-AR")}
+                      </div>
+                    </div>
+                  </div>
+                ) : (
+                  <div className="text-3xl font-bold text-white">
+                    ${product.price?.toLocaleString("es-AR")}
+                  </div>
+                )}
               </div>
 
               {/* Description */}
@@ -252,7 +281,7 @@ function ProductDetailPage() {
                     onClick={handleAddToCart}
                     className="flex-1 flex items-center justify-center gap-2 bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-semibold py-3 px-6 rounded-xl transition-colors"
                   >
-                    <Icons.Cart />
+                    <ShoppingCart />
                     Agregar al Carrito
                   </button>
                 ) : (

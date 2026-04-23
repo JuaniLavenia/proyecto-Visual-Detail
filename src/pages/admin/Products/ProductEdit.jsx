@@ -54,6 +54,7 @@ function ProductoEdit() {
     name: "",
     description: "",
     price: "",
+    precioMayorista: "",
     stock: "",
     category: "",
     brand: "",
@@ -83,6 +84,7 @@ function ProductoEdit() {
           name: p?.name || "",
           description: p?.description || "",
           price: p?.price || "",
+          precioMayorista: p?.precioMayorista || "",
           stock: p?.stock || "",
           category: p?.category || "",
           brand: p?.brand || "",
@@ -121,6 +123,13 @@ function ProductoEdit() {
     if (!formData.brand) newErrors.brand = "Selecciona una marca";
     if (!formData.capacity.trim())
       newErrors.capacity = "La capacidad es requerida";
+    if (
+      formData.price &&
+      formData.precioMayorista &&
+      parseFloat(formData.precioMayorista) >= parseFloat(formData.price)
+    )
+      newErrors.precioMayorista =
+        "El precio mayorista debe ser menor al precio regular";
     if (formData.imageUrl && image) {
       newErrors.image = "Selecciona solo una opción de imagen";
     }
@@ -160,6 +169,9 @@ function ProductoEdit() {
     data.append("name", formData.name);
     data.append("description", formData.description);
     data.append("price", formData.price);
+    if (formData.precioMayorista) {
+      data.append("precioMayorista", formData.precioMayorista);
+    }
     data.append("stock", formData.stock);
     data.append("category", formData.category);
     data.append("brand", formData.brand);
@@ -359,10 +371,10 @@ function ProductoEdit() {
             </h2>
 
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Precio */}
+              {/* Precio por Menor */}
               <div>
                 <label className="block text-white/70 text-sm mb-2">
-                  Precio (ARS) *
+                  Precio por Menor (ARS) *
                 </label>
                 <div className="relative">
                   <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50">
@@ -387,27 +399,59 @@ function ProductoEdit() {
                 )}
               </div>
 
-              {/* Stock */}
+              {/* Precio Mayorista */}
               <div>
                 <label className="block text-white/70 text-sm mb-2">
-                  Stock *
+                  Precio Mayorista (ARS)
                 </label>
-                <input
-                  type="number"
-                  name="stock"
-                  value={formData.stock}
-                  onChange={handleChange}
-                  min="0"
-                  max="999"
-                  placeholder="0"
-                  className={`w-full px-4 py-3 bg-gray-800/50 border rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-yellow-500/50 transition-colors ${
-                    errors.stock ? "border-red-500" : "border-white/10"
-                  }`}
-                />
-                {errors.stock && (
-                  <p className="text-red-400 text-xs mt-1">{errors.stock}</p>
+                <div className="relative">
+                  <span className="absolute left-4 top-1/2 -translate-y-1/2 text-white/50">
+                    $
+                  </span>
+                  <input
+                    type="number"
+                    name="precioMayorista"
+                    value={formData.precioMayorista}
+                    onChange={handleChange}
+                    min="0"
+                    max="99999"
+                    step="0.01"
+                    placeholder="0"
+                    className={`w-full pl-8 pr-4 py-3 bg-gray-800/50 border rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-yellow-500/50 transition-colors ${
+                      errors.precioMayorista
+                        ? "border-red-500"
+                        : "border-white/10"
+                    }`}
+                  />
+                </div>
+                {errors.precioMayorista && (
+                  <p className="text-red-400 text-xs mt-1">
+                    {errors.precioMayorista}
+                  </p>
                 )}
               </div>
+            </div>
+
+            {/* Stock */}
+            <div className="mt-5">
+              <label className="block text-white/70 text-sm mb-2">
+                Stock *
+              </label>
+              <input
+                type="number"
+                name="stock"
+                value={formData.stock}
+                onChange={handleChange}
+                min="0"
+                max="999"
+                placeholder="0"
+                className={`w-full px-4 py-3 bg-gray-800/50 border rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-yellow-500/50 transition-colors ${
+                  errors.stock ? "border-red-500" : "border-white/10"
+                }`}
+              />
+              {errors.stock && (
+                <p className="text-red-400 text-xs mt-1">{errors.stock}</p>
+              )}
             </div>
 
             {/* Capacidad */}

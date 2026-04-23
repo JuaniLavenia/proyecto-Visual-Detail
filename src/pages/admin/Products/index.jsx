@@ -13,6 +13,7 @@ import {
   Cube,
   Exclamation,
   Search,
+  ArrowLeft,
 } from "../../../components/common/Icons";
 import "./index.css";
 
@@ -60,6 +61,17 @@ function AdminProducto() {
   const products = data?.data || [];
   const totalRows = data?.pagination?.totalProducts || 0;
   const totalPages = Math.ceil(totalRows / currentSize);
+
+  // Stats separate fetch
+  const [stats, setStats] = useState(null);
+  useEffect(() => {
+    if (token && isAdmin) {
+      axios
+        .get(`${API_BASE}/api/productos/stats`)
+        .then((res) => setStats(res.data.data))
+        .catch(() => {});
+    }
+  }, [token, isAdmin]);
 
   // Recargar datos después de eliminar
   const refreshData = () => {
@@ -207,6 +219,12 @@ function AdminProducto() {
       <div className="bg-gradient-to-b from-gray-900 to-gray-950 border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
+            <Link
+              to="/adm/dashboard"
+              className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
+            >
+              <ArrowLeft className="w-5 h-5" />
+            </Link>
             <div>
               <h1 className="text-2xl lg:text-3xl font-bold text-white">
                 Administración de Productos
@@ -230,7 +248,9 @@ function AdminProducto() {
                 </div>
                 <div>
                   <p className="text-white/50 text-xs">Total Productos</p>
-                  <p className="text-xl font-bold text-white">{totalRows}</p>
+                  <p className="text-xl font-bold text-white">
+                    {stats?.totalProducts ?? totalRows}
+                  </p>
                 </div>
               </div>
             </div>
@@ -242,7 +262,7 @@ function AdminProducto() {
                 <div>
                   <p className="text-white/50 text-xs">En Stock</p>
                   <p className="text-xl font-bold text-white">
-                    {products.filter((p) => p.stock > 0).length}
+                    {stats?.inStock ?? 0}
                   </p>
                 </div>
               </div>
@@ -255,7 +275,7 @@ function AdminProducto() {
                 <div>
                   <p className="text-white/50 text-xs">Sin Stock</p>
                   <p className="text-xl font-bold text-white">
-                    {products.filter((p) => !p.stock || p.stock === 0).length}
+                    {stats?.outOfStock ?? 0}
                   </p>
                 </div>
               </div>
@@ -269,12 +289,9 @@ function AdminProducto() {
                   <p className="text-white/50 text-xs">Valor Stock</p>
                   <p className="text-xl font-bold text-white">
                     $
-                    {products
-                      .reduce(
-                        (acc, p) => acc + (p.price || 0) * (p.stock || 0),
-                        0,
-                      )
-                      .toLocaleString("es-AR", { maximumFractionDigits: 0 })}
+                    {(stats?.totalStockValue ?? 0).toLocaleString("es-AR", {
+                      maximumFractionDigits: 0,
+                    })}
                   </p>
                 </div>
               </div>
@@ -364,7 +381,10 @@ function AdminProducto() {
                         Categoría
                       </th>
                       <th className="px-4 py-3.5 text-left text-xs font-semibold text-white/50 uppercase tracking-wider">
-                        Precio
+                        Precio Minorista
+                      </th>
+                      <th className="px-4 py-3.5 text-left text-xs font-semibold text-white/50 uppercase tracking-wider">
+                        Precio Mayorista
                       </th>
                       <th className="px-4 py-3.5 text-center text-xs font-semibold text-white/50 uppercase tracking-wider">
                         Stock
@@ -441,6 +461,16 @@ function AdminProducto() {
                           </span>
                         </td>
                         <td className="px-4 py-3.5">
+                          {product.precioMayorista ? (
+                            <span className="text-green-400 font-semibold">
+                              $
+                              {product.precioMayorista?.toLocaleString("es-AR")}
+                            </span>
+                          ) : (
+                            <span className="text-white/30 text-xs">—</span>
+                          )}
+                        </td>
+                        <td className="px-4 py-3.5">
                           <div className="flex items-center justify-center">
                             <span
                               className={`inline-flex items-center px-2.5 py-1 rounded-full text-xs font-medium ${product.stock > 0 ? "bg-green-500/10 text-green-400 border border-green-500/20" : "bg-red-500/10 text-red-400 border border-red-500/20"}`}
@@ -513,6 +543,12 @@ function AdminProducto() {
                         <span className="text-white font-semibold">
                           ${product.price?.toLocaleString("es-AR")}
                         </span>
+                        {product.precioMayorista ? (
+                          <span className="text-green-400 font-semibold text-sm">
+                            Mayorista: $
+                            {product.precioMayorista?.toLocaleString("es-AR")}
+                          </span>
+                        ) : null}
                         <span
                           className={`text-xs ${product.stock > 0 ? "text-green-400" : "text-red-400"}`}
                         >

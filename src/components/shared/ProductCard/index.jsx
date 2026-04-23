@@ -24,10 +24,11 @@ function CardProductos({
   precioMayorista,
 }) {
   const { userId, token, role, isMayorista } = useAuthStore();
+  const favoriteItems = useFavoritesStore((state) => state.items);
+  const addItem = useCartStore((state) => state.addItem);
   const navigate = useNavigate();
 
   // Local state para favorito instantáneo (antes de la API)
-  const [isFavorite, setIsFavorite] = useState(false);
   const [imageError, setImageError] = useState(false);
 
   const handleAddToCart = async () => {
@@ -49,6 +50,11 @@ function CardProductos({
         productId: _id,
         quantity: 1,
       });
+
+      // Sync Zustand for badge
+      const res = await axios.get(`${API_BASE}/api/cart/${userId}`);
+      const backendItems = res.data.data.products || [];
+      useCartStore.getState().syncFromBackend(backendItems);
 
       Swal.fire({
         position: "center",
@@ -83,30 +89,24 @@ function CardProductos({
     }
 
     try {
-      // Toggle local state primero para UX instantánea
-      setIsFavorite(!isFavorite);
+      await axios.post(`${API_BASE}/api/favorites`, {
+        userId,
+        productId: _id,
+      });
 
-      if (!isFavorite) {
-        // Agregar a favoritos (API)
-        await axios.post(`${API_BASE}/api/favorites`, {
-          userId,
-          productId: _id,
-        });
+      // Sync Zustand with backend
+      const res = await axios.get(`${API_BASE}/api/favorites/${userId}`);
+      const favBackendItems = res.data.data.products || [];
+      useFavoritesStore.getState().syncFromBackend(favBackendItems);
 
-        Swal.fire({
-          position: "center",
-          icon: "success",
-          title: "Agregado a favoritos",
-          showConfirmButton: false,
-          timer: 1200,
-        });
-      } else {
-        // Eliminar de favoritos (necesitarías endpoint)
-        // Por ahora solo quitamos el estado local
-      }
+      Swal.fire({
+        position: "center",
+        icon: "success",
+        title: "Agregado a favoritos",
+        showConfirmButton: false,
+        timer: 1200,
+      });
     } catch (error) {
-      // Revertir estado local si falla
-      setIsFavorite(isFavorite);
       console.error("Error al gestionar favorito:", error);
     }
   };
@@ -153,14 +153,21 @@ function CardProductos({
 
         {/* Favorite Button */}
         <button
-          className={`product-card-favorite ${isFavorite ? "active" : ""}`}
+          className={`product-card-favorite ${favoriteItems.some((f) => f._id === _id) ? "active" : ""}`}
           onClick={(e) => {
             e.stopPropagation();
             handleToggleFavorite();
           }}
-          title={isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"}
+          title={
+            favoriteItems.some((f) => f._id === _id)
+              ? "Quitar de favoritos"
+              : "Agregar a favoritos"
+          }
         >
-          <Heart className="w-5 h-5" filled={isFavorite} />
+          <Heart
+            className="w-5 h-5"
+            filled={favoriteItems.some((f) => f._id === _id)}
+          />
         </button>
       </div>
 

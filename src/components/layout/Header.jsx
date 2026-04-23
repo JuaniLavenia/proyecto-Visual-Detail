@@ -1,11 +1,33 @@
 import { Link, useNavigate } from "react-router-dom";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import useAuthStore from "../../stores/useAuthStore";
 import useCartStore from "../../stores/useCartStore";
 import useFavoritesStore from "../../stores/useFavoritesStore";
+import axios from "axios";
 import Swal from "sweetalert2";
 import visual from "../../assets/img/visual.png";
-import { Home, Grid, Location, Contact, User, Logout, Settings, ShoppingCart, Heart, Search, Menu, CreditCard, Close } from "../common/Icons";
+import {
+  Home,
+  Grid,
+  Location,
+  Contact,
+  User,
+  Logout,
+  Settings,
+  ShoppingCart,
+  Heart,
+  Search,
+  Menu,
+  CreditCard,
+  Close,
+  ChevronDown,
+  Package,
+  Users,
+  Dollar,
+} from "../common/Icons";
+
+const API_BASE = "https://visual-detail-backend.onrender.com";
+// const API_BASE = "http://localhost:5000";
 
 function NavLink({ to, icon, children, onClick, external, badge }) {
   const navigate = useNavigate();
@@ -59,13 +81,17 @@ function NavLink({ to, icon, children, onClick, external, badge }) {
 }
 
 function Header() {
-  const { token, logout, isAdmin } = useAuthStore();
-  const cartCount = useCartStore((state) => state.getTotalItems());
-  const favoritesCount = useFavoritesStore((state) => state.getCount());
+  const { userId, token, logout, isAdmin } = useAuthStore();
+  const { items: cartItems, syncFromBackend: syncCartFromBackend } =
+    useCartStore();
+  const { items: favoriteItems, syncFromBackend: syncFavoritesFromBackend } =
+    useFavoritesStore();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [adminDropdownOpen, setAdminDropdownOpen] = useState(false);
+  const dropdownRef = useRef(null);
 
   const navigate = useNavigate();
 
@@ -96,6 +122,34 @@ function Header() {
     window.addEventListener("scroll", handleScroll);
     return () => window.removeEventListener("scroll", handleScroll);
   }, []);
+
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
+        setAdminDropdownOpen(false);
+      }
+    };
+    document.addEventListener("mousedown", handleClickOutside);
+    return () => document.removeEventListener("mousedown", handleClickOutside);
+  }, []);
+
+  // Sync cart and favorites from backend on mount and when token changes
+  useEffect(() => {
+    if (token && userId) {
+      Promise.all([
+        axios.get(`${API_BASE}/api/cart/${userId}`),
+        axios.get(`${API_BASE}/api/favorites/${userId}`),
+      ])
+        .then(([cartRes, favRes]) => {
+          const cartBackendItems = cartRes.data.data.products || [];
+          const favBackendItems = favRes.data.data.products || [];
+          syncCartFromBackend(cartBackendItems);
+          syncFavoritesFromBackend(favBackendItems);
+        })
+        .catch(() => {});
+    }
+  }, [token, userId, syncCartFromBackend, syncFavoritesFromBackend]);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
@@ -151,9 +205,55 @@ function Header() {
                     Cerrar Sesión
                   </NavLink>
                   {isAdmin && (
-                    <NavLink to="/adm/productos" icon={<Settings className="w-6 h-6" />}>
-                      Admin
-                    </NavLink>
+                    <div className="relative" ref={dropdownRef}>
+                      <button
+                        className="flex items-center px-4 py-2.5 text-white no-underline hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 cursor-pointer"
+                        onClick={() => setAdminDropdownOpen(!adminDropdownOpen)}
+                      >
+                        <Settings className="w-6 h-6" />
+                        <span className="ml-2 font-medium">Admin</span>
+                        <ChevronDown
+                          className={`w-4 h-4 ml-1 transition-transform ${adminDropdownOpen ? "rotate-180" : ""}`}
+                        />
+                      </button>
+                      {/* Admin Dropdown */}
+                      <div
+                        className={`absolute right-0 mt-2 w-48 bg-gray-800 border border-white/10 rounded-xl shadow-xl overflow-hidden z-50 transition-all ${adminDropdownOpen ? "opacity-100 visible" : "opacity-0 invisible"}`}
+                      >
+                        <Link
+                          to="/adm/dashboard"
+                          className="flex items-center px-4 py-3 text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                          onClick={() => setAdminDropdownOpen(false)}
+                        >
+                          <Package className="w-5 h-5 mr-2" />
+                          Dashboard
+                        </Link>
+                        <Link
+                          to="/adm/pedidos"
+                          className="flex items-center px-4 py-3 text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                          onClick={() => setAdminDropdownOpen(false)}
+                        >
+                          <Dollar className="w-5 h-5 mr-2" />
+                          Pedidos
+                        </Link>
+                        <Link
+                          to="/adm/productos"
+                          className="flex items-center px-4 py-3 text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                          onClick={() => setAdminDropdownOpen(false)}
+                        >
+                          <Grid className="w-5 h-5 mr-2" />
+                          Productos
+                        </Link>
+                        <Link
+                          to="/adm/usuarios"
+                          className="flex items-center px-4 py-3 text-white/80 hover:text-white hover:bg-white/10 transition-colors"
+                          onClick={() => setAdminDropdownOpen(false)}
+                        >
+                          <Users className="w-5 h-5 mr-2" />
+                          Usuarios
+                        </Link>
+                      </div>
+                    </div>
                   )}
                 </>
               ) : (
@@ -195,9 +295,17 @@ function Header() {
                   className="relative p-2.5 text-white/80 hover:text-yellow-400 hover:bg-white/10 rounded-full transition-all"
                 >
                   <ShoppingCart className="w-6 h-6" />
-                  {cartCount > 0 && (
+                  {cartItems.length > 0 && (
                     <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold flex items-center justify-center rounded-full">
-                      {cartCount > 9 ? "9+" : cartCount}
+                      {cartItems.reduce(
+                        (acc, item) => acc + (item.quantity || 1),
+                        0,
+                      ) > 9
+                        ? "9+"
+                        : cartItems.reduce(
+                            (acc, item) => acc + (item.quantity || 1),
+                            0,
+                          )}
                     </span>
                   )}
                 </Link>
@@ -208,9 +316,9 @@ function Header() {
                   className="relative p-2.5 text-white/80 hover:text-red-500 hover:bg-white/10 rounded-full transition-all"
                 >
                   <Heart className="w-6 h-6" />
-                  {favoritesCount > 0 && (
+                  {favoriteItems.length > 0 && (
                     <span className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs font-bold flex items-center justify-center rounded-full">
-                      {favoritesCount > 9 ? "9+" : favoritesCount}
+                      {favoriteItems.length > 9 ? "9+" : favoriteItems.length}
                     </span>
                   )}
                 </Link>
@@ -318,13 +426,40 @@ function Header() {
                   Cerrar Sesión
                 </NavLink>
                 {isAdmin && (
-                  <NavLink
-                    to="/adm/productos"
-                    icon={<Settings className="w-6 h-6" />}
-                    onClick={() => setMobileMenuOpen(false)}
-                  >
-                    Panel Admin
-                  </NavLink>
+                  <>
+                    <div className="border-t border-white/10 my-2" />
+                    <div className="px-4 py-2 text-xs font-semibold text-white/30 uppercase tracking-wider">
+                      Panel Admin
+                    </div>
+                    <NavLink
+                      to="/adm/dashboard"
+                      icon={<Package className="w-5 h-5" />}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Dashboard
+                    </NavLink>
+                    <NavLink
+                      to="/adm/pedidos"
+                      icon={<Dollar className="w-5 h-5" />}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Pedidos
+                    </NavLink>
+                    <NavLink
+                      to="/adm/productos"
+                      icon={<Grid className="w-5 h-5" />}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Productos
+                    </NavLink>
+                    <NavLink
+                      to="/adm/usuarios"
+                      icon={<Users className="w-5 h-5" />}
+                      onClick={() => setMobileMenuOpen(false)}
+                    >
+                      Usuarios
+                    </NavLink>
+                  </>
                 )}
               </>
             ) : (

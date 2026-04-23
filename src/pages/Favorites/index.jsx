@@ -19,7 +19,7 @@ import {
 } from "../../components/common/Icons";
 import "./index.css";
 
-const API_BASE = "https://visual-detail-backend.onrender.com/api";
+const API_BASE = "https://visual-detail-backend.onrender.com";
 // const API_BASE = "http://localhost:5000";
 
 function Favoritos() {

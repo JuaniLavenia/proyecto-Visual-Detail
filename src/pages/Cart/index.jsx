@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useAuthStore from "../../stores/useAuthStore";
+import useCartStore from "../../stores/useCartStore";
 import axios from "axios";
 import Swal from "sweetalert2";
 import {
@@ -20,12 +21,13 @@ import {
 } from "../../components/common/Icons";
 import "./index.css";
 
-const API_BASE = "https://visual-detail-backend.onrender.com/api";
+const API_BASE = "https://visual-detail-backend.onrender.com";
 // const API_BASE = "http://localhost:5000";
 
 function Carrito() {
   const { userId, token } = useAuthStore();
   const navigate = useNavigate();
+  const { syncFromBackend: syncCartFromBackend } = useCartStore();
   const [cartItems, setCartItems] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
@@ -37,6 +39,9 @@ function Carrito() {
       const response = await axios.get(`${API_BASE}/api/cart/${userId}`);
       const items = response.data.data.products || [];
       setCartItems(items);
+
+      // Sync Zustand store for badge consistency
+      syncCartFromBackend(items);
     } catch (error) {
       console.error("Error fetching cart items:", error);
     } finally {
@@ -62,7 +67,7 @@ function Carrito() {
     setImageErrors((prev) => ({ ...prev, [productId]: true }));
   };
 
-  const handleRemoveFromCart = (product) => {
+  const handleRemoveFromCart = async (product) => {
     Swal.fire({
       title: "¿Eliminar producto?",
       text: `¿Querés eliminar ${product.name} del carrito?`,
@@ -76,6 +81,12 @@ function Carrito() {
       if (result.isConfirmed) {
         try {
           await axios.delete(`${API_BASE}/api/cart/${userId}/${product._id}`);
+
+          // Sync Zustand store for badge update
+          const res = await axios.get(`${API_BASE}/api/cart/${userId}`);
+          syncCartFromBackend(res.data.data.products || []);
+
+          // Update local state
           setCartItems((prev) =>
             prev.filter((item) => item.product._id !== product._id),
           );
@@ -117,6 +128,10 @@ function Carrito() {
         productId: item.product._id,
         quantity: value,
       });
+
+      // Sync Zustand store for badge update
+      const res = await axios.get(`${API_BASE}/api/cart/${userId}`);
+      syncCartFromBackend(res.data.data.products || []);
     } catch (error) {
       console.error("Error updating quantity:", error);
     }

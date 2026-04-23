@@ -82,9 +82,9 @@ function NavLink({ to, icon, children, onClick, external, badge }) {
 
 function Header() {
   const { userId, token, logout, isAdmin } = useAuthStore();
-  const { items: cartItems, syncFromBackend: syncCartFromBackend } =
+  const { items: cartItems, syncFromBackend: syncCartFromBackend, clearCart: clearCartStore } =
     useCartStore();
-  const { items: favoriteItems, syncFromBackend: syncFavoritesFromBackend } =
+  const { items: favoriteItems, syncFromBackend: syncFavoritesFromBackend, clearFavorites: clearFavoritesStore } =
     useFavoritesStore();
 
   const [searchTerm, setSearchTerm] = useState("");
@@ -97,6 +97,9 @@ function Header() {
 
   const handleLogout = () => {
     logout();
+    // Clear cart and favorites stores on logout to prevent stale data
+    clearCartStore();
+    clearFavoritesStore();
     Swal.fire({
       position: "center",
       icon: "success",

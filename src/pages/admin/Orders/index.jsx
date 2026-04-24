@@ -93,15 +93,7 @@ function AdminOrders() {
 
   const handleStatusChange = async (orderId, nuevoEstado) => {
     try {
-      const config = {
-        headers: { Authorization: `Bearer ${token}` },
-      };
-
-      await axios.put(
-        `${API_BASE}/api/admin/pedidos/${orderId}/status`,
-        { nuevoEstado },
-        config,
-      );
+      await api.put(`/api/admin/pedidos/${orderId}/status`, { nuevoEstado });
 
       // Update local state
       setOrders(

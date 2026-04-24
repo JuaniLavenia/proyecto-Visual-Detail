@@ -2,11 +2,11 @@ import { useEffect, useState } from "react";
 import api from "../../../lib/api";
 import { useUserContext } from "../../../context/UserContext";
 import useAuthStore from "../../../stores/useAuthStore";
-import { User, Logout } from "../../../components/common/Icons";
+import { LogOut, User } from "lucide-react";
 
 const PersonalInfoTab = () => {
   const { userInfo, updateUser } = useUserContext();
-  const { userId, logout } = useAuthStore();
+  const { userId, logoutWithApi } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -130,10 +130,10 @@ const PersonalInfoTab = () => {
         <h3 className="text-white font-semibold mb-4">Cuenta</h3>
 
         <button
-          onClick={logout}
+          onClick={logoutWithApi}
           className="w-full py-3 px-4 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-xl font-medium transition-colors flex items-center justify-center gap-2"
         >
-          <Logout className="w-5 h-5" />
+          <LogOut className="w-5 h-5" />
           Cerrar Sesión
         </button>
       </div>

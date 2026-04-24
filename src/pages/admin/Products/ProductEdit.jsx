@@ -43,7 +43,7 @@ const CATEGORIES = [
 function ProductoEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { token, userId } = useAuthStore();
+  const { token, isAdmin } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
 
@@ -65,7 +65,7 @@ function ProductoEdit() {
   const [errors, setErrors] = useState({});
 
   // Validar acceso admin
-  if (!token || userId !== "65dbfbfdbbaccc7f307ebc2e") {
+  if (!token || !isAdmin) {
     navigate("/login");
     return null;
   }
@@ -181,7 +181,7 @@ function ProductoEdit() {
     }
 
     try {
-      await axios.put(`${API_BASE}/api/productos/${id}`, data, {
+      await api.put(`/api/productos/${id}`, data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

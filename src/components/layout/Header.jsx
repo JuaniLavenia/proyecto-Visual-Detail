@@ -78,7 +78,7 @@ function NavLink({ to, icon, children, onClick, external, badge }) {
 }
 
 function Header() {
-  const { userId, token, logout, isAdmin } = useAuthStore();
+  const { userId, token, logoutWithApi, isAdmin } = useAuthStore();
   const {
     items: cartItems,
     syncFromBackend: syncCartFromBackend,
@@ -99,7 +99,7 @@ function Header() {
   const navigate = useNavigate();
 
   const handleLogout = () => {
-    logout();
+    logoutWithApi();
     // Clear cart and favorites stores on logout to prevent stale data
     clearCartStore();
     clearFavoritesStore();

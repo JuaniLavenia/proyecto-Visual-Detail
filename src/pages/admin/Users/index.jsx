@@ -61,13 +61,9 @@ function UsersAdmin() {
 
     setUpdating(userIdActual);
     try {
-      const res = await axios.put(
-        `${API_BASE}/api/users/${userIdActual}/role`,
-        { role: newRole },
-        {
-          headers: { Authorization: `Bearer ${token}` },
-        },
-      );
+      const res = await api.put(`/api/users/${userIdActual}/role`, {
+        role: newRole,
+      });
 
       // Actualizar lista local
       setUsers(

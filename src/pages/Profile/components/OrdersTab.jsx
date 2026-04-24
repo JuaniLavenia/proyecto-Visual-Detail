@@ -175,12 +175,8 @@ const OrdersTab = () => {
                 <button
                   onClick={async () => {
                     try {
-                      await axios.put(
-                        `${API_BASE}/pedido/cancelar/${order._id}`,
-                      );
-                      const response = await axios.get(
-                        `${API_BASE}/pedidos/${userId}`,
-                      );
+                      await api.put(`/api/pedido/cancelar/${order._id}`);
+                      const response = await api.get(`/api/pedidos/${userId}`);
                       updateOrders(response.data.pedidos || []);
                     } catch (err) {
                       console.error("Error cancelling order:", err);

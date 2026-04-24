@@ -70,11 +70,10 @@ function Login() {
 
     try {
       const res = await api.post("/api/login", loginData);
-      // El backend devuelve: token, userId, role, user
-      const { token, userId, role, user } = res.data;
-      // Usar role del backend en vez de hardcoded
+      // El backend devuelve: token, userId, role, user, refreshToken
+      const { token, userId, role, user, refreshToken } = res.data;
       const roleUsuario = user?.role || role || "minorista";
-      login(token, userId, roleUsuario);
+      login(token, refreshToken, userId, roleUsuario);
 
       Swal.fire({
         position: "center",
@@ -110,9 +109,8 @@ function Login() {
 
     try {
       const res = await api.post("/api/register", registerData);
-      const { token, userId, role = "minorista" } = res.data;
-      // Nuevos usuarios siempre minorista por defecto
-      login(token, userId, role);
+      const { token, userId, role = "minorista", refreshToken } = res.data;
+      login(token, refreshToken, userId, role);
 
       Swal.fire({
         position: "center",

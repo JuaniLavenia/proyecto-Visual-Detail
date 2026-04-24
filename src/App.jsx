@@ -1,8 +1,10 @@
-import { Suspense, lazy } from 'react';
+import { Suspense, lazy, useEffect } from 'react';
 import { Routes, Route } from 'react-router';
 import './App.css';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import useAuthStore from './stores/useAuthStore';
+import { onAuthTokenRefreshed, offAuthTokenRefreshed } from './lib/api';
 
 // Lazy loading de todas las páginas
 const HomePage = lazy(() => import('./pages/Home'));
@@ -34,6 +36,27 @@ function PageLoader() {
 }
 
 function App() {
+  // Sincronizar el store cuando el token se renueva desde el api interceptor
+  useEffect(() => {
+    const handleTokenRefresh = (token, refreshToken) => {
+      if (token && refreshToken) {
+        // Token actualizado exitosamente - sincronizar con el store
+        useAuthStore.getState().updateTokens(token, refreshToken);
+      } else {
+        // Refresh falló - hacer logout
+        useAuthStore.getState().logout();
+      }
+    };
+
+    // Registrar el callback
+    onAuthTokenRefreshed(handleTokenRefresh);
+
+    // Cleanup al desmontar
+    return () => {
+      offAuthTokenRefreshed(handleTokenRefresh);
+    };
+  }, []);
+
   return (
     <ErrorBoundary>
       <Suspense fallback={<PageLoader />}>

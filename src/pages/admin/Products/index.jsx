@@ -173,7 +173,7 @@ function AdminProducto() {
     setIsExporting(true);
     try {
       const response = await api.get(`/api/productos/export`);
-      if (!response.ok) throw new Error("Error en la descarga");
+      if (response.status !== 200) throw new Error("Error en la descarga");
 
       const blob = await response.blob();
       const url = window.URL.createObjectURL(blob);

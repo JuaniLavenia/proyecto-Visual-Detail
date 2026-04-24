@@ -42,7 +42,7 @@ const CATEGORIES = [
 
 function ProductoCreate() {
   const navigate = useNavigate();
-  const { token, userId, isAdmin } = useAuthStore();
+  const { token, isAdmin } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
 
@@ -63,7 +63,7 @@ function ProductoCreate() {
   const [errors, setErrors] = useState({});
 
   // Validar acceso admin
-  if (!token || userId !== "65dbfbfdbbaccc7f307ebc2e") {
+  if (!token || !isAdmin) {
     navigate("/login");
     return null;
   }

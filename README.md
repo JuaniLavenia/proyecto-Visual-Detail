@@ -54,13 +54,6 @@ npm run build        # Build de producción
 npm run preview      # Preview del build de producción
 ```
 
-## Configuración
-
-El proyecto se conecta al backend en `http://localhost:5000`. Para cambiar la URL del API:
-
-1. Buscar `// const API_BASE = "http://localhost:5000"` en los archivos
-2. Reemplazar por la URL deseada
-
 ### Variables de entorno
 
 No requiere variables de entorno propias. La autenticación se maneja mediante JWT guardado en `localStorage` a través del store de Zustand.

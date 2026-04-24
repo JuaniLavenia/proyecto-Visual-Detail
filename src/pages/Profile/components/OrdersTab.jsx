@@ -1,12 +1,9 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../../lib/api";
 import useAuthStore from "../../../stores/useAuthStore";
 import { useUserContext } from "../../../context/UserContext";
 import { Check, Close, Clock } from "../../../components/common/Icons";
 import "./OrdersTab.css";
-
-const API_BASE = "https://visual-detail-backend.onrender.com/api";
-// const API_BASE = "http://localhost:5000/api";
 
 const OrdersTab = () => {
   const { ordersInfo, updateOrders } = useUserContext();
@@ -26,7 +23,7 @@ const OrdersTab = () => {
 
     setIsLoading(true);
     try {
-      const response = await axios.get(`${API_BASE}/pedidos/${userId}`);
+      const response = await api.get(`/api/pedidos/${userId}`);
       updateOrders(response.data.pedidos || []);
     } catch (err) {
       console.error("Error fetching orders:", err);

@@ -1,8 +1,8 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useAuthStore from "../../stores/useAuthStore";
 import useCartStore from "../../stores/useCartStore";
-import axios from "axios";
+import api, { API_BASE } from "../../lib/api";
 import Swal from "sweetalert2";
 import {
   ShoppingCart,
@@ -21,9 +21,6 @@ import {
 } from "../../components/common/Icons";
 import "./index.css";
 
-const API_BASE = "https://visual-detail-backend.onrender.com";
-// const API_BASE = "http://localhost:5000";
-
 function Carrito() {
   const { userId, token } = useAuthStore();
   const navigate = useNavigate();
@@ -36,7 +33,7 @@ function Carrito() {
 
   const fetchCartItems = async () => {
     try {
-      const response = await axios.get(`${API_BASE}/api/cart/${userId}`);
+      const response = await api.get(`/api/cart/${userId}`);
       const items = response.data.data.products || [];
       setCartItems(items);
 
@@ -80,10 +77,10 @@ function Carrito() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await axios.delete(`${API_BASE}/api/cart/${userId}/${product._id}`);
+          await api.delete(`/api/cart/${userId}/${product._id}`);
 
           // Sync Zustand store for badge update
-          const res = await axios.get(`${API_BASE}/api/cart/${userId}`);
+          const res = await api.get(`/api/cart/${userId}`);
           syncCartFromBackend(res.data.data.products || []);
 
           // Update local state
@@ -123,14 +120,14 @@ function Carrito() {
     }
 
     try {
-      await axios.post(`${API_BASE}/api/cart`, {
+      await api.post("/api/cart", {
         userId,
         productId: item.product._id,
         quantity: value,
       });
 
       // Sync Zustand store for badge update
-      const res = await axios.get(`${API_BASE}/api/cart/${userId}`);
+      const res = await api.get(`/api/cart/${userId}`);
       syncCartFromBackend(res.data.data.products || []);
     } catch (error) {
       console.error("Error updating quantity:", error);
@@ -147,7 +144,7 @@ function Carrito() {
   const handlePayment = async () => {
     setIsLoading(true);
     try {
-      await axios.post(`${API_BASE}/api/pedidos`, {
+      await api.post("/api/pedidos", {
         usuario: userId,
         productos: cartItems.map((item) => ({
           nombre: item.product.name,

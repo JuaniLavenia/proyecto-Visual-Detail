@@ -1,7 +1,6 @@
 import { Suspense, lazy } from 'react';
 import { Routes, Route } from 'react-router';
 import './App.css';
-import 'bootstrap/dist/css/bootstrap.min.css';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import ErrorBoundary from './components/common/ErrorBoundary';
 

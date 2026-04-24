@@ -1,11 +1,8 @@
 import { useEffect, useState } from "react";
-import axios from "axios";
+import api from "../../../lib/api";
 import { useUserContext } from "../../../context/UserContext";
 import useAuthStore from "../../../stores/useAuthStore";
 import { User, Logout } from "../../../components/common/Icons";
-
-const API_BASE = "https://visual-detail-backend.onrender.com/api";
-// const API_BASE = "http://localhost:5000/api";
 
 const PersonalInfoTab = () => {
   const { userInfo, updateUser } = useUserContext();
@@ -25,7 +22,7 @@ const PersonalInfoTab = () => {
 
     setIsLoading(true);
     try {
-      const response = await axios.get(`${API_BASE}/user/${userId}`);
+      const response = await api.get(`/api/user/${userId}`);
       updateUser(response.data.data.usuario);
     } catch (err) {
       console.error("Error fetching user info:", err);

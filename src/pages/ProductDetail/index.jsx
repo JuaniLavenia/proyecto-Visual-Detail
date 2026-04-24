@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import useSWR from "swr";
-import axios from "axios";
+import api, { API_BASE, fetcher } from "../../lib/api";
 import Swal from "sweetalert2";
 import ProductDetail from "../../components/shared/ProductDetail";
 import LoadingSpinner from "../../components/common/LoadingSpinner";
@@ -15,10 +15,8 @@ import {
   Image,
 } from "../../components/common/Icons";
 
-const API_BASE = "https://visual-detail-backend.onrender.com";
-// const API_BASE = "http://localhost:5000";
-
-const fetcher = (url) => axios.get(url).then((res) => res.data.data);
+// Custom fetcher que devuelve solo data.data (para productos individuales)
+const productFetcher = (url) => api.get(url).then((res) => res.data.data);
 
 function ProductDetailPage() {
   const { id } = useParams();
@@ -27,12 +25,14 @@ function ProductDetailPage() {
   const addItem = useCartStore((state) => state.addItem);
 
   const [imageError, setImageError] = useState(false);
+  const [isAddingToCart, setIsAddingToCart] = useState(false);
+  const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
 
   const {
     data: product,
     error,
     isLoading,
-  } = useSWR(id ? `${API_BASE}/api/productos/${id}` : null, fetcher);
+  } = useSWR(id ? `/api/productos/${id}` : null, productFetcher);
 
   const handleAddToCart = async () => {
     if (!token) {
@@ -46,15 +46,18 @@ function ProductDetailPage() {
       return;
     }
 
+    if (isAddingToCart) return;
+    setIsAddingToCart(true);
+
     try {
-      await axios.post(`${API_BASE}/api/cart`, {
+      await api.post("/api/cart", {
         userId,
         productId: id,
         quantity: 1,
       });
 
       // Sync Zustand for badge
-      const res = await axios.get(`${API_BASE}/api/cart/${userId}`);
+      const res = await api.get(`/api/cart/${userId}`);
       const backendItems = res.data.data.products || [];
       useCartStore.getState().syncFromBackend(backendItems);
 
@@ -74,6 +77,8 @@ function ProductDetailPage() {
         showConfirmButton: false,
         timer: 2000,
       });
+    } finally {
+      setIsAddingToCart(false);
     }
   };
 
@@ -89,14 +94,17 @@ function ProductDetailPage() {
       return;
     }
 
+    if (isTogglingFavorite) return;
+    setIsTogglingFavorite(true);
+
     try {
-      await axios.post(`${API_BASE}/api/favorites`, {
+      await api.post("/api/favorites", {
         userId,
         productId: id,
       });
 
       // Sync Zustand with backend
-      const res = await axios.get(`${API_BASE}/api/favorites/${userId}`);
+      const res = await api.get(`/api/favorites/${userId}`);
       const favBackendItems = res.data.data.products || [];
       useFavoritesStore.getState().syncFromBackend(favBackendItems);
 
@@ -109,6 +117,8 @@ function ProductDetailPage() {
       });
     } catch (error) {
       console.error("Error al gestionar favorito:", error);
+    } finally {
+      setIsTogglingFavorite(false);
     }
   };
 
@@ -208,6 +218,7 @@ function ProductDetailPage() {
                       : "bg-white/10 text-white/60 hover:bg-white/20"
                   }`}
                   onClick={handleToggleFavorite}
+                  disabled={isTogglingFavorite}
                 >
                   <Heart
                     filled={favoriteItems.some((f) => f._id === product._id)}
@@ -279,10 +290,20 @@ function ProductDetailPage() {
                 {product.stock > 0 ? (
                   <button
                     onClick={handleAddToCart}
-                    className="flex-1 flex items-center justify-center gap-2 bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-semibold py-3 px-6 rounded-xl transition-colors"
+                    disabled={isAddingToCart}
+                    className="flex-1 flex items-center justify-center gap-2 bg-yellow-500 hover:bg-yellow-400 text-gray-900 font-semibold py-3 px-6 rounded-xl transition-colors disabled:opacity-50"
                   >
-                    <ShoppingCart />
-                    Agregar al Carrito
+                    {isAddingToCart ? (
+                      <>
+                        <span className="w-5 h-5 border-2 border-gray-900/30 border-t-gray-900 rounded-full animate-spin" />
+                        Agregando...
+                      </>
+                    ) : (
+                      <>
+                        <ShoppingCart />
+                        Agregar al Carrito
+                      </>
+                    )}
                   </button>
                 ) : (
                   <button

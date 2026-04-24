@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import axios from "axios";
+import api from "../../../lib/api";
 import Swal from "sweetalert2";
 import useAuthStore from "../../../stores/useAuthStore";
 import {
@@ -11,9 +11,6 @@ import {
   Spinner,
 } from "../../../components/common/Icons";
 import "./index.css";
-
-const API_BASE = "https://visual-detail-backend.onrender.com/api";
-// const API_BASE = "http://localhost:5000/api";
 
 const BRANDS = [
   "Toxic-Shine",
@@ -145,7 +142,7 @@ function ProductoCreate() {
     }
 
     try {
-      await axios.post(`${API_BASE}/api/productos`, data, {
+      await api.post("/api/productos", data, {
         headers: { "Content-Type": "multipart/form-data" },
       });
 

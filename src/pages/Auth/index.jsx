@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
-import axios from "axios";
+import api from "../../lib/api";
 import Swal from "sweetalert2";
 import useAuthStore from "../../stores/useAuthStore";
 import {
@@ -11,9 +11,6 @@ import {
   ArrowLeft,
 } from "../../components/common/Icons";
 import "./index.css";
-
-const API_BASE = "https://visual-detail-backend.onrender.com/api";
-// const API_BASE = "http://localhost:5000/api";
 
 function Login() {
   const { login } = useAuthStore();
@@ -72,7 +69,7 @@ function Login() {
     setIsLoading(true);
 
     try {
-      const res = await axios.post(`${API_BASE}/login`, loginData);
+      const res = await api.post("/api/login", loginData);
       // El backend devuelve: token, userId, role, user
       const { token, userId, role, user } = res.data;
       // Usar role del backend en vez de hardcoded
@@ -112,7 +109,7 @@ function Login() {
     setIsLoading(true);
 
     try {
-      const res = await axios.post(`${API_BASE}/register`, registerData);
+      const res = await api.post("/api/register", registerData);
       const { token, userId, role = "minorista" } = res.data;
       // Nuevos usuarios siempre minorista por defecto
       login(token, userId, role);

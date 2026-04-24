@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api, { API_BASE } from "../../lib/api";
 import Swal from "sweetalert2";
 import useAuthStore from "../../stores/useAuthStore";
 import useFavoritesStore from "../../stores/useFavoritesStore";
@@ -19,9 +19,6 @@ import {
 } from "../../components/common/Icons";
 import "./index.css";
 
-const API_BASE = "https://visual-detail-backend.onrender.com";
-// const API_BASE = "http://localhost:5000";
-
 function Favoritos() {
   const { userId, token } = useAuthStore();
   const navigate = useNavigate();
@@ -32,7 +29,7 @@ function Favoritos() {
 
   const fetchFavorites = async () => {
     try {
-      const response = await axios.get(`${API_BASE}/api/favorites/${userId}`);
+      const response = await api.get(`/api/favorites/${userId}`);
       const favItems = response.data.data.products || [];
       setFavorites(favItems);
 
@@ -76,12 +73,10 @@ function Favoritos() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await axios.delete(
-            `${API_BASE}/api/favorites/${userId}/${product._id}`,
-          );
+          await api.delete(`/api/favorites/${userId}/${product._id}`);
 
           // Sync Zustand
-          const res = await axios.get(`${API_BASE}/api/favorites/${userId}`);
+          const res = await api.get(`/api/favorites/${userId}`);
           useFavoritesStore
             .getState()
             .syncFromBackend(res.data.data.products || []);
@@ -119,14 +114,14 @@ function Favoritos() {
     }
 
     try {
-      await axios.post(`${API_BASE}/api/cart`, {
+      await api.post(`/api/cart`, {
         userId,
         productId: product._id,
         quantity: 1,
       });
 
       // Sync Zustand
-      const res = await axios.get(`${API_BASE}/api/cart/${userId}`);
+      const res = await api.get(`/api/cart/${userId}`);
       useCartStore.getState().syncFromBackend(res.data.data.products || []);
 
       Swal.fire({

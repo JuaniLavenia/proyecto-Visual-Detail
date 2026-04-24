@@ -1,15 +1,11 @@
 import { useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import "./index.css";
-import Swal from "sweetalert2";
+import { useProductActions } from "../../../hooks/useProductActions";
 import useAuthStore from "../../../stores/useAuthStore";
-import useFavoritesStore from "../../../stores/useFavoritesStore";
-import useCartStore from "../../../stores/useCartStore";
-import axios from "axios";
+import { API_BASE } from "../../../lib/api";
+import { toast } from "../../common/SimpleDialog";
 import { Heart, ShoppingCart, Eye, Package } from "../../common/Icons";
-
-const API_BASE = "https://visual-detail-backend.onrender.com";
-// const API_BASE = "http://localhost:5000";
 
 function CardProductos({
   image,
@@ -23,91 +19,72 @@ function CardProductos({
   brand,
   precioMayorista,
 }) {
-  const { userId, token, role, isMayorista } = useAuthStore();
-  const favoriteItems = useFavoritesStore((state) => state.items);
-  const addItem = useCartStore((state) => state.addItem);
+  const { role } = useAuthStore();
   const navigate = useNavigate();
-
-  // Local state para favorito instantáneo (antes de la API)
   const [imageError, setImageError] = useState(false);
 
+  // Usar el hook personalizado
+  const {
+    isAddingToCart,
+    isTogglingFavorite,
+    addToCart,
+    toggleFavorite,
+    isFavoriteById,
+  } = useProductActions(true);
+
+  const isFavorite = isFavoriteById(_id);
+
   const handleAddToCart = async () => {
-    if (!token) {
-      Swal.fire({
-        position: "center",
-        icon: "info",
-        title: "Debe iniciar sesión para comprar",
-        showConfirmButton: false,
-        timer: 2500,
-      });
+    // Check auth primero
+    if (!useAuthStore.getState().token) {
       navigate("/login");
       return;
     }
 
-    try {
-      await axios.post(`${API_BASE}/api/cart`, {
-        userId,
-        productId: _id,
-        quantity: 1,
-      });
+    const result = await addToCart({
+      _id,
+      name,
+      price,
+      brand,
+      image,
+      category,
+      stock,
+    });
 
-      // Sync Zustand for badge
-      const res = await axios.get(`${API_BASE}/api/cart/${userId}`);
-      const backendItems = res.data.data.products || [];
-      useCartStore.getState().syncFromBackend(backendItems);
-
-      Swal.fire({
-        position: "center",
-        icon: "success",
-        title: "Producto agregado al carrito",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-    } catch (error) {
-      console.error("Error al agregar al carrito:", error);
-      Swal.fire({
-        position: "center",
-        icon: "error",
-        title: "Error al agregar al carrito",
-        showConfirmButton: false,
-        timer: 2000,
-      });
+    if (result.success) {
+      toast("Producto agregado al carrito", "success");
+    } else if (result.needsAuth) {
+      navigate("/login");
+    } else if (result.error) {
+      toast("Error al agregar al carrito", "danger");
     }
   };
 
   const handleToggleFavorite = async () => {
-    if (!token) {
-      Swal.fire({
-        position: "center",
-        icon: "info",
-        title: "Debe iniciar sesión para guardar favoritos",
-        showConfirmButton: false,
-        timer: 2500,
-      });
+    if (!useAuthStore.getState().token) {
       navigate("/login");
       return;
     }
 
-    try {
-      await axios.post(`${API_BASE}/api/favorites`, {
-        userId,
-        productId: _id,
-      });
+    const product = {
+      _id,
+      name,
+      price,
+      brand,
+      image,
+      category,
+      stock,
+      precioMayorista,
+    };
+    const result = await toggleFavorite(product);
 
-      // Sync Zustand with backend
-      const res = await axios.get(`${API_BASE}/api/favorites/${userId}`);
-      const favBackendItems = res.data.data.products || [];
-      useFavoritesStore.getState().syncFromBackend(favBackendItems);
-
-      Swal.fire({
-        position: "center",
-        icon: "success",
-        title: "Agregado a favoritos",
-        showConfirmButton: false,
-        timer: 1200,
-      });
-    } catch (error) {
-      console.error("Error al gestionar favorito:", error);
+    if (result.success) {
+      toast(
+        result.wasAdded ? "Agregado a favoritos" : "Quitado de favoritos",
+        "success",
+      );
+    } else if (result.needsAuth) {
+      navigate("/login");
     }
   };
 
@@ -153,21 +130,15 @@ function CardProductos({
 
         {/* Favorite Button */}
         <button
-          className={`product-card-favorite ${favoriteItems.some((f) => f._id === _id) ? "active" : ""}`}
+          className={`product-card-favorite ${isFavorite ? "active" : ""}`}
           onClick={(e) => {
             e.stopPropagation();
             handleToggleFavorite();
           }}
-          title={
-            favoriteItems.some((f) => f._id === _id)
-              ? "Quitar de favoritos"
-              : "Agregar a favoritos"
-          }
+          disabled={isTogglingFavorite}
+          title={isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"}
         >
-          <Heart
-            className="w-5 h-5"
-            filled={favoriteItems.some((f) => f._id === _id)}
-          />
+          <Heart className="w-5 h-5" filled={isFavorite} />
         </button>
       </div>
 
@@ -191,17 +162,25 @@ function CardProductos({
 
         {/* Price - Mostrar según role del usuario */}
         <div className="product-card-price">
-          {role === "mayorista" && precioMayorista ? (
-            <span className="text-green-400">
-              ${precioMayorista.toLocaleString("es-AR")}
-            </span>
-          ) : role === "mayorista" && !precioMayorista ? (
-            <span className="text-green-400">
-              ${(price * 0.85).toLocaleString("es-AR")}{" "}
-              <span className="text-xs">(15% dto)</span>
-            </span>
+          {precioMayorista ? (
+            <div className="flex items-baseline gap-4">
+              <div>
+                <p className="text-white/50 text-xs mb-1">Por Menor</p>
+                <div className="text-3xl font-bold text-white">
+                  ${price?.toLocaleString("es-AR")}
+                </div>
+              </div>
+              <div>
+                <p className="text-green-400/70 text-xs mb-1">Mayorista</p>
+                <div className="text-2xl font-bold text-green-400">
+                  ${precioMayorista?.toLocaleString("es-AR")}
+                </div>
+              </div>
+            </div>
           ) : (
-            <span>${price.toLocaleString("es-AR")}</span>
+            <div className="text-3xl font-bold text-white">
+              ${price?.toLocaleString("es-AR")}
+            </div>
           )}
         </div>
 
@@ -211,9 +190,19 @@ function CardProductos({
             <button
               className="product-card-btn product-card-btn-primary"
               onClick={handleAddToCart}
+              disabled={isAddingToCart}
             >
-              <ShoppingCart className="w-5 h-5" />
-              Comprar
+              {isAddingToCart ? (
+                <span className="flex items-center gap-2">
+                  <span className="w-4 h-4 border-2 border-white/30 border-t-white rounded-full animate-spin" />
+                  Agregando...
+                </span>
+              ) : (
+                <>
+                  <ShoppingCart className="w-5 h-5" />
+                  Comprar
+                </>
+              )}
             </button>
           ) : (
             <button

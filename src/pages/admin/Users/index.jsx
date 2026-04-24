@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../../lib/api";
 import Swal from "sweetalert2";
 import useAuthStore from "../../../stores/useAuthStore";
 import {
@@ -9,9 +9,6 @@ import {
   ArrowLeft,
 } from "../../../components/common/Icons";
 import "../Products/index.css";
-
-const API_BASE = "https://visual-detail-backend.onrender.com";
-// const API_BASE = "http://localhost:5000";
 
 const ROLES = [
   { value: "minorista", label: "Minorista", color: "bg-blue-500" },
@@ -38,9 +35,7 @@ function UsersAdmin() {
 
   const fetchUsers = async () => {
     try {
-      const res = await axios.get(`${API_BASE}/api/users`, {
-        headers: { Authorization: `Bearer ${token}` },
-      });
+      const res = await api.get("/api/users");
       setUsers(res.data.data.usuarios || res.data.data || []);
     } catch (error) {
       console.error("Error fetching users:", error);

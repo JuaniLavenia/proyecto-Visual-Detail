@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
-import axios from "axios";
+import api from "../../../lib/api";
 import Swal from "sweetalert2";
 import useAuthStore from "../../../stores/useAuthStore";
 import {
@@ -11,9 +11,6 @@ import {
   Spinner,
 } from "../../../components/common/Icons";
 import "./index.css";
-
-const API_BASE = "https://visual-detail-backend.onrender.com";
-// const API_BASE = "http://localhost:5000";
 
 const BRANDS = [
   "Toxic-Shine",
@@ -75,8 +72,8 @@ function ProductoEdit() {
 
   // Fetch producto
   useEffect(() => {
-    axios
-      .get(`${API_BASE}/api/productos/${id}`)
+    api
+      .get(`/api/productos/${id}`)
       .then((res) => {
         // Nueva estructura: response.data.data = producto
         const p = res.data.data;
@@ -92,7 +89,7 @@ function ProductoEdit() {
           imageUrl: p?.imageUrl || "",
         });
         if (p?.image && !p.image.startsWith("http")) {
-          setExistingImage(`${API_BASE}/img/productos/${p.image}`);
+          setExistingImage(`/img/productos/${p.image}`);
         } else {
           setExistingImage(p?.image || null);
         }

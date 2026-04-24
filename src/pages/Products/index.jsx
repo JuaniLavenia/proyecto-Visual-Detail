@@ -5,7 +5,7 @@ import CardProductos, {
   ProductCardEmpty,
 } from "../../components/shared/ProductCard";
 import Filters from "../../components/shared/CategoryBtn";
-import axios from "axios";
+import api, { fetcher, API_BASE } from "../../lib/api";
 import {
   Filter,
   Close,
@@ -13,12 +13,6 @@ import {
   ChevronRight,
 } from "../../components/common/Icons";
 import "./index.css";
-
-const API_BASE = "https://visual-detail-backend.onrender.com/api";
-// const API_BASE = "http://localhost:5000/api";
-
-// Fetcher para SWR - usa axios internamente
-const fetcher = (url) => axios.get(url).then((res) => res.data);
 
 function SearchClean() {
   const [currentPage, setCurrentPage] = useState(1);
@@ -36,18 +30,18 @@ function SearchClean() {
   // Build key de request según filtros
   const getKey = () => {
     if (filterType === "category" && activeFilter) {
-      return `${API_BASE}/productos/category/${activeFilter}`;
+      return `${API_BASE}/api/productos/category/${activeFilter}`;
     }
     if (filterType === "brand" && activeFilter) {
-      return `${API_BASE}/productos/brand/${activeFilter}`;
+      return `${API_BASE}/api/productos/brand/${activeFilter}`;
     }
     if (initialSearch) {
-      return `${API_BASE}/productos/search/${initialSearch}`;
+      return `${API_BASE}/api/productos/search/${initialSearch}`;
     }
     if (initialCategory) {
-      return `${API_BASE}/productos/category/${initialCategory}`;
+      return `${API_BASE}/api/productos/category/${initialCategory}`;
     }
-    return `${API_BASE}/productos?page=${currentPage}&limit=${currentSize}`;
+    return `${API_BASE}/api/productos?page=${currentPage}&limit=${currentSize}`;
   };
 
   // useSWR con configuración optimizada

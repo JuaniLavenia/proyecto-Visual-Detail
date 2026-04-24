@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useSWR, { mutate } from "swr";
-import axios from "axios";
+import api, { fetcher, API_BASE } from "../../../lib/api";
 import Swal from "sweetalert2";
 import useAuthStore from "../../../stores/useAuthStore";
 import AdminActionsMenu from "../../../components/common/AdminActionsMenu";
@@ -16,12 +16,6 @@ import {
   ArrowLeft,
 } from "../../../components/common/Icons";
 import "./index.css";
-
-const API_BASE = "https://visual-detail-backend.onrender.com";
-// const API_BASE = "http://localhost:5000";
-
-// Fetcher para SWR
-const fetcher = (url) => axios.get(url).then((res) => res.data);
 
 function AdminProducto() {
   const navigate = useNavigate();
@@ -66,8 +60,8 @@ function AdminProducto() {
   const [stats, setStats] = useState(null);
   useEffect(() => {
     if (token && isAdmin) {
-      axios
-        .get(`${API_BASE}/api/productos/stats`)
+      api
+        .get(`/api/productos/stats`)
         .then((res) => setStats(res.data.data))
         .catch(() => {});
     }
@@ -90,8 +84,8 @@ function AdminProducto() {
       cancelButtonText: "Cancelar",
     }).then((result) => {
       if (result.isConfirmed) {
-        axios
-          .delete(`${API_BASE}/api/productos/${id}`)
+        api
+          .delete(`/api/productos/${id}`)
           .then(() => {
             Swal.fire({
               icon: "success",
@@ -151,7 +145,7 @@ function AdminProducto() {
     formData.append("file", excelFile);
 
     try {
-      await axios.post(`${API_BASE}/api/productos/bulk-upload`, formData, {
+      await api.post(`/api/productos/bulk-upload`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
       });
       Swal.fire({
@@ -178,7 +172,7 @@ function AdminProducto() {
   const handleExportXLSX = async () => {
     setIsExporting(true);
     try {
-      const response = await fetch(`${API_BASE}/api/productos/export`);
+      const response = await api.get(`/api/productos/export`);
       if (!response.ok) throw new Error("Error en la descarga");
 
       const blob = await response.blob();

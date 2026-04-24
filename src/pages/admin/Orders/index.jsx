@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../../lib/api";
 import Swal from "sweetalert2";
 import useAuthStore from "../../../stores/useAuthStore";
 import {
@@ -15,9 +15,6 @@ import {
   ChevronRight,
 } from "../../../components/common/Icons";
 import "../Products/index.css";
-
-const API_BASE = "https://visual-detail-backend.onrender.com";
-// const API_BASE = "http://localhost:5000";
 
 const ESTADOS = [
   { value: "todos", label: "Todos" },
@@ -55,9 +52,6 @@ function AdminOrders() {
     const fetchOrders = async () => {
       try {
         setLoading(true);
-        const config = {
-          headers: { Authorization: `Bearer ${token}` },
-        };
 
         const params = new URLSearchParams();
         params.append("page", pagination.page);
@@ -66,10 +60,7 @@ function AdminOrders() {
           params.append("estado", filtroEstado);
         }
 
-        const res = await axios.get(
-          `${API_BASE}/api/admin/pedidos?${params.toString()}`,
-          config,
-        );
+        const res = await api.get(`/api/admin/pedidos?${params.toString()}`);
 
         const data = res.data.data;
         setOrders(data.pedidos || data || []);

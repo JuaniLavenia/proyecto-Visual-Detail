@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import axios from "axios";
+import api from "../../../lib/api";
 import Swal from "sweetalert2";
 import useAuthStore from "../../../stores/useAuthStore";
 import {
@@ -14,9 +14,6 @@ import {
   Exclamation,
 } from "../../../components/common/Icons";
 import "../Products/index.css";
-
-const API_BASE = "https://visual-detail-backend.onrender.com";
-// const API_BASE = "http://localhost:5000";
 
 function AdminDashboard() {
   const navigate = useNavigate();
@@ -39,14 +36,10 @@ function AdminDashboard() {
 
     const fetchDashboardData = async () => {
       try {
-        const config = {
-          headers: { Authorization: `Bearer ${token}` },
-        };
-
         // Fetch full stats (includes stock and users) and recent orders in parallel
         const [statsRes, recentRes] = await Promise.all([
-          axios.get(`${API_BASE}/api/admin/estadisticas`, config),
-          axios.get(`${API_BASE}/api/admin/pedidos/recent?limit=5`, config),
+          api.get("/api/admin/estadisticas"),
+          api.get("/api/admin/pedidos/recent?limit=5"),
         ]);
 
         setStats(statsRes.data.data);

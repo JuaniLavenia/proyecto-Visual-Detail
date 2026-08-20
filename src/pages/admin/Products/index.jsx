@@ -172,10 +172,11 @@ function AdminProducto() {
   const handleExportXLSX = async () => {
     setIsExporting(true);
     try {
-      const response = await api.get(`/api/productos/export`);
-      if (response.status !== 200) throw new Error("Error en la descarga");
+      const response = await api.get(`/api/productos/export`, {
+        responseType: "blob",
+      });
 
-      const blob = await response.blob();
+      const blob = response.data;
       const url = window.URL.createObjectURL(blob);
       const a = document.createElement("a");
       a.href = url;

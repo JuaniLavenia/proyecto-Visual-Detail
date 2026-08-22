@@ -121,6 +121,25 @@ export function handleError(error, customMessages = {}) {
 }
 
 /**
+ * Extrae los tokens de la respuesta del backend.
+ * El backend envía los tokens bajo `response.data.data` y la API
+ * debe tolerar también el formato legacy `response.data` por compatibilidad.
+ */
+export function extractRefreshTokens(responseData) {
+  if (!responseData) return null;
+
+  const payload = responseData.data ?? responseData;
+  const accessToken = payload?.accessToken;
+  const refreshToken = payload?.refreshToken;
+
+  if (!accessToken || !refreshToken) {
+    return null;
+  }
+
+  return { accessToken, refreshToken };
+}
+
+/**
  * Obtiene los datos de auth desde localStorage (evita imports circulares)
  */
 function getAuthFromStorage() {
@@ -221,7 +240,12 @@ async function refreshAccessToken() {
       { headers: { "Content-Type": "application/json" } },
     );
 
-    const { accessToken, refreshToken: newRefreshToken } = response.data;
+    const extractedTokens = extractRefreshTokens(response.data);
+    if (!extractedTokens) {
+      throw new Error("Refresh response malformed");
+    }
+
+    const { accessToken, refreshToken: newRefreshToken } = extractedTokens;
     return { accessToken, refreshToken: newRefreshToken };
   } catch (error) {
     // Refresh falló — limpiar y notificar logout

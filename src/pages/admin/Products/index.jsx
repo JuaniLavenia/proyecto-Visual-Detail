@@ -38,10 +38,12 @@ function AdminProducto() {
 
   // Build key de request según búsqueda
   const getKey = () => {
-    if (search) {
-      return `${API_BASE}/api/productos/search/${search}`;
-    }
-    return `${API_BASE}/api/productos?page=${currentPage}&limit=${currentSize}`;
+    const params = new URLSearchParams({
+      page: String(currentPage),
+      limit: String(currentSize),
+    });
+    if (search.trim()) params.set("search", search.trim());
+    return `${API_BASE}/api/productos?${params.toString()}`;
   };
 
   // useSWR para productos
@@ -112,7 +114,7 @@ function AdminProducto() {
   };
 
   const handlePageChange = (newPage) => {
-    if (newPage !== currentPage && !search) {
+    if (newPage !== currentPage && newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -573,7 +575,7 @@ function AdminProducto() {
             </div>
 
             {/* Pagination */}
-            {totalPages > 1 && !search && (
+            {totalPages > 1 && (
               <div className="mt-8 flex justify-center">
                 <div className="flex items-center gap-2">
                   <button

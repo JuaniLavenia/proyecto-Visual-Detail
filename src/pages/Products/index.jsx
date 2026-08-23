@@ -98,7 +98,8 @@ function SearchClean() {
   // Obtener título de la sección
   const sectionTitle = useMemo(() => {
     if (initialSearch) return `Resultados para "${initialSearch}"`;
-    if (categoryFilter && brandFilter) return `${categoryFilter} · ${brandFilter}`;
+    if (categoryFilter && brandFilter)
+      return `${categoryFilter} · ${brandFilter}`;
     if (categoryFilter || brandFilter) return categoryFilter || brandFilter;
     return "Todos los Productos";
   }, [initialSearch, categoryFilter, brandFilter]);
@@ -156,10 +157,18 @@ function SearchClean() {
                   }}
                   className="bg-white/10 text-white border border-white/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-yellow-500"
                 >
-                  <option value="newest" className="bg-gray-900">Más nuevos</option>
-                  <option value="price-asc" className="bg-gray-900">Precio: menor a mayor</option>
-                  <option value="price-desc" className="bg-gray-900">Precio: mayor a menor</option>
-                  <option value="name-asc" className="bg-gray-900">Nombre: A-Z</option>
+                  <option value="newest" className="bg-gray-900">
+                    Más nuevos
+                  </option>
+                  <option value="price-asc" className="bg-gray-900">
+                    Precio: menor a mayor
+                  </option>
+                  <option value="price-desc" className="bg-gray-900">
+                    Precio: mayor a menor
+                  </option>
+                  <option value="name-asc" className="bg-gray-900">
+                    Nombre: A-Z
+                  </option>
                 </select>
                 <label className="text-white/50 text-sm">Mostrar:</label>
                 <select
@@ -195,7 +204,10 @@ function SearchClean() {
                     {filter}
                   </span>
                 ))}
-              <button onClick={clearFilters} className="text-white/60 hover:text-white">
+              <button
+                onClick={clearFilters}
+                className="text-white/60 hover:text-white"
+              >
                 Limpiar
               </button>
             </div>
@@ -247,9 +259,7 @@ function SearchClean() {
                       handleFilterClick(brand, "brand")
                     }
                     getProductos={refreshData}
-                    activeCategory={
-                      categoryFilter || initialCategory
-                    }
+                    activeCategory={categoryFilter || initialCategory}
                     activeBrand={brandFilter}
                   />
                 </div>

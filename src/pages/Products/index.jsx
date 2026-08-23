@@ -18,8 +18,9 @@ function SearchClean() {
   const [currentPage, setCurrentPage] = useState(1);
   const [currentSize, setCurrentSize] = useState(12);
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeFilter, setActiveFilter] = useState(null);
-  const [filterType, setFilterType] = useState(null);
+  const [categoryFilter, setCategoryFilter] = useState(null);
+  const [brandFilter, setBrandFilter] = useState(null);
+  const [sort, setSort] = useState("newest");
 
   // Obtener parámetros de URL
   const urlParams = new URLSearchParams(window.location.search);
@@ -27,21 +28,25 @@ function SearchClean() {
     urlParams.get("category") || urlParams.get("categoria");
   const initialSearch = urlParams.get("search");
 
+  const hasFilters = Boolean(categoryFilter || brandFilter || initialSearch);
+  const activeFilterCount = [categoryFilter, brandFilter, initialSearch].filter(
+    Boolean,
+  ).length;
+
   // Build key de request según filtros
   const getKey = () => {
-    if (filterType === "category" && activeFilter) {
-      return `${API_BASE}/api/productos/category/${encodeURIComponent(activeFilter)}`;
-    }
-    if (filterType === "brand" && activeFilter) {
-      return `${API_BASE}/api/productos/brand/${encodeURIComponent(activeFilter)}`;
-    }
-    if (initialSearch) {
-      return `${API_BASE}/api/productos/search/${encodeURIComponent(initialSearch)}`;
-    }
-    if (initialCategory) {
-      return `${API_BASE}/api/productos/category/${encodeURIComponent(initialCategory)}`;
-    }
-    return `${API_BASE}/api/productos?page=${currentPage}&limit=${currentSize}`;
+    const params = new URLSearchParams({
+      page: String(currentPage),
+      limit: String(currentSize),
+      sort,
+    });
+
+    const category = categoryFilter || initialCategory;
+    if (category) params.set("category", category);
+    if (brandFilter) params.set("brand", brandFilter);
+    if (initialSearch) params.set("search", initialSearch);
+
+    return `${API_BASE}/api/productos?${params.toString()}`;
   };
 
   // useSWR con configuración optimizada
@@ -61,7 +66,7 @@ function SearchClean() {
 
   // Función para cambiar página
   const handlePageChange = (newPage) => {
-    if (newPage !== currentPage && !activeFilter && !initialSearch) {
+    if (newPage !== currentPage && newPage >= 1 && newPage <= totalPages) {
       setCurrentPage(newPage);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -69,7 +74,7 @@ function SearchClean() {
 
   // Función para cambiar tamaño de página
   const handleSizeChange = (size) => {
-    if (size !== currentSize && !activeFilter && !initialSearch) {
+    if (size !== currentSize) {
       setCurrentPage(1);
       setCurrentSize(size);
     }
@@ -77,37 +82,26 @@ function SearchClean() {
 
   // Manejar click en filtro
   const handleFilterClick = (value, type) => {
-    if (activeFilter === value && filterType === type) {
-      setActiveFilter(null);
-      setFilterType(null);
-      setCurrentPage(1);
-    } else {
-      setActiveFilter(value);
-      setFilterType(type);
-      setCurrentPage(1);
-    }
+    const setter = type === "category" ? setCategoryFilter : setBrandFilter;
+    setter((currentValue) => (currentValue === value ? null : value));
+    setCurrentPage(1);
     setIsSidebarOpen(false);
   };
 
   // Limpiar filtros
   const clearFilters = () => {
-    setActiveFilter(null);
-    setFilterType(null);
+    setCategoryFilter(null);
+    setBrandFilter(null);
     setCurrentPage(1);
   };
 
   // Obtener título de la sección
   const sectionTitle = useMemo(() => {
     if (initialSearch) return `Resultados para "${initialSearch}"`;
-    if (activeFilter) return activeFilter;
+    if (categoryFilter && brandFilter) return `${categoryFilter} · ${brandFilter}`;
+    if (categoryFilter || brandFilter) return categoryFilter || brandFilter;
     return "Todos los Productos";
-  }, [initialSearch, activeFilter]);
-
-  // Título para filtro activo
-  const activeFilterTitle = useMemo(() => {
-    if (!activeFilter) return null;
-    return filterType === "category" ? "Categoría" : "Marca";
-  }, [activeFilter, filterType]);
+  }, [initialSearch, categoryFilter, brandFilter]);
 
   // Función para recargar datos (para el modal de filtros)
   const refreshData = () => {
@@ -144,50 +138,66 @@ function SearchClean() {
               >
                 <Filter width="20px" height="20px" strokeWidth="1.5" />
                 Filtros
-                {activeFilter && (
+                {activeFilterCount > 0 && (
                   <span className="px-1.5 py-0.5 bg-yellow-500 text-gray-900 text-xs rounded-full">
-                    1
+                    {activeFilterCount}
                   </span>
                 )}
               </button>
 
-              {/* Sort/Page Size (only when no filters active) */}
-              {!activeFilter && !initialSearch && (
-                <div className="hidden md:flex items-center gap-2">
-                  <label className="text-white/50 text-sm">Mostrar:</label>
-                  <select
-                    value={currentSize}
-                    onChange={(e) => handleSizeChange(Number(e.target.value))}
-                    className="bg-white/10 text-white border border-white/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-yellow-500"
-                  >
-                    <option value={12} className="bg-gray-900">
-                      12
-                    </option>
-                    <option value={24} className="bg-gray-900">
-                      24
-                    </option>
-                    <option value={48} className="bg-gray-900">
-                      48
-                    </option>
-                  </select>
-                </div>
-              )}
+              {/* Sort/Page Size */}
+              <div className="hidden md:flex items-center gap-2">
+                <label className="text-white/50 text-sm">Ordenar:</label>
+                <select
+                  value={sort}
+                  onChange={(e) => {
+                    setSort(e.target.value);
+                    setCurrentPage(1);
+                  }}
+                  className="bg-white/10 text-white border border-white/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-yellow-500"
+                >
+                  <option value="newest" className="bg-gray-900">Más nuevos</option>
+                  <option value="price-asc" className="bg-gray-900">Precio: menor a mayor</option>
+                  <option value="price-desc" className="bg-gray-900">Precio: mayor a menor</option>
+                  <option value="name-asc" className="bg-gray-900">Nombre: A-Z</option>
+                </select>
+                <label className="text-white/50 text-sm">Mostrar:</label>
+                <select
+                  value={currentSize}
+                  onChange={(e) => handleSizeChange(Number(e.target.value))}
+                  className="bg-white/10 text-white border border-white/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-yellow-500"
+                >
+                  <option value={12} className="bg-gray-900">
+                    12
+                  </option>
+                  <option value={24} className="bg-gray-900">
+                    24
+                  </option>
+                  <option value={48} className="bg-gray-900">
+                    48
+                  </option>
+                </select>
+              </div>
             </div>
           </div>
 
           {/* Active Filter Pills */}
-          {activeFilter && (
+          {hasFilters && (
             <div className="mt-4 flex items-center gap-2 flex-wrap">
               <span className="text-white/50 text-sm">Filtro activo:</span>
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-500/20 text-yellow-400 text-sm rounded-full">
-                {filterType === "category" ? "📂" : "🏷️"} {activeFilter}
-                <button
-                  onClick={clearFilters}
-                  className="ml-1 hover:text-white"
-                >
-                  ×
-                </button>
-              </span>
+              {[categoryFilter || initialCategory, brandFilter, initialSearch]
+                .filter(Boolean)
+                .map((filter) => (
+                  <span
+                    key={filter}
+                    className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-500/20 text-yellow-400 text-sm rounded-full"
+                  >
+                    {filter}
+                  </span>
+                ))}
+              <button onClick={clearFilters} className="text-white/60 hover:text-white">
+                Limpiar
+              </button>
             </div>
           )}
         </div>
@@ -213,9 +223,9 @@ function SearchClean() {
                     <h2 className="text-lg font-semibold text-white">
                       Filtros
                     </h2>
-                    {activeFilter && (
+                    {activeFilterCount > 0 && (
                       <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
-                        1 activo
+                        {activeFilterCount} activos
                       </span>
                     )}
                   </div>
@@ -238,15 +248,15 @@ function SearchClean() {
                     }
                     getProductos={refreshData}
                     activeCategory={
-                      filterType === "category" ? activeFilter : null
+                      categoryFilter || initialCategory
                     }
-                    activeBrand={filterType === "brand" ? activeFilter : null}
+                    activeBrand={brandFilter}
                   />
                 </div>
 
                 {/* Modal Footer - Actions */}
                 <div className="flex items-center gap-3 px-5 py-4 border-t border-white/10 bg-gray-900/50">
-                  {activeFilter && (
+                  {hasFilters && (
                     <button
                       onClick={() => {
                         clearFilters();
@@ -259,9 +269,9 @@ function SearchClean() {
                   )}
                   <button
                     onClick={() => setIsSidebarOpen(false)}
-                    className={`${activeFilter ? "flex-1" : "flex-2"} px-4 py-3 bg-yellow-500 text-gray-900 font-semibold rounded-xl hover:bg-yellow-400 transition-colors`}
+                    className="flex-1 px-4 py-3 bg-yellow-500 text-gray-900 font-semibold rounded-xl hover:bg-yellow-400 transition-colors"
                   >
-                    {activeFilter ? "Aplicar filtros" : "Ver todos"}
+                    Aplicar filtros
                   </button>
                 </div>
               </div>
@@ -297,8 +307,8 @@ function SearchClean() {
               <ProductCardEmpty
                 title="No se encontraron productos"
                 message={
-                  activeFilter
-                    ? `No hay productos en la categoría "${activeFilter}"`
+                  hasFilters
+                    ? "No hay productos con los filtros seleccionados"
                     : "Intenta con otros términos de búsqueda"
                 }
               />
@@ -311,7 +321,7 @@ function SearchClean() {
                 </div>
 
                 {/* Pagination */}
-                {!activeFilter && !initialSearch && totalPages > 1 && (
+                {totalPages > 1 && (
                   <div className="mt-12 flex justify-center">
                     <div className="flex items-center gap-2">
                       {/* Previous */}
@@ -364,13 +374,11 @@ function SearchClean() {
                 )}
 
                 {/* Results Info */}
-                {!activeFilter && !initialSearch && (
-                  <div className="mt-8 text-center text-white/50 text-sm">
-                    Mostrando {(currentPage - 1) * currentSize + 1} -{" "}
-                    {Math.min(currentPage * currentSize, totalRows)} de{" "}
-                    {totalRows} productos
-                  </div>
-                )}
+                <div className="mt-8 text-center text-white/50 text-sm">
+                  Mostrando {(currentPage - 1) * currentSize + 1} -{" "}
+                  {Math.min(currentPage * currentSize, totalRows)} de{" "}
+                  {totalRows} productos
+                </div>
               </>
             )}
           </main>

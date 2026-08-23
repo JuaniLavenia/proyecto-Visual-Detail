@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   Users,
   Exclamation,
+  Settings,
 } from "../../../components/common/Icons";
 import "../Products/index.css";
 
@@ -251,6 +252,13 @@ function AdminDashboard() {
           >
             <Users className="w-5 h-5" />
             <span className="font-medium">Usuarios</span>
+          </Link>
+          <Link
+            to="/adm/filtros"
+            className="flex items-center justify-center gap-2 bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-xl transition-colors"
+          >
+            <Settings className="w-5 h-5" />
+            <span className="font-medium">Filtros PLP</span>
           </Link>
           <Link
             to="/adm/productos/create"

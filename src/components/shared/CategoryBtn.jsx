@@ -108,14 +108,30 @@ function Filters({
 
   const [categories, setCategories] = useState(fallbackCategories);
   const [brands, setBrands] = useState(fallbackBrands);
+  const [filterGroups, setFilterGroups] = useState([
+    { key: "category", label: "Categorías" },
+    { key: "brand", label: "Marcas" },
+  ]);
 
   useEffect(() => {
     const fetchTaxonomy = async () => {
       try {
-        const [brandsRes, categoriesRes] = await Promise.all([
+        const [configRes, brandsRes, categoriesRes] = await Promise.all([
+          api.get("/api/filter-config/plp"),
           api.get("/api/brands"),
           api.get("/api/categories"),
         ]);
+
+        const configuredGroups = configRes?.data?.data?.filters;
+        if (!Array.isArray(configuredGroups))
+          throw new Error("Invalid filter config");
+        setFilterGroups(
+          configuredGroups
+            .filter(
+              (group) => group?.key === "category" || group?.key === "brand",
+            )
+            .map((group) => ({ key: group.key, label: group.label })),
+        );
 
         const fetchedBrands = Array.isArray(brandsRes?.data?.data)
           ? brandsRes.data.data.map((item) => item?.name).filter(Boolean)
@@ -130,6 +146,10 @@ function Filters({
           mergeTaxonomyValues(fetchedCategories, fallbackCategories),
         );
       } catch {
+        setFilterGroups([
+          { key: "category", label: "Categorías" },
+          { key: "brand", label: "Marcas" },
+        ]);
         setBrands(fallbackBrands);
         setCategories(fallbackCategories);
       }
@@ -202,37 +222,36 @@ function Filters({
             </div>
           )}
 
-          {/* Categories */}
-          <FilterSection
-            title="Categorías"
-            icon={
-              <svg
-                className="w-4 h-4"
-                fill="none"
-                viewBox="0 0 24 24"
-                stroke="white"
-                strokeWidth={1.5}
-              >
-                <path
-                  strokeLinecap="round"
-                  strokeLinejoin="round"
-                  d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
-                />
-              </svg>
-            }
-            items={categories}
-            activeItem={activeCategory}
-            onItemClick={handleCategorySelect}
-          />
-
-          {/* Brands */}
-          <FilterSection
-            title="Marcas"
-            icon={<Star className="w-4 h-4" />}
-            items={brands}
-            activeItem={activeBrand}
-            onItemClick={handleBrandSelect}
-          />
+          {filterGroups.map((group) => (
+            <FilterSection
+              key={group.key}
+              title={group.label}
+              icon={
+                group.key === "brand" ? (
+                  <Star className="w-4 h-4" />
+                ) : (
+                  <svg
+                    className="w-4 h-4"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="white"
+                    strokeWidth={1.5}
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      d="M3.75 6.75h16.5M3.75 12h16.5m-16.5 5.25h16.5"
+                    />
+                  </svg>
+                )
+              }
+              items={group.key === "brand" ? brands : categories}
+              activeItem={group.key === "brand" ? activeBrand : activeCategory}
+              onItemClick={
+                group.key === "brand" ? handleBrandSelect : handleCategorySelect
+              }
+            />
+          ))}
         </div>
       </div>
     </div>

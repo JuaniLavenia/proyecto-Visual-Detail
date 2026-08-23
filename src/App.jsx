@@ -1,30 +1,33 @@
-import { Suspense, lazy, useEffect } from 'react';
-import { Routes, Route } from 'react-router';
-import './App.css';
-import LoadingSpinner from './components/common/LoadingSpinner';
-import ErrorBoundary from './components/common/ErrorBoundary';
-import useAuthStore from './stores/useAuthStore';
-import { onAuthTokenRefreshed, offAuthTokenRefreshed } from './lib/api';
+import { Suspense, lazy, useEffect } from "react";
+import { Routes, Route } from "react-router";
+import "./App.css";
+import LoadingSpinner from "./components/common/LoadingSpinner";
+import ErrorBoundary from "./components/common/ErrorBoundary";
+import useAuthStore from "./stores/useAuthStore";
+import { onAuthTokenRefreshed, offAuthTokenRefreshed } from "./lib/api";
 
 // Lazy loading de todas las páginas
-const HomePage = lazy(() => import('./pages/Home'));
-const Login = lazy(() => import('./pages/Auth'));
-const Products = lazy(() => import('./pages/Products'));
-const ProductDetail = lazy(() => import('./pages/ProductDetail'));
-const Cart = lazy(() => import('./pages/Cart'));
-const Favorites = lazy(() => import('./pages/Favorites'));
-const Contact = lazy(() => import('./pages/Contact'));
-const Profile = lazy(() => import('./pages/Profile'));
-const AdminProducts = lazy(() => import('./pages/admin/Products'));
-const ProductEdit = lazy(() => import('./pages/admin/Products/ProductEdit'));
-const ProductCreate = lazy(() => import('./pages/admin/Products/ProductCreate'));
-const AdminUsers = lazy(() => import('./pages/admin/Users'));
-const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
-const AdminOrders = lazy(() => import('./pages/admin/Orders'));
+const HomePage = lazy(() => import("./pages/Home"));
+const Login = lazy(() => import("./pages/Auth"));
+const Products = lazy(() => import("./pages/Products"));
+const ProductDetail = lazy(() => import("./pages/ProductDetail"));
+const Cart = lazy(() => import("./pages/Cart"));
+const Favorites = lazy(() => import("./pages/Favorites"));
+const Contact = lazy(() => import("./pages/Contact"));
+const Profile = lazy(() => import("./pages/Profile"));
+const AdminProducts = lazy(() => import("./pages/admin/Products"));
+const ProductEdit = lazy(() => import("./pages/admin/Products/ProductEdit"));
+const ProductCreate = lazy(
+  () => import("./pages/admin/Products/ProductCreate"),
+);
+const AdminUsers = lazy(() => import("./pages/admin/Users"));
+const AdminDashboard = lazy(() => import("./pages/admin/Dashboard"));
+const AdminOrders = lazy(() => import("./pages/admin/Orders"));
+const FilterConfig = lazy(() => import("./pages/admin/FilterConfig"));
 
 // Layout components
-const Header = lazy(() => import('./components/layout/Header'));
-const Footer = lazy(() => import('./components/layout/Footer'));
+const Header = lazy(() => import("./components/layout/Header"));
+const Footer = lazy(() => import("./components/layout/Footer"));
 
 // Componente de fallback para Suspense
 function PageLoader() {
@@ -61,7 +64,7 @@ function App() {
     <ErrorBoundary>
       <Suspense fallback={<PageLoader />}>
         <Header />
-        
+
         <main className="min-h-screen">
           <Routes>
             <Route path="/" element={<HomePage />} />
@@ -72,7 +75,7 @@ function App() {
             <Route path="/favoritos" element={<Favorites />} />
             <Route path="/contactanos" element={<Contact />} />
             <Route path="/perfil" element={<Profile />} />
-            
+
             {/* Rutas de Admin */}
             <Route path="/adm/dashboard" element={<AdminDashboard />} />
             <Route path="/adm/pedidos" element={<AdminOrders />} />
@@ -80,9 +83,10 @@ function App() {
             <Route path="/adm/productos/edit/:id" element={<ProductEdit />} />
             <Route path="/adm/productos/create" element={<ProductCreate />} />
             <Route path="/adm/usuarios" element={<AdminUsers />} />
+            <Route path="/adm/filtros" element={<FilterConfig />} />
           </Routes>
         </main>
-        
+
         <Footer />
       </Suspense>
     </ErrorBoundary>

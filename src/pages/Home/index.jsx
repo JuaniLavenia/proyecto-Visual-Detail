@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
+import api from "../../lib/api";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -16,8 +17,7 @@ import Megui from "../../assets/img/meguiars-carr.png";
 import Menzerna from "../../assets/img/menzerna-carr.png";
 import Vonixx from "../../assets/img/vonixx-carr.png";
 
-// Categories data
-const categories = [
+const fallbackCategories = [
   {
     name: "Exteriores",
     image:
@@ -50,7 +50,7 @@ const categories = [
   },
 ];
 
-const brands = [
+const fallbackBrands = [
   { name: "TOXIC SHINE", image: Toxic },
   { name: "FULLCAR", image: Fullcar },
   { name: "TERNNOVA", image: Ternnova },
@@ -106,6 +106,92 @@ function CategoryCard({ category }) {
 
 function HomePage() {
   const brandsSwiperRef = useRef(null);
+  const [categories, setCategories] = useState(fallbackCategories);
+  const [brands, setBrands] = useState(fallbackBrands);
+
+  useEffect(() => {
+    const normalizeKey = (value) =>
+      String(value ?? "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .replace(/[_-]+/g, " ")
+        .replace(/\s+/g, " ")
+        .toLowerCase();
+
+    const mergeBrandOptions = (apiItems) => {
+      const combined = [...(apiItems || []), ...fallbackBrands];
+      const unique = new Map();
+
+      combined.forEach((brand) => {
+        const name = String(brand?.name ?? "").trim();
+        if (!name) return;
+        const key = normalizeKey(name);
+        if (!unique.has(key)) {
+          unique.set(key, {
+            name,
+            image:
+              brand?.image ??
+              fallbackBrands.find((fallbackBrand) => normalizeKey(fallbackBrand.name) === key)?.image ??
+              null,
+          });
+        }
+      });
+
+      return Array.from(unique.values());
+    };
+
+    const mergeCategoryOptions = (apiItems) => {
+      const combined = [...(apiItems || []), ...fallbackCategories];
+      const unique = new Map();
+
+      combined.forEach((category) => {
+        const name = String(category?.name ?? "").trim();
+        if (!name) return;
+        const key = normalizeKey(name);
+        if (!unique.has(key)) {
+          unique.set(key, {
+            name,
+            image:
+              category?.image ??
+              fallbackCategories.find((fallbackCategory) => normalizeKey(fallbackCategory.name) === key)?.image ??
+              null,
+            slug: category?.slug ?? name,
+          });
+        }
+      });
+
+      return Array.from(unique.values());
+    };
+
+    const fetchTaxonomy = async () => {
+      try {
+        const [brandsRes, categoriesRes] = await Promise.all([
+          api.get("/api/brands"),
+          api.get("/api/categories"),
+        ]);
+
+        const fetchedBrands = Array.isArray(brandsRes?.data?.data)
+          ? brandsRes.data.data.map((item) => ({ name: item?.name }))
+          : [];
+
+        const fetchedCategories = Array.isArray(categoriesRes?.data?.data)
+          ? categoriesRes.data.data.map((item) => ({
+              name: item?.name,
+              slug: item?.slug ?? item?.name,
+            }))
+          : [];
+
+        setBrands(mergeBrandOptions(fetchedBrands));
+        setCategories(mergeCategoryOptions(fetchedCategories));
+      } catch {
+        setBrands(fallbackBrands);
+        setCategories(fallbackCategories);
+      }
+    };
+
+    fetchTaxonomy();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-950 pt-20 lg:pt-24">

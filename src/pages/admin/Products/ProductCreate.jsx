@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../../../lib/api";
 import Swal from "sweetalert2";
@@ -12,7 +12,7 @@ import {
 } from "../../../components/common/Icons";
 import "./index.css";
 
-const BRANDS = [
+const DEFAULT_BRANDS = [
   "Toxic-Shine",
   "Fullcar",
   "Dreams",
@@ -26,7 +26,7 @@ const BRANDS = [
   "Otros",
 ];
 
-const CATEGORIES = [
+const DEFAULT_CATEGORIES = [
   "Interiores",
   "Exteriores",
   "Línea Profesional",
@@ -45,6 +45,8 @@ function ProductoCreate() {
   const { token, isAdmin } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const [brandOptions, setBrandOptions] = useState(DEFAULT_BRANDS);
+  const [categoryOptions, setCategoryOptions] = useState(DEFAULT_CATEGORIES);
 
   const [formData, setFormData] = useState({
     name: "",
@@ -61,6 +63,58 @@ function ProductoCreate() {
   const [image, setImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
   const [errors, setErrors] = useState({});
+
+  useEffect(() => {
+    const fetchTaxonomy = async () => {
+      try {
+        const [brandsRes, categoriesRes] = await Promise.all([
+          api.get("/api/brands"),
+          api.get("/api/categories"),
+        ]);
+
+        const brands = Array.isArray(brandsRes?.data?.data)
+          ? brandsRes.data.data.map((item) => item.name).filter(Boolean)
+          : DEFAULT_BRANDS;
+
+        const categories = Array.isArray(categoriesRes?.data?.data)
+          ? categoriesRes.data.data.map((item) => item.name).filter(Boolean)
+          : DEFAULT_CATEGORIES;
+
+        const normalizeOption = (value) =>
+          String(value ?? "")
+            .normalize("NFD")
+            .replace(/[\u0300-\u036f]/g, "")
+            .replace(/[_-]+/g, " ")
+            .replace(/\s+/g, " ")
+            .trim();
+
+        const mergedBrands = Array.from(
+          new Map(
+            [...(brands.length ? brands : DEFAULT_BRANDS), ...DEFAULT_BRANDS].map((option) => [
+              normalizeOption(option).toLowerCase(),
+              option,
+            ]),
+          ).values(),
+        );
+        const mergedCategories = Array.from(
+          new Map(
+            [...(categories.length ? categories : DEFAULT_CATEGORIES), ...DEFAULT_CATEGORIES].map((option) => [
+              normalizeOption(option).toLowerCase(),
+              option,
+            ]),
+          ).values(),
+        );
+
+        setBrandOptions(mergedBrands);
+        setCategoryOptions(mergedCategories);
+      } catch {
+        setBrandOptions(DEFAULT_BRANDS);
+        setCategoryOptions(DEFAULT_CATEGORIES);
+      }
+    };
+
+    fetchTaxonomy();
+  }, []);
 
   // Validar acceso admin
   if (!token || !isAdmin) {
@@ -271,7 +325,7 @@ function ProductoCreate() {
                   <option value="" className="bg-gray-900">
                     Seleccionar marca
                   </option>
-                  {BRANDS.map((brand) => (
+                  {brandOptions.map((brand) => (
                     <option key={brand} value={brand} className="bg-gray-900">
                       {brand}
                     </option>
@@ -298,7 +352,7 @@ function ProductoCreate() {
                   <option value="" className="bg-gray-900">
                     Seleccionar categoría
                   </option>
-                  {CATEGORIES.map((cat) => (
+                  {categoryOptions.map((cat) => (
                     <option key={cat} value={cat} className="bg-gray-900">
                       {cat}
                     </option>

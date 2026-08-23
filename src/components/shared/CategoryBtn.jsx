@@ -126,7 +126,9 @@ function Filters({
           : [];
 
         setBrands(mergeTaxonomyValues(fetchedBrands, fallbackBrands));
-        setCategories(mergeTaxonomyValues(fetchedCategories, fallbackCategories));
+        setCategories(
+          mergeTaxonomyValues(fetchedCategories, fallbackCategories),
+        );
       } catch {
         setBrands(fallbackBrands);
         setCategories(fallbackCategories);

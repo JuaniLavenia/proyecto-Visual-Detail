@@ -92,18 +92,18 @@ function ProductoEdit() {
 
         const mergedBrands = Array.from(
           new Map(
-            [...(brands.length ? brands : DEFAULT_BRANDS), ...DEFAULT_BRANDS].map((option) => [
-              normalizeOption(option).toLowerCase(),
-              option,
-            ]),
+            [
+              ...(brands.length ? brands : DEFAULT_BRANDS),
+              ...DEFAULT_BRANDS,
+            ].map((option) => [normalizeOption(option).toLowerCase(), option]),
           ).values(),
         );
         const mergedCategories = Array.from(
           new Map(
-            [...(categories.length ? categories : DEFAULT_CATEGORIES), ...DEFAULT_CATEGORIES].map((option) => [
-              normalizeOption(option).toLowerCase(),
-              option,
-            ]),
+            [
+              ...(categories.length ? categories : DEFAULT_CATEGORIES),
+              ...DEFAULT_CATEGORIES,
+            ].map((option) => [normalizeOption(option).toLowerCase(), option]),
           ).values(),
         );
 

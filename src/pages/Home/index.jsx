@@ -132,7 +132,9 @@ function HomePage() {
             name,
             image:
               brand?.image ??
-              fallbackBrands.find((fallbackBrand) => normalizeKey(fallbackBrand.name) === key)?.image ??
+              fallbackBrands.find(
+                (fallbackBrand) => normalizeKey(fallbackBrand.name) === key,
+              )?.image ??
               null,
           });
         }
@@ -154,7 +156,10 @@ function HomePage() {
             name,
             image:
               category?.image ??
-              fallbackCategories.find((fallbackCategory) => normalizeKey(fallbackCategory.name) === key)?.image ??
+              fallbackCategories.find(
+                (fallbackCategory) =>
+                  normalizeKey(fallbackCategory.name) === key,
+              )?.image ??
               null,
             slug: category?.slug ?? name,
           });

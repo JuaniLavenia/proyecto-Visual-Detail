@@ -70,10 +70,10 @@ function Login() {
 
     try {
       const res = await api.post("/api/login", loginData);
-      // El backend devuelve: token, userId, role, user, refreshToken
-      const { token, userId, role, user, refreshToken } = res.data;
+      // El backend devuelve: { success, data: { userId, accessToken, refreshToken, role, user }, message }
+      const { accessToken, userId, role, user, refreshToken } = res.data.data;
       const roleUsuario = user?.role || role || "minorista";
-      login(token, refreshToken, userId, roleUsuario);
+      login(accessToken, refreshToken, userId, roleUsuario);
 
       Swal.fire({
         position: "center",
@@ -109,8 +109,9 @@ function Login() {
 
     try {
       const res = await api.post("/api/register", registerData);
-      const { token, userId, role = "minorista", refreshToken } = res.data;
-      login(token, refreshToken, userId, role);
+      const { accessToken, userId, role = "minorista", refreshToken } =
+        res.data.data;
+      login(accessToken, refreshToken, userId, role);
 
       Swal.fire({
         position: "center",

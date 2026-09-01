@@ -221,7 +221,7 @@ async function refreshAccessToken() {
       { headers: { "Content-Type": "application/json" } },
     );
 
-    const { accessToken, refreshToken: newRefreshToken } = response.data;
+    const { accessToken, refreshToken: newRefreshToken } = response.data.data;
     return { accessToken, refreshToken: newRefreshToken };
   } catch (error) {
     // Refresh falló — limpiar y notificar logout

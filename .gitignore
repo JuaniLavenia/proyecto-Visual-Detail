@@ -23,3 +23,8 @@ dev-dist
 *.njsproj
 *.sln
 *.sw?
+
+bash.exe.stackdump
+
+# SDD skill registry cache
+.atl/

@@ -1,0 +1,64 @@
+# openspec/config.yaml
+schema: spec-driven
+
+artifact_store: openspec
+delivery_strategy: single-pr
+review_budget_lines: 400
+
+context: |
+  Project: proyecto-Visual-Detail (frontend)
+  Tech stack: React 18.2, Vite 4.2, Zustand 5 (state), React Router 6 (react-router-dom),
+    Axios 1.4, Tailwind CSS 4.2 (via @tailwindcss/postcss), Bootstrap 5 + react-bootstrap
+    (legacy UI, coexists with Tailwind), PWA via vite-plugin-pwa + workbox-window,
+    FontAwesome + lucide-react icons, SweetAlert2, Swiper/glider-js carousels,
+    AOS scroll animations, SWR for data fetching, react-data-table-component,
+    react-window for virtualization. Plain JavaScript (JSX), no TypeScript build
+    (only @types/react, @types/react-dom present as editor-hint devDependencies).
+  Architecture: src/{components,pages,context,hooks,lib,stores,assets}. Zustand stores
+    under src/stores. Prior SDD work centralized SVG usage under a mobile-first
+    responsive convention (see archived change) and delivered an admin dashboard
+    feature (see openspec/specs/admin-dashboard/spec.md).
+  Testing: No test runner configured. package.json has no "test" script and no
+    devDependency for vitest/jest/@testing-library/*. No ESLint or Prettier config
+    found at project root (only vite.config.js, postcss.config.js present).
+  Style: JSX components, Tailwind utility classes for new mobile-first work,
+    legacy Bootstrap classes still present in older components.
+
+testing:
+  runner: none
+  test_layers: []
+  coverage_threshold: 0
+  linter: none
+  type_checker: none
+  formatter: none
+  strict_tdd: false
+  strict_tdd_reason: >
+    No test runner detected in package.json (no vitest/jest and no "test" script).
+    Strict TDD cannot be enforced until a runner is installed; recommend adding
+    Vitest + @testing-library/react before enabling strict_tdd.
+
+rules:
+  proposal:
+    - Include rollback plan for risky changes
+    - Note whether the change touches legacy Bootstrap views or the mobile-first Tailwind convention
+  specs:
+    - Use Given/When/Then for scenarios
+    - Use RFC 2119 keywords (MUST, SHALL, SHOULD, MAY)
+  design:
+    - Include sequence diagrams for complex flows
+    - Document architecture decisions with rationale
+  tasks:
+    - Group by phase, use hierarchical numbering
+    - Keep tasks completable in one session
+  apply:
+    guidelines:
+      - Follow existing code patterns (Zustand for state, Axios for API calls)
+      - Prefer Tailwind utilities for new/mobile-first UI; do not introduce new Bootstrap usage
+    tdd: false           # No test runner available yet; see testing.strict_tdd_reason
+    test_command: ""
+  verify:
+    test_command: ""
+    build_command: "npm run build"
+    coverage_threshold: 0
+  archive:
+    - Warn before merging destructive deltas

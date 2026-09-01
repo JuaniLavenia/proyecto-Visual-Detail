@@ -1,0 +1,55 @@
+change: fix-auth-refresh-contract
+repo: proyecto-Visual-Detail
+cross_repo:
+  linked_change: fix-auth-refresh-contract
+  linked_repo: proyecto-Visual-Detail-backend
+
+preflight:
+  execution_mode: interactive
+  artifact_store: openspec
+  delivery_strategy: single-pr
+  review_budget_lines: 400
+
+phases:
+  explore:
+    status: done
+    artifact: exploration.md
+  propose:
+    status: done
+    artifact: proposal.md
+    decision: >
+      Backend confirmó Opción A: envolver login/register con success(),
+      campo estandarizado en accessToken. El backend también elimina
+      errorMidleware de auth.router.js en el mismo change (auth errors
+      hoy caen en 500 genérico). Frontend a actualizar: api.js:224
+      (response.data.data) y Auth/index.jsx:74,112 (res.data.data.accessToken).
+  spec:
+    status: done
+    artifact: specs/auth-session/spec.md
+  design:
+    status: done
+    artifact: design.md
+    note: >
+      Además de las 2 líneas ya previstas, hay que tocar las líneas
+      adyacentes donde se usa login(token,...) (Auth/index.jsx:74-76)
+      y el equivalente en register (:112-113), no solo el destructuring.
+  tasks:
+    status: done
+    artifact: tasks.md
+    forecast: "~12 lineas, riesgo bajo, sin chained PRs, sin size:exception"
+  apply:
+    status: partial
+    artifact: apply-progress
+    tasks_completed: "9/13"
+    note: >
+      Los 3 cambios de codigo estan hechos y verificados (regex + npm run
+      build OK). Las 4 tareas restantes son verificacion manual contra DB
+      real (login/refresh/rotacion/concurrencia), bloqueadas por Mongo
+      Atlas inalcanzable en este sandbox - pendiente de correr en un
+      entorno con DB real antes de mergear.
+  verify:
+    status: pending
+  archive:
+    status: pending
+
+updated: 2026-09-01

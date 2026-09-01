@@ -88,9 +88,12 @@ function ProductoCreate() {
             .replace(/\s+/g, " ")
             .trim();
 
+        // DEFAULT_* va primero: new Map() se queda con la ULTIMA entrada
+        // para cada clave, asi el valor real de la API (mas actualizado
+        // que el default hardcodeado) es el que gana si hay coincidencia.
         const mergedBrands = Array.from(
           new Map(
-            [...(brands.length ? brands : DEFAULT_BRANDS), ...DEFAULT_BRANDS].map((option) => [
+            [...DEFAULT_BRANDS, ...(brands.length ? brands : DEFAULT_BRANDS)].map((option) => [
               normalizeOption(option).toLowerCase(),
               option,
             ]),
@@ -98,7 +101,7 @@ function ProductoCreate() {
         );
         const mergedCategories = Array.from(
           new Map(
-            [...(categories.length ? categories : DEFAULT_CATEGORIES), ...DEFAULT_CATEGORIES].map((option) => [
+            [...DEFAULT_CATEGORIES, ...(categories.length ? categories : DEFAULT_CATEGORIES)].map((option) => [
               normalizeOption(option).toLowerCase(),
               option,
             ]),

@@ -65,11 +65,17 @@ function BrandCard({ brand }) {
   return (
     <div className="group relative flex flex-col items-center justify-center p-6 bg-gray-900/50 rounded-2xl border border-white/5 hover:border-yellow-400/30 transition-all duration-300 hover:shadow-xl hover:shadow-yellow-400/10">
       <div className="relative w-32 h-20 mb-3 flex items-center justify-center">
-        <img
-          src={brand.image}
-          alt={brand.name}
-          className="max-w-full max-h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-300 group-hover:scale-110"
-        />
+        {brand.image ? (
+          <img
+            src={brand.image}
+            alt={brand.name}
+            className="max-w-full max-h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-300 group-hover:scale-110"
+          />
+        ) : (
+          <span className="text-white/30 text-xs font-semibold uppercase text-center px-2">
+            {brand.name}
+          </span>
+        )}
       </div>
       <span className="text-sm font-semibold text-white/70 group-hover:text-yellow-400 transition-colors">
         {brand.name}
@@ -82,13 +88,21 @@ function CategoryCard({ category }) {
   return (
     <Link
       to={`/productos?categoria=${category.slug}`}
-      className="group relative overflow-hidden rounded-2xl aspect-[4/3]"
+      className="group relative overflow-hidden rounded-2xl aspect-[4/3] bg-gray-900"
     >
-      <img
-        src={category.image}
-        alt={category.name}
-        className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-      />
+      {category.image ? (
+        <img
+          src={category.image}
+          alt={category.name}
+          className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+        />
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
+          <span className="text-white/20 text-4xl font-bold uppercase">
+            {category.name?.[0]}
+          </span>
+        </div>
+      )}
       <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/40 to-transparent" />
       <div className="absolute inset-0 flex items-end justify-center pb-6 px-4">
         <div className="text-center">

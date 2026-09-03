@@ -1,5 +1,4 @@
-import { useEffect, useState } from "react";
-import api from "../../lib/api";
+import useTaxonomyOptions from "../../hooks/useTaxonomyOptions";
 import { Filter, Category, Circle, Star } from "../common/Icons";
 
 function FilterButton({ children, active, onClick, icon }) {
@@ -54,87 +53,7 @@ function Filters({
   activeCategory,
   activeBrand,
 }) {
-  const fallbackCategories = [
-    "Interiores",
-    "Exteriores",
-    "Línea Profesional",
-    "Línea Industrial",
-    "Perfumes y Aromatizantes",
-    "Pads y Baking Plates",
-    "Microfibras",
-    "Aplicadores",
-    "Cepillos y Brochas",
-    "Dosificadores y Foams",
-    "Otros",
-  ];
-
-  const fallbackBrands = [
-    "Toxic-Shine",
-    "Fullcar",
-    "Dreams",
-    "Ternnova",
-    "Drop",
-    "Menzerna",
-    "Meguiars",
-    "Vonixx",
-    "Laffitte",
-    "Stretch",
-    "Otros",
-  ];
-
-  const normalizeTaxonomyName = (value) =>
-    String(value ?? "")
-      .normalize("NFD")
-      .replace(/[\u0300-\u036f]/g, "")
-      .trim()
-      .replace(/[_-]+/g, " ")
-      .replace(/\s+/g, " ")
-      .toLowerCase();
-
-  const mergeTaxonomyValues = (apiValues, fallbackValues) => {
-    const merged = [...(apiValues || []), ...(fallbackValues || [])];
-    const unique = new Map();
-
-    merged.forEach((value) => {
-      const normalized = normalizeTaxonomyName(value);
-      if (!normalized) return;
-      if (!unique.has(normalized)) {
-        unique.set(normalized, value.trim());
-      }
-    });
-
-    return Array.from(unique.values());
-  };
-
-  const [categories, setCategories] = useState(fallbackCategories);
-  const [brands, setBrands] = useState(fallbackBrands);
-
-  useEffect(() => {
-    const fetchTaxonomy = async () => {
-      try {
-        const [brandsRes, categoriesRes] = await Promise.all([
-          api.get("/api/brands"),
-          api.get("/api/categories"),
-        ]);
-
-        const fetchedBrands = Array.isArray(brandsRes?.data?.data)
-          ? brandsRes.data.data.map((item) => item?.name).filter(Boolean)
-          : [];
-
-        const fetchedCategories = Array.isArray(categoriesRes?.data?.data)
-          ? categoriesRes.data.data.map((item) => item?.name).filter(Boolean)
-          : [];
-
-        setBrands(mergeTaxonomyValues(fetchedBrands, fallbackBrands));
-        setCategories(mergeTaxonomyValues(fetchedCategories, fallbackCategories));
-      } catch {
-        setBrands(fallbackBrands);
-        setCategories(fallbackCategories);
-      }
-    };
-
-    fetchTaxonomy();
-  }, []);
+  const { brands, categories } = useTaxonomyOptions();
 
   const handleCategorySelect = (category) => {
     // Si ya está activo, quitamos el filtro

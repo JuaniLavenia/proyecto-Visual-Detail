@@ -1,8 +1,9 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import api from "../../../lib/api";
 import Swal from "sweetalert2";
 import useAuthStore from "../../../stores/useAuthStore";
+import useTaxonomyOptions from "../../../hooks/useTaxonomyOptions";
 import {
   ArrowLeft,
   Settings,
@@ -12,42 +13,18 @@ import {
 } from "../../../components/common/Icons";
 import "./index.css";
 
-const DEFAULT_BRANDS = [
-  "Toxic-Shine",
-  "Fullcar",
-  "Dreams",
-  "Ternnova",
-  "Drop",
-  "Menzerna",
-  "Meguiars",
-  "Vonixx",
-  "Laffitte",
-  "Stretch",
-  "Otros",
-];
-
-const DEFAULT_CATEGORIES = [
-  "Interiores",
-  "Exteriores",
-  "Línea Profesional",
-  "Línea Industrial",
-  "Perfumes y Aromatizantes",
-  "Pads y Baking Plates",
-  "Microfibras",
-  "Aplicadores",
-  "Cepillos y Brochas",
-  "Dosificadores y Foams",
-  "Otros",
-];
-
 function ProductoEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { token, isAdmin } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
-  const [brandOptions, setBrandOptions] = useState(DEFAULT_BRANDS);
-  const [categoryOptions, setCategoryOptions] = useState(DEFAULT_CATEGORIES);
+  const {
+    brands: activeBrands,
+    categories: activeCategories,
+    loading: loadingTaxonomy,
+    error: taxonomyError,
+  } = useTaxonomyOptions();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -66,60 +43,23 @@ function ProductoEdit() {
   const [existingImage, setExistingImage] = useState(null);
   const [errors, setErrors] = useState({});
 
-  useEffect(() => {
-    const fetchTaxonomy = async () => {
-      try {
-        const [brandsRes, categoriesRes] = await Promise.all([
-          api.get("/api/brands"),
-          api.get("/api/categories"),
-        ]);
+  // El producto puede tener guardada una marca/categoria que ya no esta
+  // activa (desactivada o renombrada despues de creado el producto). Si no
+  // la agregamos a las opciones, el select la muestra en blanco y guardar
+  // sin tocarla mandaria un valor distinto al que el producto tiene hoy.
+  const brandOptions = useMemo(() => {
+    if (formData.brand && !activeBrands.includes(formData.brand)) {
+      return [...activeBrands, formData.brand];
+    }
+    return activeBrands;
+  }, [activeBrands, formData.brand]);
 
-        const brands = Array.isArray(brandsRes?.data?.data)
-          ? brandsRes.data.data.map((item) => item.name).filter(Boolean)
-          : DEFAULT_BRANDS;
-
-        const categories = Array.isArray(categoriesRes?.data?.data)
-          ? categoriesRes.data.data.map((item) => item.name).filter(Boolean)
-          : DEFAULT_CATEGORIES;
-
-        const normalizeOption = (value) =>
-          String(value ?? "")
-            .normalize("NFD")
-            .replace(/[\u0300-\u036f]/g, "")
-            .replace(/[_-]+/g, " ")
-            .replace(/\s+/g, " ")
-            .trim();
-
-        // DEFAULT_* va primero: new Map() se queda con la ULTIMA entrada
-        // para cada clave, asi el valor real de la API (mas actualizado
-        // que el default hardcodeado) es el que gana si hay coincidencia.
-        const mergedBrands = Array.from(
-          new Map(
-            [...DEFAULT_BRANDS, ...(brands.length ? brands : DEFAULT_BRANDS)].map((option) => [
-              normalizeOption(option).toLowerCase(),
-              option,
-            ]),
-          ).values(),
-        );
-        const mergedCategories = Array.from(
-          new Map(
-            [...DEFAULT_CATEGORIES, ...(categories.length ? categories : DEFAULT_CATEGORIES)].map((option) => [
-              normalizeOption(option).toLowerCase(),
-              option,
-            ]),
-          ).values(),
-        );
-
-        setBrandOptions(mergedBrands);
-        setCategoryOptions(mergedCategories);
-      } catch {
-        setBrandOptions(DEFAULT_BRANDS);
-        setCategoryOptions(DEFAULT_CATEGORIES);
-      }
-    };
-
-    fetchTaxonomy();
-  }, []);
+  const categoryOptions = useMemo(() => {
+    if (formData.category && !activeCategories.includes(formData.category)) {
+      return [...activeCategories, formData.category];
+    }
+    return activeCategories;
+  }, [activeCategories, formData.category]);
 
   // Validar acceso admin
   if (!token || !isAdmin) {
@@ -360,6 +300,12 @@ function ProductoEdit() {
               Categorización
             </h2>
 
+            {taxonomyError && (
+              <p className="text-red-400 text-xs mb-4">
+                No se pudieron cargar las marcas y categorías. Recargá la página para intentar de nuevo.
+              </p>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Marca */}
               <div>
@@ -370,12 +316,13 @@ function ProductoEdit() {
                   name="brand"
                   value={formData.brand}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 bg-gray-800/50 border rounded-xl text-white focus:outline-none focus:border-yellow-500/50 transition-colors ${
+                  disabled={loadingTaxonomy || !!taxonomyError}
+                  className={`w-full px-4 py-3 bg-gray-800/50 border rounded-xl text-white focus:outline-none focus:border-yellow-500/50 transition-colors disabled:opacity-50 ${
                     errors.brand ? "border-red-500" : "border-white/10"
                   }`}
                 >
                   <option value="" className="bg-gray-900">
-                    Seleccionar marca
+                    {loadingTaxonomy ? "Cargando marcas..." : "Seleccionar marca"}
                   </option>
                   {brandOptions.map((brand) => (
                     <option key={brand} value={brand} className="bg-gray-900">
@@ -397,12 +344,13 @@ function ProductoEdit() {
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 bg-gray-800/50 border rounded-xl text-white focus:outline-none focus:border-yellow-500/50 transition-colors ${
+                  disabled={loadingTaxonomy || !!taxonomyError}
+                  className={`w-full px-4 py-3 bg-gray-800/50 border rounded-xl text-white focus:outline-none focus:border-yellow-500/50 transition-colors disabled:opacity-50 ${
                     errors.category ? "border-red-500" : "border-white/10"
                   }`}
                 >
                   <option value="" className="bg-gray-900">
-                    Seleccionar categoría
+                    {loadingTaxonomy ? "Cargando categorías..." : "Seleccionar categoría"}
                   </option>
                   {categoryOptions.map((cat) => (
                     <option key={cat} value={cat} className="bg-gray-900">

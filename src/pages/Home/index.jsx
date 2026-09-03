@@ -17,7 +17,10 @@ import Megui from "../../assets/img/meguiars-carr.png";
 import Menzerna from "../../assets/img/menzerna-carr.png";
 import Vonixx from "../../assets/img/vonixx-carr.png";
 
-const fallbackCategories = [
+// Los modelos Brand/Category del backend no tienen campo de imagen, asi que
+// estos mapas solo aportan una imagen conocida para nombres que coincidan;
+// NO agregan marcas/categorias que no vengan de la API (ver useEffect abajo).
+const CATEGORY_IMAGE_MAP = [
   {
     name: "Exteriores",
     image:
@@ -50,7 +53,7 @@ const fallbackCategories = [
   },
 ];
 
-const fallbackBrands = [
+const BRAND_IMAGE_MAP = [
   { name: "TOXIC SHINE", image: Toxic },
   { name: "FULLCAR", image: Fullcar },
   { name: "TERNNOVA", image: Ternnova },
@@ -120,8 +123,8 @@ function CategoryCard({ category }) {
 
 function HomePage() {
   const brandsSwiperRef = useRef(null);
-  const [categories, setCategories] = useState(fallbackCategories);
-  const [brands, setBrands] = useState(fallbackBrands);
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
 
   useEffect(() => {
     const normalizeKey = (value) =>
@@ -133,50 +136,24 @@ function HomePage() {
         .replace(/\s+/g, " ")
         .toLowerCase();
 
-    const mergeBrandOptions = (apiItems) => {
-      const combined = [...(apiItems || []), ...fallbackBrands];
-      const unique = new Map();
-
-      combined.forEach((brand) => {
-        const name = String(brand?.name ?? "").trim();
-        if (!name) return;
-        const key = normalizeKey(name);
-        if (!unique.has(key)) {
-          unique.set(key, {
+    // Solo lo que devuelve la API define que marcas/categorias se muestran;
+    // el mapa hardcodeado solo completa la imagen si el nombre coincide.
+    const withKnownImages = (apiItems, imageMap) =>
+      (apiItems || [])
+        .map((item) => {
+          const name = String(item?.name ?? "").trim();
+          if (!name) return null;
+          const key = normalizeKey(name);
+          return {
+            ...item,
             name,
             image:
-              brand?.image ??
-              fallbackBrands.find((fallbackBrand) => normalizeKey(fallbackBrand.name) === key)?.image ??
+              item?.image ??
+              imageMap.find((known) => normalizeKey(known.name) === key)?.image ??
               null,
-          });
-        }
-      });
-
-      return Array.from(unique.values());
-    };
-
-    const mergeCategoryOptions = (apiItems) => {
-      const combined = [...(apiItems || []), ...fallbackCategories];
-      const unique = new Map();
-
-      combined.forEach((category) => {
-        const name = String(category?.name ?? "").trim();
-        if (!name) return;
-        const key = normalizeKey(name);
-        if (!unique.has(key)) {
-          unique.set(key, {
-            name,
-            image:
-              category?.image ??
-              fallbackCategories.find((fallbackCategory) => normalizeKey(fallbackCategory.name) === key)?.image ??
-              null,
-            slug: category?.slug ?? name,
-          });
-        }
-      });
-
-      return Array.from(unique.values());
-    };
+          };
+        })
+        .filter(Boolean);
 
     const fetchTaxonomy = async () => {
       try {
@@ -196,11 +173,11 @@ function HomePage() {
             }))
           : [];
 
-        setBrands(mergeBrandOptions(fetchedBrands));
-        setCategories(mergeCategoryOptions(fetchedCategories));
+        setBrands(withKnownImages(fetchedBrands, BRAND_IMAGE_MAP));
+        setCategories(withKnownImages(fetchedCategories, CATEGORY_IMAGE_MAP));
       } catch {
-        setBrands(fallbackBrands);
-        setCategories(fallbackCategories);
+        setBrands([]);
+        setCategories([]);
       }
     };
 

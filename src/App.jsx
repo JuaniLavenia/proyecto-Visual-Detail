@@ -19,6 +19,7 @@ const AdminProducts = lazy(() => import('./pages/admin/Products'));
 const ProductEdit = lazy(() => import('./pages/admin/Products/ProductEdit'));
 const ProductCreate = lazy(() => import('./pages/admin/Products/ProductCreate'));
 const AdminUsers = lazy(() => import('./pages/admin/Users'));
+const AdminTaxonomy = lazy(() => import('./pages/admin/Taxonomy'));
 const AdminDashboard = lazy(() => import('./pages/admin/Dashboard'));
 const AdminOrders = lazy(() => import('./pages/admin/Orders'));
 
@@ -80,6 +81,7 @@ function App() {
             <Route path="/adm/productos/edit/:id" element={<ProductEdit />} />
             <Route path="/adm/productos/create" element={<ProductCreate />} />
             <Route path="/adm/usuarios" element={<AdminUsers />} />
+            <Route path="/adm/taxonomia" element={<AdminTaxonomy />} />
           </Routes>
         </main>
         

@@ -30,16 +30,16 @@ function SearchClean() {
   // Build key de request según filtros
   const getKey = () => {
     if (filterType === "category" && activeFilter) {
-      return `${API_BASE}/api/productos/category/${activeFilter}`;
+      return `${API_BASE}/api/productos/category/${encodeURIComponent(activeFilter)}`;
     }
     if (filterType === "brand" && activeFilter) {
-      return `${API_BASE}/api/productos/brand/${activeFilter}`;
+      return `${API_BASE}/api/productos/brand/${encodeURIComponent(activeFilter)}`;
     }
     if (initialSearch) {
-      return `${API_BASE}/api/productos/search/${initialSearch}`;
+      return `${API_BASE}/api/productos/search/${encodeURIComponent(initialSearch)}`;
     }
     if (initialCategory) {
-      return `${API_BASE}/api/productos/category/${initialCategory}`;
+      return `${API_BASE}/api/productos/category/${encodeURIComponent(initialCategory)}`;
     }
     return `${API_BASE}/api/productos?page=${currentPage}&limit=${currentSize}`;
   };

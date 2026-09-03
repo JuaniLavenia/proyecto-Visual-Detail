@@ -1,7 +1,7 @@
 import { useState, useRef, useEffect } from "react";
 import PropTypes from "prop-types";
 import { Link } from "react-router-dom";
-import { Export, Import, Plus, Users } from "./Icons";
+import { Export, Import, Plus, Users, Tag } from "./Icons";
 
 const defaultActions = [
   {
@@ -29,6 +29,13 @@ const defaultActions = [
     icon: Users,
     color: "bg-purple-600 hover:bg-purple-500",
     href: "/adm/usuarios",
+  },
+  {
+    key: "taxonomy",
+    label: "Marcas y Categorías",
+    icon: Tag,
+    color: "bg-teal-600 hover:bg-teal-500",
+    href: "/adm/taxonomia",
   },
 ];
 

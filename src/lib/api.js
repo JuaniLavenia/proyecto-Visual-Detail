@@ -90,16 +90,18 @@ export function classifyError(error) {
   if (status === 422) {
     return {
       type: ErrorTypes.VALIDATION_ERROR,
-      message: error.response.data?.message || "Datos inválidos",
+      message: error.response.data?.error?.message || "Datos inválidos",
     };
   }
   if (status >= 500) {
     return { type: ErrorTypes.SERVER_ERROR, message: "Error del servidor" };
   }
 
+  // El contrato del backend envuelve el mensaje en error.message
+  // ({ success: false, error: { message, code } }), no en data.message.
   return {
     type: ErrorTypes.UNKNOWN,
-    message: error.response.data?.message || "Error desconocido",
+    message: error.response.data?.error?.message || "Error desconocido",
   };
 }
 

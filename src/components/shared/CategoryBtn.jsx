@@ -1,4 +1,4 @@
-import { useState } from "react";
+import useTaxonomyOptions from "../../hooks/useTaxonomyOptions";
 import { Filter, Category, Circle, Star } from "../common/Icons";
 
 function FilterButton({ children, active, onClick, icon }) {
@@ -53,33 +53,7 @@ function Filters({
   activeCategory,
   activeBrand,
 }) {
-  const categories = [
-    "Interiores",
-    "Exteriores",
-    "Línea Profesional",
-    "Línea Industrial",
-    "Perfumes y Aromatizantes",
-    "Pads y Baking Plates",
-    "Microfibras",
-    "Aplicadores",
-    "Cepillos y Brochas",
-    "Dosificadores y Foams",
-    "Otros",
-  ];
-
-  const brands = [
-    "Toxic-Shine",
-    "Fullcar",
-    "Dreams",
-    "Ternnova",
-    "Drop",
-    "Menzerna",
-    "Meguiars",
-    "Vonixx",
-    "Laffitte",
-    "Stretch",
-    "Otros",
-  ];
+  const { brands, categories } = useTaxonomyOptions();
 
   const handleCategorySelect = (category) => {
     // Si ya está activo, quitamos el filtro

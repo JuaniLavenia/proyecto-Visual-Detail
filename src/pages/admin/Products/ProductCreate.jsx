@@ -3,6 +3,7 @@ import { useNavigate, Link } from "react-router-dom";
 import api from "../../../lib/api";
 import Swal from "sweetalert2";
 import useAuthStore from "../../../stores/useAuthStore";
+import useTaxonomyOptions from "../../../hooks/useTaxonomyOptions";
 import {
   ArrowLeft,
   Settings,
@@ -12,39 +13,17 @@ import {
 } from "../../../components/common/Icons";
 import "./index.css";
 
-const BRANDS = [
-  "Toxic-Shine",
-  "Fullcar",
-  "Dreams",
-  "Ternnova",
-  "Drop",
-  "Menzerna",
-  "Meguiars",
-  "Vonixx",
-  "Laffitte",
-  "Stretch",
-  "Otros",
-];
-
-const CATEGORIES = [
-  "Interiores",
-  "Exteriores",
-  "Línea Profesional",
-  "Línea Industrial",
-  "Perfumes y Aromatizantes",
-  "Pads y Baking Plates",
-  "Microfibras",
-  "Aplicadores",
-  "Cepillos y Brochas",
-  "Dosificadores y Foams",
-  "Otros",
-];
-
 function ProductoCreate() {
   const navigate = useNavigate();
   const { token, isAdmin } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
+  const {
+    brands: brandOptions,
+    categories: categoryOptions,
+    loading: loadingTaxonomy,
+    error: taxonomyError,
+  } = useTaxonomyOptions();
 
   const [formData, setFormData] = useState({
     name: "",
@@ -58,8 +37,6 @@ function ProductoCreate() {
     imageUrl: "",
   });
 
-  const [image, setImage] = useState(null);
-  const [imagePreview, setImagePreview] = useState(null);
   const [errors, setErrors] = useState({});
 
   // Validar acceso admin
@@ -88,9 +65,6 @@ function ProductoCreate() {
     )
       newErrors.precioMayorista =
         "El precio mayorista debe ser menor al precio regular";
-    if (formData.imageUrl && image) {
-      newErrors.image = "Selecciona solo una opción de imagen";
-    }
     return newErrors;
   };
 
@@ -99,16 +73,6 @@ function ProductoCreate() {
     setFormData({ ...formData, [name]: value });
     if (errors[name]) {
       setErrors({ ...errors, [name]: null });
-    }
-  };
-
-  const handleImageFileChange = (e) => {
-    const file = e.target.files[0];
-    if (file) {
-      setImage(file);
-      setImagePreview(URL.createObjectURL(file));
-      setFormData({ ...formData, imageUrl: "" });
-      if (errors.image) setErrors({ ...errors, image: null });
     }
   };
 
@@ -123,28 +87,24 @@ function ProductoCreate() {
 
     setIsLoading(true);
 
-    const data = new FormData();
-    data.append("name", formData.name);
-    data.append("description", formData.description);
-    data.append("price", formData.price);
+    const payload = {
+      name: formData.name,
+      description: formData.description,
+      price: formData.price,
+      stock: formData.stock,
+      category: formData.category,
+      brand: formData.brand,
+      capacity: formData.capacity,
+    };
     if (formData.precioMayorista) {
-      data.append("precioMayorista", formData.precioMayorista);
+      payload.precioMayorista = formData.precioMayorista;
     }
-    data.append("stock", formData.stock);
-    data.append("category", formData.category);
-    data.append("brand", formData.brand);
-    data.append("capacity", formData.capacity);
-
-    if (image) {
-      data.append("image", image);
-    } else if (formData.imageUrl) {
-      data.append("imageUrl", formData.imageUrl);
+    if (formData.imageUrl) {
+      payload.imageUrl = formData.imageUrl;
     }
 
     try {
-      await api.post("/api/productos", data, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
+      await api.post("/api/productos", payload);
 
       Swal.fire({
         icon: "success",
@@ -254,6 +214,12 @@ function ProductoCreate() {
               Categorización
             </h2>
 
+            {taxonomyError && (
+              <p className="text-red-400 text-xs mb-4">
+                No se pudieron cargar las marcas y categorías. Recargá la página para intentar de nuevo.
+              </p>
+            )}
+
             <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
               {/* Marca */}
               <div>
@@ -264,14 +230,15 @@ function ProductoCreate() {
                   name="brand"
                   value={formData.brand}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 bg-gray-800/50 border rounded-xl text-white focus:outline-none focus:border-yellow-500/50 transition-colors ${
+                  disabled={loadingTaxonomy || !!taxonomyError}
+                  className={`w-full px-4 py-3 bg-gray-800/50 border rounded-xl text-white focus:outline-none focus:border-yellow-500/50 transition-colors disabled:opacity-50 ${
                     errors.brand ? "border-red-500" : "border-white/10"
                   }`}
                 >
                   <option value="" className="bg-gray-900">
-                    Seleccionar marca
+                    {loadingTaxonomy ? "Cargando marcas..." : "Seleccionar marca"}
                   </option>
-                  {BRANDS.map((brand) => (
+                  {brandOptions.map((brand) => (
                     <option key={brand} value={brand} className="bg-gray-900">
                       {brand}
                     </option>
@@ -291,14 +258,15 @@ function ProductoCreate() {
                   name="category"
                   value={formData.category}
                   onChange={handleChange}
-                  className={`w-full px-4 py-3 bg-gray-800/50 border rounded-xl text-white focus:outline-none focus:border-yellow-500/50 transition-colors ${
+                  disabled={loadingTaxonomy || !!taxonomyError}
+                  className={`w-full px-4 py-3 bg-gray-800/50 border rounded-xl text-white focus:outline-none focus:border-yellow-500/50 transition-colors disabled:opacity-50 ${
                     errors.category ? "border-red-500" : "border-white/10"
                   }`}
                 >
                   <option value="" className="bg-gray-900">
-                    Seleccionar categoría
+                    {loadingTaxonomy ? "Cargando categorías..." : "Seleccionar categoría"}
                   </option>
-                  {CATEGORIES.map((cat) => (
+                  {categoryOptions.map((cat) => (
                     <option key={cat} value={cat} className="bg-gray-900">
                       {cat}
                     </option>
@@ -432,63 +400,32 @@ function ProductoCreate() {
             </h2>
 
             {/* Image Preview */}
-            {(imagePreview || formData.imageUrl) && (
+            {formData.imageUrl && (
               <div className="mb-5">
                 <p className="text-white/50 text-sm mb-2">Vista previa:</p>
                 <div className="w-40 h-40 rounded-xl overflow-hidden bg-gray-800 border border-white/10">
-                  {imagePreview ? (
-                    <img
-                      src={imagePreview}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : formData.imageUrl ? (
-                    <img
-                      src={formData.imageUrl}
-                      alt="Preview"
-                      className="w-full h-full object-cover"
-                    />
-                  ) : null}
+                  <img
+                    src={formData.imageUrl}
+                    alt="Preview"
+                    className="w-full h-full object-cover"
+                  />
                 </div>
               </div>
             )}
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-5">
-              {/* Upload File */}
-              <div>
-                <label className="block text-white/70 text-sm mb-2">
-                  Subir imagen (archivo)
-                </label>
-                <input
-                  type="file"
-                  accept="image/png,image/svg,image/jpg,image/jpeg"
-                  onChange={handleImageFileChange}
-                  className="w-full px-4 py-3 bg-gray-800/50 border border-white/10 rounded-xl text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-yellow-500 file:text-gray-900 hover:file:bg-yellow-400 cursor-pointer"
-                />
-              </div>
-
-              {/* Image URL */}
-              <div>
-                <label className="block text-white/70 text-sm mb-2">
-                  O desde URL
-                </label>
-                <input
-                  type="url"
-                  name="imageUrl"
-                  value={formData.imageUrl}
-                  onChange={(e) => {
-                    setFormData({ ...formData, imageUrl: e.target.value });
-                    setImage(null);
-                    setImagePreview(null);
-                  }}
-                  placeholder="https://ejemplo.com/imagen.jpg"
-                  className="w-full px-4 py-3 bg-gray-800/50 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-yellow-500/50 transition-colors"
-                />
-              </div>
+            <div>
+              <label className="block text-white/70 text-sm mb-2">
+                URL de la imagen
+              </label>
+              <input
+                type="url"
+                name="imageUrl"
+                value={formData.imageUrl}
+                onChange={handleChange}
+                placeholder="https://ejemplo.com/imagen.jpg"
+                className="w-full px-4 py-3 bg-gray-800/50 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-yellow-500/50 transition-colors"
+              />
             </div>
-            {errors.image && (
-              <p className="text-red-400 text-xs mt-2">{errors.image}</p>
-            )}
           </div>
 
           {/* Actions */}

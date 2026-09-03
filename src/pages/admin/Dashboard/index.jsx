@@ -12,6 +12,7 @@ import {
   ArrowLeft,
   Users,
   Exclamation,
+  Tag,
 } from "../../../components/common/Icons";
 import "../Products/index.css";
 
@@ -258,6 +259,13 @@ function AdminDashboard() {
           >
             <Package className="w-5 h-5" />
             <span className="font-medium">Nuevo Producto</span>
+          </Link>
+          <Link
+            to="/adm/taxonomia"
+            className="flex items-center justify-center gap-2 bg-gray-700 hover:bg-gray-600 text-white py-3 px-4 rounded-xl transition-colors"
+          >
+            <Tag className="w-5 h-5" />
+            <span className="font-medium">Marcas y Categorías</span>
           </Link>
         </div>
 

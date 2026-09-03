@@ -1,7 +1,8 @@
-import { useEffect, useRef } from "react";
+import { useEffect, useRef, useState } from "react";
 import { Link } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
+import api from "../../lib/api";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -16,8 +17,10 @@ import Megui from "../../assets/img/meguiars-carr.png";
 import Menzerna from "../../assets/img/menzerna-carr.png";
 import Vonixx from "../../assets/img/vonixx-carr.png";
 
-// Categories data
-const categories = [
+// Los modelos Brand/Category del backend no tienen campo de imagen, asi que
+// estos mapas solo aportan una imagen conocida para nombres que coincidan;
+// NO agregan marcas/categorias que no vengan de la API (ver useEffect abajo).
+const CATEGORY_IMAGE_MAP = [
   {
     name: "Exteriores",
     image:
@@ -50,7 +53,7 @@ const categories = [
   },
 ];
 
-const brands = [
+const BRAND_IMAGE_MAP = [
   { name: "TOXIC SHINE", image: Toxic },
   { name: "FULLCAR", image: Fullcar },
   { name: "TERNNOVA", image: Ternnova },
@@ -65,11 +68,17 @@ function BrandCard({ brand }) {
   return (
     <div className="group relative flex flex-col items-center justify-center p-6 bg-gray-900/50 rounded-2xl border border-white/5 hover:border-yellow-400/30 transition-all duration-300 hover:shadow-xl hover:shadow-yellow-400/10">
       <div className="relative w-32 h-20 mb-3 flex items-center justify-center">
-        <img
-          src={brand.image}
-          alt={brand.name}
-          className="max-w-full max-h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-300 group-hover:scale-110"
-        />
+        {brand.image ? (
+          <img
+            src={brand.image}
+            alt={brand.name}
+            className="max-w-full max-h-full object-contain grayscale group-hover:grayscale-0 transition-all duration-300 group-hover:scale-110"
+          />
+        ) : (
+          <span className="text-white/30 text-xs font-semibold uppercase text-center px-2">
+            {brand.name}
+          </span>
+        )}
       </div>
       <span className="text-sm font-semibold text-white/70 group-hover:text-yellow-400 transition-colors">
         {brand.name}
@@ -82,13 +91,21 @@ function CategoryCard({ category }) {
   return (
     <Link
       to={`/productos?categoria=${category.slug}`}
-      className="group relative overflow-hidden rounded-2xl aspect-[4/3]"
+      className="group relative overflow-hidden rounded-2xl aspect-[4/3] bg-gray-900"
     >
-      <img
-        src={category.image}
-        alt={category.name}
-        className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
-      />
+      {category.image ? (
+        <img
+          src={category.image}
+          alt={category.name}
+          className="absolute inset-0 w-full h-full object-cover transform group-hover:scale-110 transition-transform duration-500"
+        />
+      ) : (
+        <div className="absolute inset-0 flex items-center justify-center bg-gradient-to-br from-gray-800 to-gray-900">
+          <span className="text-white/20 text-4xl font-bold uppercase">
+            {category.name?.[0]}
+          </span>
+        </div>
+      )}
       <div className="absolute inset-0 bg-gradient-to-t from-gray-900/90 via-gray-900/40 to-transparent" />
       <div className="absolute inset-0 flex items-end justify-center pb-6 px-4">
         <div className="text-center">
@@ -106,6 +123,66 @@ function CategoryCard({ category }) {
 
 function HomePage() {
   const brandsSwiperRef = useRef(null);
+  const [categories, setCategories] = useState([]);
+  const [brands, setBrands] = useState([]);
+
+  useEffect(() => {
+    const normalizeKey = (value) =>
+      String(value ?? "")
+        .normalize("NFD")
+        .replace(/[\u0300-\u036f]/g, "")
+        .trim()
+        .replace(/[_-]+/g, " ")
+        .replace(/\s+/g, " ")
+        .toLowerCase();
+
+    // Solo lo que devuelve la API define que marcas/categorias se muestran;
+    // el mapa hardcodeado solo completa la imagen si el nombre coincide.
+    const withKnownImages = (apiItems, imageMap) =>
+      (apiItems || [])
+        .map((item) => {
+          const name = String(item?.name ?? "").trim();
+          if (!name) return null;
+          const key = normalizeKey(name);
+          return {
+            ...item,
+            name,
+            image:
+              item?.image ??
+              imageMap.find((known) => normalizeKey(known.name) === key)?.image ??
+              null,
+          };
+        })
+        .filter(Boolean);
+
+    const fetchTaxonomy = async () => {
+      try {
+        const [brandsRes, categoriesRes] = await Promise.all([
+          api.get("/api/brands"),
+          api.get("/api/categories"),
+        ]);
+
+        const fetchedBrands = Array.isArray(brandsRes?.data?.data)
+          ? brandsRes.data.data.map((item) => ({ name: item?.name }))
+          : [];
+
+        const fetchedCategories = Array.isArray(categoriesRes?.data?.data)
+          ? categoriesRes.data.data.map((item) => ({
+              name: item?.name,
+              slug: item?.slug ?? item?.name,
+            }))
+          : [];
+
+        setBrands(withKnownImages(fetchedBrands, BRAND_IMAGE_MAP));
+        setCategories(withKnownImages(fetchedCategories, CATEGORY_IMAGE_MAP));
+      } catch {
+        setBrands([]);
+        setCategories([]);
+      }
+    };
+
+    fetchTaxonomy();
+  }, []);
 
   return (
     <div className="min-h-screen bg-gray-950 pt-20 lg:pt-24">

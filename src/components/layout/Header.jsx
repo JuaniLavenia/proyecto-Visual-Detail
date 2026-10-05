@@ -116,7 +116,7 @@ function Header() {
   const handleSearchSubmit = (e) => {
     e.preventDefault();
     if (searchTerm.trim()) {
-      navigate(`/productos?search=${searchTerm}`);
+      navigate(`/productos?search=${encodeURIComponent(searchTerm.trim())}`);
       setSearchTerm("");
     }
   };

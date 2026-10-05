@@ -76,7 +76,8 @@ Frontend (`proyecto-Visual-Detail`):
 - 2026-10-05: exploration done (delegated), feature document created.
 - 2026-10-05: user approved; branch `feature/password-recovery` in both repos. Backend R1–R4 (delegated writer, test-first, `npm test` 51/51). Review assess: high (auth hot path), RDD off → independent read-only verifier: PASS WITH FOLLOW-UPS; follow-ups fixed inline as R5 (51/51). Frontend W1–W3 (delegated writer), `pnpm build` OK (re-run by parent). User's uncommitted `API_BASE` change kept out of commits.
 - 2026-10-05: user QA — real Brevo delivery works (after fixing `SMTP_FROM` placeholder). Bug found: reset link 404 in Vite dev because the JWT's dots in the last path segment bypass the SPA fallback. Fix: link is now `${FRONTEND_URL}/reset/:id?token=<jwt>`, frontend route `/reset/:id` reads `token` from the query (backend `d8004d7` test-first RED→GREEN 51/51; frontend `74b8d86`, build OK). API route `/api/reset/:id/:token` unchanged.
-- 2026-10-05: user QA passed — admin sent link via Brevo, link opened `/reset/:id?token=`, password changed, login with new password OK. Not confirmed by user: link reuse rejection (covered by unit test), session revocation in another browser.
+- 2026-10-05: user QA passed — admin sent link via Brevo, link opened `/reset/:id?token=`, password changed, login with new password OK. Link reuse rejection confirmed by user (message shows on submit). Not confirmed: session revocation in another browser (unit-tested).
+- Decision (2026-10-05): the reset page does not pre-validate the token on load; invalid/used links are reported on submit. User accepted this UX (avoids an extra endpoint and spending rate-limit budget on page loads).
 - Next: user merges both `feature/password-recovery` branches. Deploy: set `TRUST_PROXY=1`, `FRONTEND_URL`, `SMTP_*` on Render. Then Unit 5 slice 2 (users CRUD).
 
 ## Route

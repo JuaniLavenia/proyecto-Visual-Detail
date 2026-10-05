@@ -1,5 +1,17 @@
 import useTaxonomyOptions from "../../hooks/useTaxonomyOptions";
-import { Filter, Category, Circle, Star } from "../common/Icons";
+import { slugify } from "../../lib/slugify";
+import { Category, Circle, Star } from "../common/Icons";
+
+// Active values come from the URL: usually a slug, but legacy links may
+// still carry the display name.
+const matchesOption = (option, value) =>
+  !!value &&
+  (option.slug === value ||
+    option.name === value ||
+    option.slug === slugify(value));
+
+const findOption = (options, value) =>
+  options.find((option) => matchesOption(option, value));
 
 function FilterButton({ children, active, onClick, icon }) {
   return (
@@ -33,11 +45,11 @@ function FilterSection({ title, items, activeItem, onItemClick, icon }) {
       <div className="flex flex-wrap gap-2">
         {items.map((item) => (
           <FilterButton
-            key={item}
-            active={activeItem === item}
+            key={item.slug}
+            active={matchesOption(item, activeItem)}
             onClick={() => onItemClick(item)}
           >
-            {item}
+            {item.name}
           </FilterButton>
         ))}
       </div>
@@ -45,11 +57,14 @@ function FilterSection({ title, items, activeItem, onItemClick, icon }) {
   );
 }
 
+/**
+ * Brand/category filter picker. `activeCategory` / `activeBrand` are the URL
+ * values (slug, or a legacy name); the click handlers receive the option slug,
+ * or null to clear. Brand and category combine independently.
+ */
 function Filters({
   handleCategoryClick,
   handleBrandClick,
-  getProductos,
-  onClearFilters,
   activeCategory,
   activeBrand,
 }) {
@@ -57,23 +72,19 @@ function Filters({
 
   const handleCategorySelect = (category) => {
     // Si ya está activo, quitamos el filtro
-    if (activeCategory === category) {
-      handleCategoryClick(null);
-    } else {
-      // Seleccionar nueva categoría y resetear marca
-      handleCategoryClick(category);
-    }
+    handleCategoryClick(
+      matchesOption(category, activeCategory) ? null : category.slug,
+    );
   };
 
   const handleBrandSelect = (brand) => {
     // Si ya está activo, quitamos el filtro
-    if (activeBrand === brand) {
-      handleBrandClick(null);
-    } else {
-      // Seleccionar nueva marca y resetear categoría
-      handleBrandClick(brand);
-    }
+    handleBrandClick(matchesOption(brand, activeBrand) ? null : brand.slug);
   };
+
+  const activeCategoryLabel =
+    findOption(categories, activeCategory)?.name || activeCategory;
+  const activeBrandLabel = findOption(brands, activeBrand)?.name || activeBrand;
 
   const hasActiveFilters = activeCategory || activeBrand;
 
@@ -94,9 +105,9 @@ function Filters({
                 {activeCategory && (
                   <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-500/20 text-yellow-400 text-sm rounded-full">
                     <Circle className="w-4 h-4" />
-                    {activeCategory}
+                    {activeCategoryLabel}
                     <button
-                      onClick={() => handleCategorySelect(activeCategory)}
+                      onClick={() => handleCategoryClick(null)}
                       className="ml-1 hover:text-white"
                     >
                       ×
@@ -106,9 +117,9 @@ function Filters({
                 {activeBrand && (
                   <span className="inline-flex items-center gap-1 px-3 py-1 bg-blue-500/20 text-blue-400 text-sm rounded-full">
                     <Category className="w-4 h-4" />
-                    {activeBrand}
+                    {activeBrandLabel}
                     <button
-                      onClick={() => handleBrandSelect(activeBrand)}
+                      onClick={() => handleBrandClick(null)}
                       className="ml-1 hover:text-white"
                     >
                       ×

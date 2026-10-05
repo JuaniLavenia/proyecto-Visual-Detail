@@ -45,16 +45,23 @@ function ProductoEdit() {
   // activa (desactivada o renombrada despues de creado el producto). Si no
   // la agregamos a las opciones, el select la muestra en blanco y guardar
   // sin tocarla mandaria un valor distinto al que el producto tiene hoy.
+  // Las opciones son { name, slug }; el producto guarda el name canonico.
   const brandOptions = useMemo(() => {
-    if (formData.brand && !activeBrands.includes(formData.brand)) {
-      return [...activeBrands, formData.brand];
+    if (
+      formData.brand &&
+      !activeBrands.some((option) => option.name === formData.brand)
+    ) {
+      return [...activeBrands, { name: formData.brand, slug: "" }];
     }
     return activeBrands;
   }, [activeBrands, formData.brand]);
 
   const categoryOptions = useMemo(() => {
-    if (formData.category && !activeCategories.includes(formData.category)) {
-      return [...activeCategories, formData.category];
+    if (
+      formData.category &&
+      !activeCategories.some((option) => option.name === formData.category)
+    ) {
+      return [...activeCategories, { name: formData.category, slug: "" }];
     }
     return activeCategories;
   }, [activeCategories, formData.category]);
@@ -309,8 +316,12 @@ function ProductoEdit() {
                     {loadingTaxonomy ? "Cargando marcas..." : "Seleccionar marca"}
                   </option>
                   {brandOptions.map((brand) => (
-                    <option key={brand} value={brand} className="bg-gray-900">
-                      {brand}
+                    <option
+                      key={brand.name}
+                      value={brand.name}
+                      className="bg-gray-900"
+                    >
+                      {brand.name}
                     </option>
                   ))}
                 </select>
@@ -337,8 +348,12 @@ function ProductoEdit() {
                     {loadingTaxonomy ? "Cargando categorías..." : "Seleccionar categoría"}
                   </option>
                   {categoryOptions.map((cat) => (
-                    <option key={cat} value={cat} className="bg-gray-900">
-                      {cat}
+                    <option
+                      key={cat.name}
+                      value={cat.name}
+                      className="bg-gray-900"
+                    >
+                      {cat.name}
                     </option>
                   ))}
                 </select>

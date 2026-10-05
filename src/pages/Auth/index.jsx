@@ -261,6 +261,14 @@ function Login() {
                 {errors.password && (
                   <p className="text-red-400 text-xs mt-1">{errors.password}</p>
                 )}
+                <div className="text-right mt-2">
+                  <Link
+                    to="/recuperar"
+                    className="text-yellow-400 hover:text-yellow-300 text-sm transition-colors"
+                  >
+                    ¿Olvidaste tu contraseña?
+                  </Link>
+                </div>
               </div>
 
               {/* Submit */}

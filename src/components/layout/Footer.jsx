@@ -1,6 +1,15 @@
 import { Link } from "react-router-dom";
 import Visual from "../../assets/img/visual.png";
 import { Instagram, Facebook, WhatsApp, Location, Mail, Phone, CreditCard } from "../common/Icons";
+import { slugify } from "../../lib/slugify";
+
+// Canonical category names; links use the slug the backend derives from them.
+const FOOTER_CATEGORIES = [
+  "Exteriores",
+  "Interiores",
+  "Línea Profesional",
+  "Perfumes",
+];
 
 function Footer() {
   const currentYear = new Date().getFullYear();
@@ -97,38 +106,16 @@ function Footer() {
           <div>
             <h4 className="text-white font-semibold mb-4">Categorías</h4>
             <ul className="space-y-3">
-              <li>
-                <Link
-                  to="/productos?category=Exteriores"
-                  className="text-white/50 hover:text-yellow-400 transition-colors text-sm"
-                >
-                  Exteriores
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/productos?category=Interiores"
-                  className="text-white/50 hover:text-yellow-400 transition-colors text-sm"
-                >
-                  Interiores
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/productos?category=Profesional"
-                  className="text-white/50 hover:text-yellow-400 transition-colors text-sm"
-                >
-                  Línea Profesional
-                </Link>
-              </li>
-              <li>
-                <Link
-                  to="/productos?category=Perfumes"
-                  className="text-white/50 hover:text-yellow-400 transition-colors text-sm"
-                >
-                  Perfumes
-                </Link>
-              </li>
+              {FOOTER_CATEGORIES.map((name) => (
+                <li key={name}>
+                  <Link
+                    to={`/productos?category=${slugify(name)}`}
+                    className="text-white/50 hover:text-yellow-400 transition-colors text-sm"
+                  >
+                    {name}
+                  </Link>
+                </li>
+              ))}
             </ul>
           </div>
 

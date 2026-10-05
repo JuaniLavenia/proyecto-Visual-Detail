@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { Swiper, SwiperSlide } from "swiper/react";
 import { Autoplay, Navigation, Pagination } from "swiper/modules";
 import api from "../../lib/api";
+import { slugify } from "../../lib/slugify";
 import "swiper/css";
 import "swiper/css/navigation";
 import "swiper/css/pagination";
@@ -25,31 +26,26 @@ const CATEGORY_IMAGE_MAP = [
     name: "Exteriores",
     image:
       "https://static.wixstatic.com/media/5a2c8f_301295c3d8f74fb287c3699812ba9fa9~mv2.jpg/v1/fill/w_1196,h_474,al_c,q_85,usm_0.66_1.00_0.01,enc_auto/5a2c8f_301295c3d8f74fb287c3699812ba9fa9~mv2.jpg",
-    slug: "Exteriores",
   },
   {
     name: "Interiores",
     image:
       "https://static.wixstatic.com/media/5a2c8f_f16fb69ffc1c4805bf10a304f850af93~mv2.jpg/v1/fill/w_1152,h_457,al_c,q_85,enc_auto/5a2c8f_f16fb69ffc1c4805bf10a304f850af93~mv2.jpg",
-    slug: "Interiores",
   },
   {
     name: "Línea Profesional",
     image:
       "https://static.wixstatic.com/media/5a2c8f_b6f242cd8d0042688594f5474f8a3d12~mv2.jpg/v1/fill/w_1196,h_474,al_c,q_85,usm_0.66_1.00_0.01,enc_auto/5a2c8f_b6f242cd8d0042688594f5474f8a3d12~mv2.jpg",
-    slug: "Profesional",
   },
   {
     name: "Línea Industrial",
     image:
       "https://static.wixstatic.com/media/5a2c8f_2491e8debfc54edfb758ef28a9ee2bb0~mv2.jpg/v1/fill/w_1196,h_474,al_c,q_85,usm_0.66_1.00_0.01,enc_auto/5a2c8f_2491e8debfc54edfb758ef28a9ee2bb0~mv2.jpg",
-    slug: "Industrial",
   },
   {
     name: "Perfumes",
     image:
       "https://static.wixstatic.com/media/5a2c8f_060fe2e628f74b1fa4eeb7af95569662~mv2.jpg/v1/fill/w_1152,h_457,al_c,q_85,enc_auto/5a2c8f_060fe2e628f74b1fa4eeb7af95569662~mv2.jpg",
-    slug: "Perfumes",
   },
 ];
 
@@ -90,7 +86,7 @@ function BrandCard({ brand }) {
 function CategoryCard({ category }) {
   return (
     <Link
-      to={`/productos?categoria=${category.slug}`}
+      to={`/productos?category=${encodeURIComponent(category.slug)}`}
       className="group relative overflow-hidden rounded-2xl aspect-[4/3] bg-gray-900"
     >
       {category.image ? (
@@ -169,7 +165,7 @@ function HomePage() {
         const fetchedCategories = Array.isArray(categoriesRes?.data?.data)
           ? categoriesRes.data.data.map((item) => ({
               name: item?.name,
-              slug: item?.slug ?? item?.name,
+              slug: item?.slug || slugify(item?.name),
             }))
           : [];
 

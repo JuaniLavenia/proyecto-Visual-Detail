@@ -75,7 +75,8 @@ Frontend (`proyecto-Visual-Detail`):
 
 - 2026-10-05: exploration done (delegated), feature document created.
 - 2026-10-05: user approved; branch `feature/password-recovery` in both repos. Backend R1–R4 (delegated writer, test-first, `npm test` 51/51). Review assess: high (auth hot path), RDD off → independent read-only verifier: PASS WITH FOLLOW-UPS; follow-ups fixed inline as R5 (51/51). Frontend W1–W3 (delegated writer), `pnpm build` OK (re-run by parent). User's uncommitted `API_BASE` change kept out of commits.
-- Next: manual browser QA incl. real Brevo delivery (needs user's `.env` + consent to send a real mail).
+- 2026-10-05: user QA — real Brevo delivery works (after fixing `SMTP_FROM` placeholder). Bug found: reset link 404 in Vite dev because the JWT's dots in the last path segment bypass the SPA fallback. Fix: link is now `${FRONTEND_URL}/reset/:id?token=<jwt>`, frontend route `/reset/:id` reads `token` from the query (backend `d8004d7` test-first RED→GREEN 51/51; frontend `74b8d86`, build OK). API route `/api/reset/:id/:token` unchanged.
+- Next: user re-tests the full reset flow, then merges.
 
 ## Route
 

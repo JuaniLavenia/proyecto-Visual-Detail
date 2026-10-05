@@ -36,10 +36,11 @@ Backend (`proyecto-Visual-Detail-backend`):
 
 Frontend (`proyecto-Visual-Detail`):
 
-- [ ] F1 — `useTaxonomyOptions` returns `{ name, slug }`; update `CategoryBtn`, `ProductCreate`, `ProductEdit`.
-- [ ] F2 — PLP: `useSearchParams` as single source of truth (`brand`, `category`, `search`, `sort`, `page`, `limit`), one SWR key on `/api/productos?...`, server `totalPages`, pagination enabled with filters, price sort select, combined empty-state message. Normalize legacy `categoria` param and name values.
-- [ ] F3 — Admin products search → `GET /api/productos?search=`.
-- [ ] F4 — Home / Banner / Footer links use slugs.
+- [x] F1 — `useTaxonomyOptions` returns `{ name, slug }`; update `CategoryBtn`, `ProductCreate`, `ProductEdit`. (`9bbce95`)
+- [x] F2 — PLP: `useSearchParams` as single source of truth (`brand`, `category`, `search`, `sort`, `page`, `limit`), one SWR key on `/api/productos?...`, server `totalPages`, pagination enabled with filters, price sort select, combined empty-state message. Normalize legacy `categoria` param and name values. (`3838537`)
+- [x] F3 — Admin products search → `GET /api/productos?search=`. (`9ec4c0b`)
+- [x] F4 — Home / Banner / Footer links use slugs. (`fbd3542`)
+- [x] F5 — Header search encodes the term (`&`, `#` broke the URL). Added during F2 review.
 
 ## Acceptance criteria
 
@@ -64,7 +65,9 @@ Frontend (`proyecto-Visual-Detail`):
 
 - 2026-10-05: exploration done, feature document created.
 - 2026-10-05: branch `feature/plp-combined-filters` created in both repos (from local `main`, each 1 commit ahead of origin). Frontend `package.json` / `pnpm-lock.yaml` changes are pre-existing and out of scope; do not commit them.
-- 2026-10-05: backend B1–B4 done (delegated writer). `npm test`: 31/31 pass (re-run by parent). Test-first RED observed for B1–B4 helpers; `findAll` wiring tests written after. Review assess: medium (package.json), RDD off → writer self-verification + parent spot check. Next: F1.
+- 2026-10-05: backend B1–B4 done (delegated writer). `npm test`: 31/31 pass (re-run by parent). Test-first RED observed for B1–B4 helpers; `findAll` wiring tests written after. Review assess: medium (package.json), RDD off → writer self-verification + parent spot check.
+- 2026-10-05: frontend F1–F4 done (delegated writer), F5 inline. `pnpm build` passes (re-run by parent). Manual browser QA pending (user). Follow-ups: unused legacy helpers in `src/lib/api.js`; Home brand cards are not links; Footer slugs assume stored slug == slugify(name).
+- Next: user manual QA, then merge both branches.
 
 ## Route
 

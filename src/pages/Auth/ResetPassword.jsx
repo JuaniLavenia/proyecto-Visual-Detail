@@ -92,7 +92,9 @@ function ResetPassword() {
           title: "No se pudo restablecer la contraseña",
           text: isRateLimitError(err)
             ? RATE_LIMIT_MESSAGE
-            : "Intentá de nuevo más tarde.",
+            : err?.code === "USER_INACTIVE"
+              ? "Tu cuenta está desactivada. Contactá a un administrador."
+              : "Intentá de nuevo más tarde.",
           confirmButtonColor: "#eab308",
         });
       }

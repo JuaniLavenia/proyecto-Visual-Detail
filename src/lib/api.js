@@ -256,6 +256,22 @@ api.interceptors.response.use(
     const originalRequest = error.config;
     const status = error.response?.status;
 
+    // A deactivated account cannot recover by refreshing: end the session the
+    // same way a failed refresh does (storage + store logout via App.jsx).
+    // Login, forgot and reset are excluded: they do not belong to the current
+    // session, so another account's state must not end it.
+    if (
+      status === 403 &&
+      error.response?.data?.error?.code === "USER_INACTIVE" &&
+      !originalRequest?.url?.includes("/api/login") &&
+      !originalRequest?.url?.includes("/api/forgot") &&
+      !originalRequest?.url?.includes("/api/reset")
+    ) {
+      clearAuthInStorage();
+      notifyTokenRefreshed(null, null);
+      return Promise.reject(handleError(error));
+    }
+
     // Si es 401 Y no es una request de auth Y no es el endpoint de refresh
     // Y no se intentó refresh aún
     if (

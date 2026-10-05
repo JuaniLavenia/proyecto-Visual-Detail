@@ -89,7 +89,10 @@ function Login() {
       Swal.fire({
         icon: "error",
         title: "Error de autenticación",
-        text: "Email o contraseña incorrectos",
+        text:
+          err?.code === "USER_INACTIVE"
+            ? "Tu cuenta está desactivada. Contactá a un administrador."
+            : "Email o contraseña incorrectos",
         confirmButtonColor: "#eab308",
       });
     } finally {

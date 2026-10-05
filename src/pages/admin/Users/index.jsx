@@ -1,17 +1,34 @@
 import { useState, useEffect } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import api from "../../../lib/api";
 import Swal from "sweetalert2";
 import useAuthStore from "../../../stores/useAuthStore";
 import {
   Users,
+  UserCheck,
   ShoppingCart,
   ArrowLeft,
-  Mail,
+  Plus,
   Spinner,
+  Search,
+  ChevronLeft,
+  ChevronRight,
 } from "../../../components/common/Icons";
 import { sendPasswordResetLink } from "../../../lib/auth-api";
+import {
+  listUsers,
+  createUser,
+  updateUser,
+  deleteUser,
+  isUserActive,
+} from "../../../lib/users-api";
+import UserFormModal from "./UserFormModal";
+import UserRowActions from "./UserRowActions";
+import { ROLES, getRoleLabel, SELF_ACTION_HINT } from "./constants";
+import { getUserErrorMessage, isUserNotFoundError } from "./user-errors";
 import "../Products/index.css";
+
+const PAGE_SIZE = 20;
+const SEARCH_DEBOUNCE_MS = 400;
 
 const escapeHtml = (value = "") =>
   String(value).replace(
@@ -22,85 +39,444 @@ const escapeHtml = (value = "") =>
       ],
   );
 
-const ROLES = [
-  { value: "minorista", label: "Minorista", color: "bg-blue-500" },
-  { value: "mayorista", label: "Mayorista", color: "bg-green-500" },
-  { value: "admin", label: "Administrador", color: "bg-yellow-500" },
+const DANGER_COLOR = "#ef4444";
+const ACCENT_COLOR = "#eab308";
+
+// Plain-text label for SweetAlert `text` (never interpolated into `html`).
+const describeUser = (user) =>
+  user.name ? `${user.name} (${user.email})` : user.email;
+
+const STATUS_OPTIONS = [
+  { value: "", label: "Todos los estados" },
+  { value: "active", label: "Activos" },
+  { value: "inactive", label: "Inactivos" },
 ];
+
+const SORT_OPTIONS = [
+  { value: "newest", label: "Más recientes" },
+  { value: "email", label: "Email (A-Z)" },
+];
+
+const SELECT_CLASS =
+  "bg-gray-800 text-white px-3 py-2 rounded-lg border border-white/10 focus:outline-none focus:border-yellow-500 disabled:opacity-50 text-sm";
+
+// Windowed page numbers, same pattern as the PLP (src/pages/Products).
+function getPageNumbers(page, totalPages) {
+  const size = Math.min(5, totalPages);
+  let start = 1;
+  if (totalPages > 5) {
+    if (page >= totalPages - 2) start = totalPages - 4;
+    else if (page > 3) start = page - 2;
+  }
+  return Array.from({ length: size }, (_, i) => start + i);
+}
+
+function UsersPagination({ page, totalPages, onChange, disabled }) {
+  if (totalPages <= 1) return null;
+  return (
+    <nav
+      className="mt-8 flex justify-center"
+      aria-label="Paginación de usuarios"
+    >
+      <div className="flex items-center gap-2">
+        <button
+          type="button"
+          onClick={() => onChange(page - 1)}
+          disabled={disabled || page === 1}
+          aria-label="Página anterior"
+          className="p-2 rounded-lg bg-white/5 text-white/70 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        >
+          <ChevronLeft className="w-5 h-5" />
+        </button>
+        {getPageNumbers(page, totalPages).map((pageNum) => (
+          <button
+            type="button"
+            key={pageNum}
+            onClick={() => onChange(pageNum)}
+            disabled={disabled}
+            aria-current={page === pageNum ? "page" : undefined}
+            className={`w-10 h-10 rounded-lg font-medium transition-colors ${
+              page === pageNum
+                ? "bg-yellow-500 text-gray-900"
+                : "bg-white/5 text-white/70 hover:bg-white/10"
+            }`}
+          >
+            {pageNum}
+          </button>
+        ))}
+        <button
+          type="button"
+          onClick={() => onChange(page + 1)}
+          disabled={disabled || page >= totalPages}
+          aria-label="Página siguiente"
+          className="p-2 rounded-lg bg-white/5 text-white/70 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
+        >
+          <ChevronRight className="w-5 h-5" />
+        </button>
+      </div>
+    </nav>
+  );
+}
+
+function KpiCard({ icon: Icon, label, value, accent }) {
+  return (
+    <div className="bg-gray-800/30 border border-white/5 rounded-xl p-4">
+      <div className="flex items-center gap-3">
+        <div className={`p-2 rounded-lg ${accent.bg} ${accent.text}`}>
+          <Icon className="w-6 h-6" />
+        </div>
+        <div>
+          <p className="text-white/50 text-xs">{label}</p>
+          <p className={`text-xl font-bold ${accent.value}`}>{value ?? "-"}</p>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function StatusBadge({ user }) {
+  const active = isUserActive(user);
+  return (
+    <span
+      className={`px-2 py-1 rounded text-xs font-medium border ${
+        active
+          ? "bg-emerald-500/10 text-emerald-400 border-emerald-500/30"
+          : "bg-red-500/10 text-red-400 border-red-500/30"
+      }`}
+    >
+      {active ? "Activo" : "Inactivo"}
+    </span>
+  );
+}
+
+function UserIdentity({ user, avatarSize = "w-10 h-10" }) {
+  return (
+    <div className="flex items-center gap-3 min-w-0">
+      <div
+        className={`${avatarSize} rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0`}
+      >
+        <span className="text-yellow-400 font-medium text-sm">
+          {(user.name || user.email)?.charAt(0).toUpperCase()}
+        </span>
+      </div>
+      <div className="min-w-0">
+        {user.name && (
+          <p className="text-white font-medium truncate max-w-xs">
+            {user.name}
+          </p>
+        )}
+        <p
+          className={`truncate max-w-xs ${
+            user.name ? "text-white/50 text-sm" : "text-white font-medium"
+          }`}
+        >
+          {user.email}
+        </p>
+      </div>
+    </div>
+  );
+}
 
 function UsersAdmin() {
   const { token, isAdmin, userId } = useAuthStore();
   const navigate = useNavigate();
 
   const [users, setUsers] = useState([]);
+  const [pagination, setPagination] = useState(null);
+  const [counts, setCounts] = useState(null);
   const [loading, setLoading] = useState(true);
-  const [updating, setUpdating] = useState(null);
+  const [loadError, setLoadError] = useState(null);
+  const [reloadKey, setReloadKey] = useState(0);
+
+  const [page, setPage] = useState(1);
+  const [searchInput, setSearchInput] = useState("");
+  const [search, setSearch] = useState("");
+  const [roleFilter, setRoleFilter] = useState("");
+  const [statusFilter, setStatusFilter] = useState("");
+  const [sort, setSort] = useState("newest");
+
+  const [busyId, setBusyId] = useState(null);
   const [sendingLink, setSendingLink] = useState(null);
+  const [modal, setModal] = useState(null); // null | { mode: 'create' } | { mode: 'edit', user }
+  const [saving, setSaving] = useState(false);
 
-  // Verificar acceso admin
+  const isSelf = (user) => Boolean(userId) && String(user._id) === String(userId);
+
+  // Admin access guard
   useEffect(() => {
-    if (!token || !isAdmin) {
-      navigate("/");
-      return;
-    }
-    fetchUsers();
-  }, [token, isAdmin]);
+    if (!token || !isAdmin) navigate("/");
+  }, [token, isAdmin, navigate]);
 
-  const fetchUsers = async () => {
-    try {
-      const res = await api.get("/api/users");
-      setUsers(res.data.data.usuarios || res.data.data || []);
-    } catch (error) {
-      console.error("Error fetching users:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "No se pudieron cargar los usuarios",
+  // Debounce the search box; a new term always starts at page 1.
+  useEffect(() => {
+    const term = searchInput.trim();
+    if (term === search) return undefined;
+    const timer = setTimeout(() => {
+      setSearch(term);
+      setPage(1);
+    }, SEARCH_DEBOUNCE_MS);
+    return () => clearTimeout(timer);
+  }, [searchInput, search]);
+
+  useEffect(() => {
+    if (!token || !isAdmin) return undefined;
+    const controller = new AbortController();
+    setLoading(true);
+    setLoadError(null);
+
+    listUsers(
+      {
+        page,
+        limit: PAGE_SIZE,
+        search,
+        role: roleFilter,
+        status: statusFilter,
+        sort,
+      },
+      { signal: controller.signal },
+    )
+      .then((result) => {
+        if (controller.signal.aborted) return;
+        // A deletion or filter change can leave us past the last page: move
+        // back without rendering the empty page in between.
+        const totalPages = result.pagination?.totalPages || 1;
+        if (page > totalPages) {
+          setPage(totalPages);
+          return;
+        }
+        setUsers(result.users);
+        setPagination(result.pagination);
+        setCounts(result.counts);
+      })
+      .catch((error) => {
+        if (controller.signal.aborted) return;
+        console.error("Error fetching users:", error);
+        setLoadError(error?.message || "No se pudieron cargar los usuarios");
+      })
+      .finally(() => {
+        if (!controller.signal.aborted) setLoading(false);
       });
+
+    return () => controller.abort();
+  }, [
+    token,
+    isAdmin,
+    page,
+    search,
+    roleFilter,
+    statusFilter,
+    sort,
+    reloadKey,
+  ]);
+
+  const reload = () => setReloadKey((key) => key + 1);
+
+  const handleFilterChange = (setter) => (e) => {
+    setter(e.target.value);
+    setPage(1);
+  };
+
+  const hasFilters = Boolean(search || roleFilter || statusFilter);
+
+  const clearFilters = () => {
+    setSearchInput("");
+    setSearch("");
+    setRoleFilter("");
+    setStatusFilter("");
+    setPage(1);
+  };
+
+  const handlePageChange = (nextPage) => {
+    const totalPages = pagination?.totalPages || 1;
+    if (nextPage < 1 || nextPage > totalPages || nextPage === page) return;
+    setPage(nextPage);
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  };
+
+  const showSuccess = (title, text) =>
+    Swal.fire({
+      icon: "success",
+      title,
+      text,
+      timer: 1800,
+      showConfirmButton: false,
+    });
+
+  const showUserError = (error, title, fallback) => {
+    console.error(`${title}:`, error);
+    // The user was deleted elsewhere: the current page is stale.
+    if (isUserNotFoundError(error)) reload();
+    return Swal.fire({
+      icon: "error",
+      title,
+      text: getUserErrorMessage(error, fallback),
+      confirmButtonColor: ACCENT_COLOR,
+    });
+  };
+
+  // Runs one row mutation; on success refetches the page (and the KPIs).
+  const runRowMutation = async (user, request, success, failure) => {
+    setBusyId(user._id);
+    try {
+      await request();
+      showSuccess(success.title, success.text);
+      reload();
+      return true;
+    } catch (error) {
+      showUserError(error, failure.title, failure.fallback);
+      return false;
     } finally {
-      setLoading(false);
+      setBusyId(null);
     }
   };
 
-  const handleRoleChange = async (userIdActual, newRole) => {
-    if (!isAdmin) {
-      Swal.fire({
-        icon: "warning",
-        title: "Acceso denegado",
-        text: "Solo administradores pueden cambiar roles",
-      });
-      return;
-    }
+  const setUserActive = (user, isActive) =>
+    runRowMutation(
+      user,
+      () => updateUser(user._id, { isActive }),
+      {
+        title: isActive ? "Usuario activado" : "Usuario desactivado",
+        text: isActive
+          ? "El usuario puede volver a iniciar sesión."
+          : "Se cerró su sesión y ya no puede iniciar sesión.",
+      },
+      {
+        title: isActive ? "No se pudo activar" : "No se pudo desactivar",
+        fallback: "No se pudo actualizar el estado del usuario",
+      },
+    );
 
-    setUpdating(userIdActual);
+  // The <select> is controlled by user.role, so a cancelled confirmation
+  // (or a failed request) leaves it showing the current role.
+  const handleRoleChange = async (user, newRole) => {
+    if (newRole === user.role) return;
+    const roleLabel = getRoleLabel(newRole);
+    const { isConfirmed } = await Swal.fire({
+      icon: "warning",
+      title: "¿Cambiar rol?",
+      text: `${describeUser(user)} pasará a ser ${roleLabel}. Se cerrará su sesión y deberá volver a iniciarla.`,
+      showCancelButton: true,
+      confirmButtonText: "Cambiar rol",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: ACCENT_COLOR,
+    });
+    if (!isConfirmed) return;
+
+    await runRowMutation(
+      user,
+      () => updateUser(user._id, { role: newRole }),
+      { title: "Rol actualizado", text: `El usuario ahora es ${roleLabel}` },
+      { title: "No se pudo cambiar el rol", fallback: "No se pudo actualizar el rol" },
+    );
+  };
+
+  const handleToggleActive = async (user) => {
+    const active = isUserActive(user);
+    const { isConfirmed } = await Swal.fire({
+      showCancelButton: true,
+      cancelButtonText: "Cancelar",
+      ...(active
+        ? {
+            icon: "warning",
+            title: "¿Desactivar usuario?",
+            text: `${describeUser(user)} no podrá iniciar sesión y se cerrará su sesión actual. Podés reactivarlo cuando quieras.`,
+            confirmButtonText: "Desactivar",
+            confirmButtonColor: DANGER_COLOR,
+          }
+        : {
+            icon: "question",
+            title: "¿Activar usuario?",
+            text: `${describeUser(user)} podrá volver a iniciar sesión.`,
+            confirmButtonText: "Activar",
+            confirmButtonColor: ACCENT_COLOR,
+          }),
+    });
+    if (!isConfirmed) return;
+    await setUserActive(user, !active);
+  };
+
+  const offerDeactivation = async (user) => {
+    const { isConfirmed } = await Swal.fire({
+      icon: "warning",
+      title: "No se puede eliminar",
+      text: `${getUserErrorMessage({ code: "USER_HAS_ORDERS" })} Al desactivarlo se cierra su sesión y no podrá iniciar sesión.`,
+      showCancelButton: true,
+      confirmButtonText: "Desactivar",
+      cancelButtonText: "Cerrar",
+      confirmButtonColor: DANGER_COLOR,
+    });
+    if (isConfirmed) await setUserActive(user, false);
+  };
+
+  const handleDelete = async (user) => {
+    const { isConfirmed } = await Swal.fire({
+      icon: "warning",
+      title: "¿Eliminar usuario?",
+      text: `Se eliminará ${describeUser(user)} junto con su carrito y favoritos. Solo se pueden eliminar usuarios sin pedidos; si tiene pedidos, desactivalo. Esta acción no se puede deshacer.`,
+      showCancelButton: true,
+      confirmButtonText: "Eliminar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: DANGER_COLOR,
+    });
+    if (!isConfirmed) return;
+
+    setBusyId(user._id);
     try {
-      const res = await api.put(`/api/users/${userIdActual}/role`, {
-        role: newRole,
-      });
-
-      // Actualizar lista local
-      setUsers(
-        users.map((u) =>
-          u._id === userIdActual ? { ...u, role: newRole } : u,
-        ),
-      );
-
-      Swal.fire({
-        icon: "success",
-        title: "Role actualizado",
-        text: `El usuario ahora es ${newRole}`,
-        timer: 1500,
-        showConfirmButton: false,
-      });
+      await deleteUser(user._id);
+      showSuccess("Usuario eliminado");
+      reload();
     } catch (error) {
-      console.error("Error updating role:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "No se pudo actualizar el role",
-      });
+      if (error?.code === "USER_HAS_ORDERS" && isUserActive(user)) {
+        setBusyId(null);
+        await offerDeactivation(user);
+      } else {
+        showUserError(
+          error,
+          "No se pudo eliminar",
+          "Ocurrió un error al eliminar el usuario",
+        );
+      }
     } finally {
-      setUpdating(null);
+      setBusyId(null);
+    }
+  };
+
+  const handleFormSubmit = async (values) => {
+    setSaving(true);
+    try {
+      if (modal.mode === "edit") {
+        await updateUser(modal.user._id, values);
+        setModal(null);
+        showSuccess("Usuario actualizado");
+      } else {
+        const result = await createUser(values);
+        setModal(null);
+        if (result?.inviteSent) {
+          showSuccess(
+            "Usuario creado",
+            "Usuario creado. Se envió un mail para que defina su contraseña.",
+          );
+        } else {
+          Swal.fire({
+            icon: "warning",
+            title: "Usuario creado",
+            text: "Usuario creado, pero no se pudo enviar el mail. Reenvialo con 'Enviar link de recuperación'.",
+            confirmButtonColor: ACCENT_COLOR,
+          });
+        }
+      }
+      reload();
+    } catch (error) {
+      // Keep the modal open so the admin can fix the data, unless the
+      // edited user no longer exists.
+      if (isUserNotFoundError(error)) setModal(null);
+      showUserError(
+        error,
+        "No se pudo guardar",
+        "Verificá los datos e intentá de nuevo.",
+      );
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -148,25 +524,35 @@ function UsersAdmin() {
     }
   };
 
-  const renderResetLinkButton = (user, extraClass = "") => (
-    <button
-      type="button"
-      onClick={() => handleSendResetLink(user)}
-      disabled={sendingLink === user._id}
-      className={`inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10 disabled:opacity-50 disabled:cursor-not-allowed text-sm transition-colors ${extraClass}`}
+  const renderRowActions = (user, compact) => (
+    <UserRowActions
+      user={user}
+      isSelf={isSelf(user)}
+      busy={busyId === user._id}
+      sendingLink={sendingLink === user._id}
+      compact={compact}
+      onEdit={(target) => setModal({ mode: "edit", user: target })}
+      onToggleActive={handleToggleActive}
+      onDelete={handleDelete}
+      onSendResetLink={handleSendResetLink}
+    />
+  );
+
+  const renderRoleSelect = (user, extraClass = "") => (
+    <select
+      value={user.role || "minorista"}
+      onChange={(e) => handleRoleChange(user, e.target.value)}
+      disabled={busyId === user._id || isSelf(user)}
+      title={isSelf(user) ? SELF_ACTION_HINT : undefined}
+      aria-label={`Cambiar rol de ${user.email}`}
+      className={`${SELECT_CLASS} ${extraClass}`}
     >
-      {sendingLink === user._id ? (
-        <>
-          <Spinner className="w-4 h-4" />
-          Enviando...
-        </>
-      ) : (
-        <>
-          <Mail className="w-4 h-4" />
-          Enviar link de recuperación
-        </>
-      )}
-    </button>
+      {ROLES.map((role) => (
+        <option key={role.value} value={role.value}>
+          {role.label}
+        </option>
+      ))}
+    </select>
   );
 
   const getRoleBadge = (role) => {
@@ -180,13 +566,146 @@ function UsersAdmin() {
     );
   };
 
-  if (loading) {
+  const totalUsers = counts?.total ?? pagination?.totalUsers ?? 0;
+  const totalPages = pagination?.totalPages || 1;
+  const isFirstLoad = loading && !pagination && !loadError;
+
+  const renderResults = () => {
+    if (isFirstLoad) {
+      return (
+        <div className="flex items-center justify-center gap-3 py-20 text-white/50">
+          <Spinner className="w-5 h-5" />
+          Cargando usuarios...
+        </div>
+      );
+    }
+
+    if (loadError) {
+      return (
+        <div className="text-center py-20" role="alert">
+          <h3 className="text-xl font-semibold text-white mb-2">
+            No se pudieron cargar los usuarios
+          </h3>
+          <p className="text-white/50 mb-6">{loadError}</p>
+          <button
+            type="button"
+            onClick={reload}
+            className="px-4 py-2 rounded-lg bg-yellow-500 text-gray-900 font-medium hover:bg-yellow-400 transition-colors"
+          >
+            Reintentar
+          </button>
+        </div>
+      );
+    }
+
+    if (users.length === 0) {
+      return (
+        <div className="text-center py-20">
+          <div className="text-6xl mb-4">👥</div>
+          <h3 className="text-xl font-semibold text-white mb-2">
+            {hasFilters
+              ? "No hay usuarios que coincidan con los filtros"
+              : "No hay usuarios registrados"}
+          </h3>
+          {hasFilters && (
+            <button
+              type="button"
+              onClick={clearFilters}
+              className="mt-4 px-4 py-2 rounded-lg border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10 text-sm transition-colors"
+            >
+              Limpiar filtros
+            </button>
+          )}
+        </div>
+      );
+    }
+
     return (
-      <div className="min-h-screen bg-gray-950 pt-20 lg:pt-24 flex items-center justify-center">
-        <div className="text-white/50">Cargando usuarios...</div>
+      <div
+        className={`transition-opacity ${loading ? "opacity-50 pointer-events-none" : ""}`}
+        aria-busy={loading}
+      >
+        {/* Desktop Table */}
+        <div className="hidden lg:block bg-gray-900/30 border border-white/5 rounded-2xl overflow-hidden">
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead className="bg-gray-800/40 border-b border-white/5">
+                <tr>
+                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-white/50 uppercase tracking-wider">
+                    Usuario
+                  </th>
+                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-white/50 uppercase tracking-wider">
+                    Rol
+                  </th>
+                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-white/50 uppercase tracking-wider">
+                    Estado
+                  </th>
+                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-white/50 uppercase tracking-wider">
+                    Cambiar rol
+                  </th>
+                  <th className="px-4 py-3.5 text-left text-xs font-semibold text-white/50 uppercase tracking-wider">
+                    Acciones
+                  </th>
+                </tr>
+              </thead>
+              <tbody className="divide-y divide-white/5">
+                {users.map((user) => (
+                  <tr
+                    key={user._id}
+                    className="hover:bg-white/5 transition-colors duration-200"
+                  >
+                    <td className="px-4 py-3.5">
+                      <UserIdentity user={user} />
+                    </td>
+                    <td className="px-4 py-3.5">{getRoleBadge(user.role)}</td>
+                    <td className="px-4 py-3.5">
+                      <StatusBadge user={user} />
+                    </td>
+                    <td className="px-4 py-3.5">
+                      {renderRoleSelect(user, "min-w-[140px]")}
+                    </td>
+                    <td className="px-4 py-3.5">
+                      {renderRowActions(user, true)}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        {/* Mobile Cards */}
+        <div className="lg:hidden grid gap-4">
+          {users.map((user) => (
+            <div
+              key={user._id}
+              className="bg-gray-900/50 border border-white/5 rounded-xl p-4"
+            >
+              <div className="flex items-start justify-between gap-3 mb-4">
+                <UserIdentity user={user} avatarSize="w-12 h-12" />
+                <StatusBadge user={user} />
+              </div>
+              <div className="flex items-center justify-between">
+                <div>
+                  <p className="text-white/50 text-xs mb-1">Rol actual</p>
+                  {getRoleBadge(user.role)}
+                </div>
+                {renderRoleSelect(user)}
+              </div>
+              {renderRowActions(user, false)}
+            </div>
+          ))}
+        </div>
+
+        <UsersPagination
+          page={page}
+          totalPages={totalPages}
+          onChange={handlePageChange}
+          disabled={loading}
+        />
       </div>
     );
-  }
+  };
 
   return (
     <div className="min-h-screen bg-gray-950 pt-20 lg:pt-24 pb-12">
@@ -197,6 +716,7 @@ function UsersAdmin() {
             <div className="flex items-center gap-4">
               <Link
                 to="/adm/dashboard"
+                aria-label="Volver al panel"
                 className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
               >
                 <ArrowLeft className="w-5 h-5" />
@@ -206,205 +726,156 @@ function UsersAdmin() {
                   Administración de Usuarios
                 </h1>
                 <p className="text-white/50 mt-1">
-                  {users.length} usuario{users.length !== 1 ? "s" : ""}{" "}
-                  registrado{users.length !== 1 ? "s" : ""}
+                  {totalUsers} usuario{totalUsers !== 1 ? "s" : ""} registrado
+                  {totalUsers !== 1 ? "s" : ""}
                 </p>
               </div>
             </div>
+            <button
+              type="button"
+              onClick={() => setModal({ mode: "create" })}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-yellow-500 text-gray-900 font-semibold hover:bg-yellow-400 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Nuevo usuario
+            </button>
           </div>
 
-          {/* KPI Cards */}
-          <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-gray-800/30 border border-white/5 rounded-xl p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-yellow-500/10 rounded-lg text-yellow-400">
-                  <Users className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-white/50 text-xs">Total Usuarios</p>
-                  <p className="text-xl font-bold text-white">{users.length}</p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-800/30 border border-white/5 rounded-xl p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
-                  <Users className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-white/50 text-xs">Minoristas</p>
-                  <p className="text-xl font-bold text-blue-400">
-                    {users.filter((u) => u.role === "minorista").length}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-800/30 border border-white/5 rounded-xl p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-green-500/10 rounded-lg text-green-400">
-                  <Users className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-white/50 text-xs">Mayoristas</p>
-                  <p className="text-xl font-bold text-green-400">
-                    {users.filter((u) => u.role === "mayorista").length}
-                  </p>
-                </div>
-              </div>
-            </div>
-            <div className="bg-gray-800/30 border border-white/5 rounded-xl p-4">
-              <div className="flex items-center gap-3">
-                <div className="p-2 bg-purple-500/10 rounded-lg text-purple-400">
-                  <ShoppingCart className="w-6 h-6" />
-                </div>
-                <div>
-                  <p className="text-white/50 text-xs">Admins</p>
-                  <p className="text-xl font-bold text-purple-400">
-                    {users.filter((u) => u.role === "admin").length}
-                  </p>
-                </div>
-              </div>
-            </div>
+          {/* KPI Cards (server-side counts, independent of filters) */}
+          <div className="mt-6 grid grid-cols-2 md:grid-cols-3 xl:grid-cols-6 gap-4">
+            <KpiCard
+              icon={Users}
+              label="Total Usuarios"
+              value={counts?.total}
+              accent={{
+                bg: "bg-yellow-500/10",
+                text: "text-yellow-400",
+                value: "text-white",
+              }}
+            />
+            <KpiCard
+              icon={UserCheck}
+              label="Activos"
+              value={counts?.active}
+              accent={{
+                bg: "bg-emerald-500/10",
+                text: "text-emerald-400",
+                value: "text-emerald-400",
+              }}
+            />
+            <KpiCard
+              icon={Users}
+              label="Inactivos"
+              value={counts?.inactive}
+              accent={{
+                bg: "bg-red-500/10",
+                text: "text-red-400",
+                value: "text-red-400",
+              }}
+            />
+            <KpiCard
+              icon={Users}
+              label="Minoristas"
+              value={counts?.minoristas}
+              accent={{
+                bg: "bg-blue-500/10",
+                text: "text-blue-400",
+                value: "text-blue-400",
+              }}
+            />
+            <KpiCard
+              icon={Users}
+              label="Mayoristas"
+              value={counts?.mayoristas}
+              accent={{
+                bg: "bg-green-500/10",
+                text: "text-green-400",
+                value: "text-green-400",
+              }}
+            />
+            <KpiCard
+              icon={ShoppingCart}
+              label="Admins"
+              value={counts?.admins}
+              accent={{
+                bg: "bg-purple-500/10",
+                text: "text-purple-400",
+                value: "text-purple-400",
+              }}
+            />
           </div>
         </div>
       </div>
 
-      {/* Table Section */}
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        {users.length === 0 ? (
-          <div className="text-center py-20">
-            <div className="text-6xl mb-4">👥</div>
-            <h3 className="text-xl font-semibold text-white mb-2">
-              No hay usuarios registrados
-            </h3>
+        {/* Filters */}
+        <div className="mb-6 flex flex-col lg:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="w-4 h-4 text-white/40 absolute left-3 top-1/2 -translate-y-1/2 pointer-events-none" />
+            <input
+              type="search"
+              value={searchInput}
+              onChange={(e) => setSearchInput(e.target.value)}
+              placeholder="Buscar por email o nombre..."
+              aria-label="Buscar usuarios por email o nombre"
+              className="w-full bg-gray-800 text-white pl-9 pr-3 py-2 rounded-lg border border-white/10 focus:outline-none focus:border-yellow-500 text-sm placeholder:text-white/40"
+            />
           </div>
-        ) : (
-          <>
-            {/* Desktop Table */}
-            <div className="hidden lg:block bg-gray-900/30 border border-white/5 rounded-2xl overflow-hidden">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead className="bg-gray-800/40 border-b border-white/5">
-                    <tr>
-                      <th className="px-4 py-3.5 text-left text-xs font-semibold text-white/50 uppercase tracking-wider">
-                        Usuario
-                      </th>
-                      <th className="px-4 py-3.5 text-left text-xs font-semibold text-white/50 uppercase tracking-wider">
-                        Role
-                      </th>
-                      <th className="px-4 py-3.5 text-left text-xs font-semibold text-white/50 uppercase tracking-wider">
-                        Cambiar Role
-                      </th>
-                      <th className="px-4 py-3.5 text-left text-xs font-semibold text-white/50 uppercase tracking-wider">
-                        ID
-                      </th>
-                      <th className="px-4 py-3.5 text-left text-xs font-semibold text-white/50 uppercase tracking-wider">
-                        Acciones
-                      </th>
-                    </tr>
-                  </thead>
-                  <tbody className="divide-y divide-white/5">
-                    {users.map((user, index) => (
-                      <tr
-                        key={user._id}
-                        className="hover:bg-white/5 transition-all duration-200"
-                        style={{ animationDelay: `${index * 0.03}s` }}
-                      >
-                        <td className="px-4 py-3.5">
-                          <div className="flex items-center gap-3">
-                            <div className="w-10 h-10 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
-                              <span className="text-yellow-400 font-medium text-sm">
-                                {user.email?.charAt(0).toUpperCase()}
-                              </span>
-                            </div>
-                            <span className="text-white font-medium truncate max-w-xs">
-                              {user.email}
-                            </span>
-                          </div>
-                        </td>
-                        <td className="px-4 py-3.5">
-                          {getRoleBadge(user.role)}
-                        </td>
-                        <td className="px-4 py-3.5">
-                          <select
-                            value={user.role || "minorista"}
-                            onChange={(e) =>
-                              handleRoleChange(user._id, e.target.value)
-                            }
-                            disabled={updating === user._id}
-                            className="bg-gray-800 text-white px-3 py-2 rounded-lg border border-white/10 focus:outline-none focus:border-yellow-500 disabled:opacity-50 text-sm min-w-[140px]"
-                          >
-                            {ROLES.map((role) => (
-                              <option key={role.value} value={role.value}>
-                                {role.label}
-                              </option>
-                            ))}
-                          </select>
-                        </td>
-                        <td className="px-4 py-3.5">
-                          <code className="text-white/40 text-xs">
-                            {user._id}
-                          </code>
-                        </td>
-                        <td className="px-4 py-3.5">
-                          {renderResetLinkButton(user, "whitespace-nowrap")}
-                        </td>
-                      </tr>
-                    ))}
-                  </tbody>
-                </table>
-              </div>
-            </div>
-
-            {/* Mobile Cards */}
-            <div className="lg:hidden grid gap-4">
-              {users.map((user) => (
-                <div
-                  key={user._id}
-                  className="bg-gray-900/50 border border-white/5 rounded-xl p-4"
-                >
-                  <div className="flex items-center gap-3 mb-4">
-                    <div className="w-12 h-12 rounded-full bg-yellow-500/20 flex items-center justify-center flex-shrink-0">
-                      <span className="text-yellow-400 font-medium">
-                        {user.email?.charAt(0).toUpperCase()}
-                      </span>
-                    </div>
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white font-medium truncate">
-                        {user.email}
-                      </p>
-                      <p className="text-white/40 text-xs truncate">
-                        {user._id}
-                      </p>
-                    </div>
-                  </div>
-                  <div className="flex items-center justify-between">
-                    <div>
-                      <p className="text-white/50 text-xs mb-1">Role actual</p>
-                      {getRoleBadge(user.role)}
-                    </div>
-                    <select
-                      value={user.role || "minorista"}
-                      onChange={(e) =>
-                        handleRoleChange(user._id, e.target.value)
-                      }
-                      disabled={updating === user._id}
-                      className="bg-gray-800 text-white px-3 py-2 rounded-lg border border-white/10 focus:outline-none focus:border-yellow-500 disabled:opacity-50 text-sm"
-                    >
-                      {ROLES.map((role) => (
-                        <option key={role.value} value={role.value}>
-                          {role.label}
-                        </option>
-                      ))}
-                    </select>
-                  </div>
-                  {renderResetLinkButton(user, "w-full mt-4")}
-                </div>
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+            <select
+              value={roleFilter}
+              onChange={handleFilterChange(setRoleFilter)}
+              aria-label="Filtrar por rol"
+              className={SELECT_CLASS}
+            >
+              <option value="">Todos los roles</option>
+              {ROLES.map((role) => (
+                <option key={role.value} value={role.value}>
+                  {role.label}
+                </option>
               ))}
-            </div>
-          </>
-        )}
+            </select>
+            <select
+              value={statusFilter}
+              onChange={handleFilterChange(setStatusFilter)}
+              aria-label="Filtrar por estado"
+              className={SELECT_CLASS}
+            >
+              {STATUS_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+            <select
+              value={sort}
+              onChange={handleFilterChange(setSort)}
+              aria-label="Ordenar usuarios"
+              className={SELECT_CLASS}
+            >
+              {SORT_OPTIONS.map((option) => (
+                <option key={option.value} value={option.value}>
+                  {option.label}
+                </option>
+              ))}
+            </select>
+          </div>
+        </div>
+
+        {renderResults()}
       </div>
+
+      {modal && (
+        <UserFormModal
+          key={modal.mode === "edit" ? modal.user._id : "create"}
+          mode={modal.mode}
+          user={modal.mode === "edit" ? modal.user : null}
+          isSelf={modal.mode === "edit" && isSelf(modal.user)}
+          saving={saving}
+          onCancel={() => setModal(null)}
+          onSubmit={handleFormSubmit}
+        />
+      )}
     </div>
   );
 }

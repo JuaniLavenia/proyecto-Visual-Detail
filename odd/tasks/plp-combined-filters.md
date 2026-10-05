@@ -67,7 +67,9 @@ Frontend (`proyecto-Visual-Detail`):
 - 2026-10-05: branch `feature/plp-combined-filters` created in both repos (from local `main`, each 1 commit ahead of origin). Frontend `package.json` / `pnpm-lock.yaml` changes are pre-existing and out of scope; do not commit them.
 - 2026-10-05: backend B1–B4 done (delegated writer). `npm test`: 31/31 pass (re-run by parent). Test-first RED observed for B1–B4 helpers; `findAll` wiring tests written after. Review assess: medium (package.json), RDD off → writer self-verification + parent spot check.
 - 2026-10-05: frontend F1–F4 done (delegated writer), F5 inline. `pnpm build` passes (re-run by parent). Manual browser QA pending (user). Follow-ups: unused legacy helpers in `src/lib/api.js`; Home brand cards are not links; Footer slugs assume stored slug == slugify(name).
-- Next: user manual QA, then merge both branches.
+- 2026-10-05: browser QA (Chrome, local dev servers) passed: combined brand+category filters + price sort (51/51 matching, sorted), pagination with filters, back/forward/reload restore state, removing a filter resets page, `?categoria=` rewritten to `category=`, name value and unknown slug (empty page, 200), combined empty-state message, Header search encodes `&`, admin search via `?search=`. No console errors. Not exercised: admin search pagination with >12 results.
+- Observation: `price_asc` puts products with null price first (a broken product doc with null name/brand/category exists in the DB). Data issue, not code.
+- Next: user merges both branches.
 
 ## Route
 

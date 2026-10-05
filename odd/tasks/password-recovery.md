@@ -33,16 +33,17 @@ Make password recovery work end to end: a user can request a reset link from the
 
 Backend (`proyecto-Visual-Detail-backend`):
 
-- [ ] R1 — Config + mailer: add `smtp.secure`, `smtp.from`, `app.frontendUrl` to convict and `.env-example` (Brevo defaults, no secrets); new `src/utils/mailer.js` (nodemailer transport from config, `sendMail`). Unit test with a stubbed transport.
-- [ ] R2 — Password reset service: `requestPasswordReset(email)` (always resolves; sends mail only if user exists; logs SMTP failures without leaking them) and `resetPassword(id, token, password)` (validate, `save()`, clear `refreshToken`, map JWT errors to 400 codes). Link `${frontendUrl}/reset/${id}/${token}`. Controllers return `success()`; forgot always answers the same generic message. Validate `id` as MongoId. Tests first.
-- [ ] R3 — Rate limiting: mount `authLimiter` on the real auth routes and add a stricter limiter for `/forgot` and `/reset` (e.g. 5 per 15 min per IP).
-- [ ] R4 — Admin endpoint `POST /api/users/:id/password-reset` (`authenticate` + `isAdmin`) reusing the service; 404 `USER_NOT_FOUND` for unknown id (admin-only, no enumeration concern). Tests.
+- [x] R1 — Config + mailer: add `smtp.secure`, `smtp.from`, `app.frontendUrl` to convict and `.env-example` (Brevo defaults, no secrets); new `src/utils/mailer.js` (nodemailer transport from config, `sendMail`). Unit test with a stubbed transport. (`2530973`)
+- [x] R2 — Password reset service: `requestPasswordReset(email)` (always resolves; sends mail only if user exists; logs SMTP failures without leaking them) and `resetPassword(id, token, password)` (validate, `save()`, clear `refreshToken`, map JWT errors to 400 codes). Link `${frontendUrl}/reset/${id}/${token}`. Controllers return `success()`; forgot always answers the same generic message. Validate `id` as MongoId. Tests first. (`930fab5`)
+- [x] R3 — Rate limiting: mount `authLimiter` on the real auth routes and add a stricter limiter for `/forgot` and `/reset` (e.g. 5 per 15 min per IP). (`7d06a93`)
+- [x] R4 — Admin endpoint `POST /api/users/:id/password-reset` (`authenticate` + `isAdmin`) reusing the service; 404 `USER_NOT_FOUND` for unknown id (admin-only, no enumeration concern). Tests. (`ce72c2f`)
+- [x] R5 — Verifier follow-ups: configurable `TRUST_PROXY` (`app.set('trust proxy')`, set 1 on Render), forgot no longer awaits SMTP (timing enumeration), `jwt.verify` pinned to HS256. (`ced2e05`)
 
 Frontend (`proyecto-Visual-Detail`):
 
-- [ ] W1 — `src/lib/api.js`: auth helpers for forgot/reset; exclude `/api/forgot` and `/api/reset` from the 401 refresh interceptor.
-- [ ] W2 — Pages `/recuperar` (email form, generic success message) and `/reset/:id/:token` (new password + confirm, 6–12 chars to match backend, handles invalid/expired link with a CTA to request a new one); "¿Olvidaste tu contraseña?" link on the login form.
-- [ ] W3 — Admin users page: "Enviar link de recuperación" action with SweetAlert confirm and result feedback.
+- [x] W1 — Auth helpers in new `src/lib/auth-api.js`; `api.js` errors expose `status`/`code`; `/api/forgot` and `/api/reset` excluded from the 401 refresh interceptor. (`abe4ffc`)
+- [x] W2 — Pages `/recuperar` (email form, generic success message) and `/reset/:id/:token` (new password + confirm, 6–12 chars to match backend, handles invalid/expired link with a CTA to request a new one); "¿Olvidaste tu contraseña?" link on the login form. (`299c0ba`)
+- [x] W3 — Admin users page: "Enviar link de recuperación" action with SweetAlert confirm and result feedback. (`21b2fbd`)
 
 ## Acceptance criteria
 
@@ -63,12 +64,18 @@ Frontend (`proyecto-Visual-Detail`):
 
 - Backend password rule is 6–12 chars; a 12-char maximum is unusually low (bcrypt allows 72 bytes). Candidate follow-up.
 - CORS is fully open (`app.use(cors())`); `FRONTEND_URL` could later drive an allow-list.
-- `pre-save` hook logs hashing errors and continues; candidate hardening (Unit 6).
+- `pre-save` hook logs hashing errors and continues → could store a plaintext password; candidate hardening (Unit 6).
+- No route-level tests (middleware order, 429, identical forgot body over HTTP); candidate for Unit 6.
+- `authLimiter` (100/15 min) is shared by login/register/refresh/logout; consider a separate refresh limiter.
+- Malformed reset `:id` returns the generic validation 400 instead of `INVALID_RESET_TOKEN` (no leak).
+- Deploy: set `TRUST_PROXY=1` and `FRONTEND_URL` on Render.
 - Frontend `API_BASE` is hardcoded (uncommitted local change to localhost); no `VITE_*` env.
 
 ## Progress
 
-- 2026-10-05: exploration done (delegated), feature document created. Waiting for user go-ahead; branch not created yet.
+- 2026-10-05: exploration done (delegated), feature document created.
+- 2026-10-05: user approved; branch `feature/password-recovery` in both repos. Backend R1–R4 (delegated writer, test-first, `npm test` 51/51). Review assess: high (auth hot path), RDD off → independent read-only verifier: PASS WITH FOLLOW-UPS; follow-ups fixed inline as R5 (51/51). Frontend W1–W3 (delegated writer), `pnpm build` OK (re-run by parent). User's uncommitted `API_BASE` change kept out of commits.
+- Next: manual browser QA incl. real Brevo delivery (needs user's `.env` + consent to send a real mail).
 
 ## Route
 

@@ -1,17 +1,8 @@
-import useTaxonomyOptions from "../../hooks/useTaxonomyOptions";
-import { slugify } from "../../lib/slugify";
+import {
+  matchesTaxonomyOption as matchesOption,
+  findTaxonomyOption as findOption,
+} from "../../hooks/useTaxonomyOptions";
 import { Category, Circle, Star } from "../common/Icons";
-
-// Active values come from the URL: usually a slug, but legacy links may
-// still carry the display name.
-const matchesOption = (option, value) =>
-  !!value &&
-  (option.slug === value ||
-    option.name === value ||
-    option.slug === slugify(value));
-
-const findOption = (options, value) =>
-  options.find((option) => matchesOption(option, value));
 
 function FilterButton({ children, active, onClick, icon }) {
   return (
@@ -58,18 +49,19 @@ function FilterSection({ title, items, activeItem, onItemClick, icon }) {
 }
 
 /**
- * Brand/category filter picker. `activeCategory` / `activeBrand` are the URL
- * values (slug, or a legacy name); the click handlers receive the option slug,
- * or null to clear. Brand and category combine independently.
+ * Brand/category filter picker. `brands` / `categories` are `{ name, slug }`
+ * options (see useTaxonomyOptions). `activeCategory` / `activeBrand` are the
+ * URL values (slug, or a legacy name); the click handlers receive the option
+ * slug, or null to clear. Brand and category combine independently.
  */
 function Filters({
+  brands = [],
+  categories = [],
   handleCategoryClick,
   handleBrandClick,
   activeCategory,
   activeBrand,
 }) {
-  const { brands, categories } = useTaxonomyOptions();
-
   const handleCategorySelect = (category) => {
     // Si ya está activo, quitamos el filtro
     handleCategoryClick(

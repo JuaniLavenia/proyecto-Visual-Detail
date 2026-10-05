@@ -18,6 +18,19 @@ const toOptions = (items) =>
     : [];
 
 /**
+ * True when a URL filter value refers to the option. URL values are usually
+ * slugs, but legacy links may still carry the display name.
+ */
+export const matchesTaxonomyOption = (option, value) =>
+  !!value &&
+  (option.slug === value ||
+    option.name === value ||
+    option.slug === slugify(value));
+
+export const findTaxonomyOption = (options, value) =>
+  options.find((option) => matchesTaxonomyOption(option, value));
+
+/**
  * Marcas y categorias activas para selects/filtros publicos. Consume los
  * mismos endpoints publicos que ya filtran isActive:true en el backend, asi
  * que nunca ofrece una opcion desactivada.

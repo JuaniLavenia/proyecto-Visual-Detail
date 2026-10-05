@@ -1,118 +1,165 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect, useCallback } from "react";
+import { useSearchParams } from "react-router-dom";
 import useSWR from "swr";
 import CardProductos, {
   ProductCardSkeleton,
   ProductCardEmpty,
 } from "../../components/shared/ProductCard";
 import Filters from "../../components/shared/CategoryBtn";
-import api, { fetcher, API_BASE } from "../../lib/api";
+import useTaxonomyOptions, {
+  findTaxonomyOption,
+} from "../../hooks/useTaxonomyOptions";
+import { fetcher, API_BASE } from "../../lib/api";
 import {
   Filter,
   Close,
   ChevronLeft,
   ChevronRight,
 } from "../../components/common/Icons";
+import {
+  PAGE_SIZES,
+  DEFAULT_LIMIT,
+  SORT_OPTIONS,
+  LEGACY_PARAMS,
+  parseProductsParams,
+  buildProductsKey,
+  joinLabels,
+} from "./productsQuery";
 import "./index.css";
 
 function SearchClean() {
-  const [currentPage, setCurrentPage] = useState(1);
-  const [currentSize, setCurrentSize] = useState(12);
+  const [searchParams, setSearchParams] = useSearchParams();
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
-  const [activeFilter, setActiveFilter] = useState(null);
-  const [filterType, setFilterType] = useState(null);
+  const { brands, categories } = useTaxonomyOptions();
 
-  // Obtener parámetros de URL
-  const urlParams = new URLSearchParams(window.location.search);
-  const initialCategory =
-    urlParams.get("category") || urlParams.get("categoria");
-  const initialSearch = urlParams.get("search");
+  // La URL es la unica fuente de verdad de filtros, orden y paginacion
+  const filters = useMemo(
+    () => parseProductsParams(searchParams),
+    [searchParams],
+  );
+  const { brand, category, search, sort, page, limit } = filters;
 
-  // Build key de request según filtros
-  const getKey = () => {
-    if (filterType === "category" && activeFilter) {
-      return `${API_BASE}/api/productos/category/${encodeURIComponent(activeFilter)}`;
-    }
-    if (filterType === "brand" && activeFilter) {
-      return `${API_BASE}/api/productos/brand/${encodeURIComponent(activeFilter)}`;
-    }
-    if (initialSearch) {
-      return `${API_BASE}/api/productos/search/${encodeURIComponent(initialSearch)}`;
-    }
-    if (initialCategory) {
-      return `${API_BASE}/api/productos/category/${encodeURIComponent(initialCategory)}`;
-    }
-    return `${API_BASE}/api/productos?page=${currentPage}&limit=${currentSize}`;
-  };
+  // Normalizar links viejos (?categoria=X → ?category=X) sin sumar historial
+  useEffect(() => {
+    const legacyKeys = Object.keys(LEGACY_PARAMS).filter((key) =>
+      searchParams.has(key),
+    );
+    if (legacyKeys.length === 0) return;
 
-  // useSWR con configuración optimizada
-  const { data, error, isLoading, mutate } = useSWR(getKey(), fetcher, {
-    revalidateOnFocus: false, // No revalidar al volver a la pestaña
-    revalidateOnReconnect: true, // Sí revalidar al reconectar
-    dedupingInterval: 5000, // Deduplicar requests en 5 segundos
-    errorRetryCount: 3, // Reintentar hasta 3 veces
-    errorRetryInterval: 2000, // Reintentar cada 2 segundos
-    fallbackData: null, // Sin datos por defecto
-  });
+    const next = new URLSearchParams(searchParams);
+    legacyKeys.forEach((key) => {
+      const target = LEGACY_PARAMS[key];
+      if (!next.get(target) && next.get(key)) next.set(target, next.get(key));
+      next.delete(key);
+    });
+    setSearchParams(next, { replace: true });
+  }, [searchParams, setSearchParams]);
+
+  // Cambios del usuario: push, para que el boton atras restaure el estado.
+  // Cualquier cambio de filtro vuelve a la pagina 1.
+  const updateParams = useCallback(
+    (changes, { resetPage = true } = {}) => {
+      const next = new URLSearchParams(searchParams);
+      Object.entries(changes).forEach(([key, value]) => {
+        if (value === null || value === undefined || value === "") {
+          next.delete(key);
+        } else {
+          next.set(key, String(value));
+        }
+      });
+      if (resetPage) next.delete("page");
+      setSearchParams(next);
+    },
+    [searchParams, setSearchParams],
+  );
+
+  const { data, error, isLoading, mutate } = useSWR(
+    buildProductsKey(API_BASE, filters),
+    fetcher,
+    {
+      revalidateOnFocus: false, // No revalidar al volver a la pestaña
+      revalidateOnReconnect: true, // Sí revalidar al reconectar
+      dedupingInterval: 5000, // Deduplicar requests en 5 segundos
+      errorRetryCount: 3, // Reintentar hasta 3 veces
+      errorRetryInterval: 2000, // Reintentar cada 2 segundos
+    },
+  );
 
   // Extraer productos y paginación de la respuesta
   const products = data?.data || [];
-  const totalRows = data?.pagination?.totalProducts || products.length;
-  const totalPages = Math.ceil(totalRows / currentSize);
+  const totalRows = data?.pagination?.totalProducts ?? products.length;
+  const totalPages = data?.pagination?.totalPages ?? 1;
 
-  // Función para cambiar página
   const handlePageChange = (newPage) => {
-    if (newPage !== currentPage && !activeFilter && !initialSearch) {
-      setCurrentPage(newPage);
-      window.scrollTo({ top: 0, behavior: "smooth" });
-    }
+    if (newPage === page || newPage < 1 || newPage > totalPages) return;
+    updateParams({ page: newPage > 1 ? newPage : null }, { resetPage: false });
+    window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  // Función para cambiar tamaño de página
   const handleSizeChange = (size) => {
-    if (size !== currentSize && !activeFilter && !initialSearch) {
-      setCurrentPage(1);
-      setCurrentSize(size);
-    }
+    if (size === limit) return;
+    updateParams({ limit: size === DEFAULT_LIMIT ? null : size });
   };
 
-  // Manejar click en filtro
-  const handleFilterClick = (value, type) => {
-    if (activeFilter === value && filterType === type) {
-      setActiveFilter(null);
-      setFilterType(null);
-      setCurrentPage(1);
-    } else {
-      setActiveFilter(value);
-      setFilterType(type);
-      setCurrentPage(1);
-    }
-    setIsSidebarOpen(false);
+  const handleSortChange = (value) => {
+    if (value === sort) return;
+    updateParams({ sort: value || null });
   };
 
-  // Limpiar filtros
-  const clearFilters = () => {
-    setActiveFilter(null);
-    setFilterType(null);
-    setCurrentPage(1);
-  };
+  // Limpiar filtros de marca/categoría (la búsqueda se conserva)
+  const clearFilters = () => updateParams({ brand: null, category: null });
+
+  const clearAll = () =>
+    updateParams({ brand: null, category: null, search: null });
+
+  // Etiquetas legibles para los valores de la URL (slug o nombre legacy)
+  const categoryLabel = category
+    ? findTaxonomyOption(categories, category)?.name || category
+    : null;
+  const brandLabel = brand
+    ? findTaxonomyOption(brands, brand)?.name || brand
+    : null;
+
+  const activeFilterCount = (category ? 1 : 0) + (brand ? 1 : 0);
+  const activePills = [
+    category && {
+      key: "category",
+      label: `📂 ${categoryLabel}`,
+      onRemove: () => updateParams({ category: null }),
+    },
+    brand && {
+      key: "brand",
+      label: `🏷️ ${brandLabel}`,
+      onRemove: () => updateParams({ brand: null }),
+    },
+    search && {
+      key: "search",
+      label: `🔍 "${search}"`,
+      onRemove: () => updateParams({ search: null }),
+    },
+  ].filter(Boolean);
 
   // Obtener título de la sección
   const sectionTitle = useMemo(() => {
-    if (initialSearch) return `Resultados para "${initialSearch}"`;
-    if (activeFilter) return activeFilter;
+    if (search) return `Resultados para "${search}"`;
+    if (categoryLabel && brandLabel) return `${categoryLabel} · ${brandLabel}`;
+    if (categoryLabel || brandLabel) return categoryLabel || brandLabel;
     return "Todos los Productos";
-  }, [initialSearch, activeFilter]);
+  }, [search, categoryLabel, brandLabel]);
 
-  // Título para filtro activo
-  const activeFilterTitle = useMemo(() => {
-    if (!activeFilter) return null;
-    return filterType === "category" ? "Categoría" : "Marca";
-  }, [activeFilter, filterType]);
+  // Mensaje del estado vacío con todos los filtros activos combinados
+  const emptyMessage = useMemo(() => {
+    const parts = [
+      categoryLabel && `la categoría "${categoryLabel}"`,
+      brandLabel && `la marca "${brandLabel}"`,
+      search && `la búsqueda "${search}"`,
+    ].filter(Boolean);
+    if (parts.length === 0) return "Todavía no hay productos disponibles";
+    return `No hay productos para ${joinLabels(parts)}`;
+  }, [categoryLabel, brandLabel, search]);
 
-  // Función para recargar datos (para el modal de filtros)
-  const refreshData = () => {
-    mutate();
-  };
+  const firstShown = (page - 1) * limit + 1;
+  const lastShown = Math.min(page * limit, totalRows);
 
   return (
     <div className="min-h-screen bg-gray-950 pt-20 lg:pt-24">
@@ -126,7 +173,7 @@ function SearchClean() {
                 {sectionTitle}
               </h1>
               <p className="text-white/50 mt-1">
-                {!isLoading && (
+                {!isLoading && !error && (
                   <span>
                     {totalRows} producto{totalRows !== 1 ? "s" : ""} encontrado
                     {totalRows !== 1 ? "s" : ""}
@@ -136,7 +183,7 @@ function SearchClean() {
             </div>
 
             {/* Controls */}
-            <div className="flex items-center gap-3">
+            <div className="flex flex-wrap items-center gap-3">
               {/* Filter Toggle Button */}
               <button
                 onClick={() => setIsSidebarOpen(true)}
@@ -144,50 +191,86 @@ function SearchClean() {
               >
                 <Filter width="20px" height="20px" strokeWidth="1.5" />
                 Filtros
-                {activeFilter && (
+                {activeFilterCount > 0 && (
                   <span className="px-1.5 py-0.5 bg-yellow-500 text-gray-900 text-xs rounded-full">
-                    1
+                    {activeFilterCount}
                   </span>
                 )}
               </button>
 
-              {/* Sort/Page Size (only when no filters active) */}
-              {!activeFilter && !initialSearch && (
-                <div className="hidden md:flex items-center gap-2">
-                  <label className="text-white/50 text-sm">Mostrar:</label>
-                  <select
-                    value={currentSize}
-                    onChange={(e) => handleSizeChange(Number(e.target.value))}
-                    className="bg-white/10 text-white border border-white/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-yellow-500"
-                  >
-                    <option value={12} className="bg-gray-900">
-                      12
+              {/* Sort */}
+              <div className="flex items-center gap-2">
+                <label htmlFor="plp-sort" className="text-white/50 text-sm">
+                  Ordenar:
+                </label>
+                <select
+                  id="plp-sort"
+                  value={sort}
+                  onChange={(e) => handleSortChange(e.target.value)}
+                  className="bg-white/10 text-white border border-white/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-yellow-500"
+                >
+                  {SORT_OPTIONS.map((option) => (
+                    <option
+                      key={option.value || "default"}
+                      value={option.value}
+                      className="bg-gray-900"
+                    >
+                      {option.label}
                     </option>
-                    <option value={24} className="bg-gray-900">
-                      24
+                  ))}
+                </select>
+              </div>
+
+              {/* Page Size */}
+              <div className="hidden md:flex items-center gap-2">
+                <label htmlFor="plp-size" className="text-white/50 text-sm">
+                  Mostrar:
+                </label>
+                <select
+                  id="plp-size"
+                  value={limit}
+                  onChange={(e) => handleSizeChange(Number(e.target.value))}
+                  className="bg-white/10 text-white border border-white/20 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-yellow-500"
+                >
+                  {PAGE_SIZES.map((size) => (
+                    <option key={size} value={size} className="bg-gray-900">
+                      {size}
                     </option>
-                    <option value={48} className="bg-gray-900">
-                      48
-                    </option>
-                  </select>
-                </div>
-              )}
+                  ))}
+                </select>
+              </div>
             </div>
           </div>
 
           {/* Active Filter Pills */}
-          {activeFilter && (
+          {activePills.length > 0 && (
             <div className="mt-4 flex items-center gap-2 flex-wrap">
-              <span className="text-white/50 text-sm">Filtro activo:</span>
-              <span className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-500/20 text-yellow-400 text-sm rounded-full">
-                {filterType === "category" ? "📂" : "🏷️"} {activeFilter}
-                <button
-                  onClick={clearFilters}
-                  className="ml-1 hover:text-white"
-                >
-                  ×
-                </button>
+              <span className="text-white/50 text-sm">
+                {activePills.length === 1 ? "Filtro activo:" : "Filtros activos:"}
               </span>
+              {activePills.map((pill) => (
+                <span
+                  key={pill.key}
+                  className="inline-flex items-center gap-1 px-3 py-1 bg-yellow-500/20 text-yellow-400 text-sm rounded-full"
+                >
+                  {pill.label}
+                  <button
+                    onClick={pill.onRemove}
+                    className="ml-1 hover:text-white"
+                    aria-label="Quitar filtro"
+                  >
+                    ×
+                  </button>
+                </span>
+              ))}
+              {activePills.length > 1 && (
+                <button
+                  onClick={clearAll}
+                  className="text-white/50 text-sm underline hover:text-white"
+                >
+                  Limpiar todo
+                </button>
+              )}
             </div>
           )}
         </div>
@@ -213,9 +296,10 @@ function SearchClean() {
                     <h2 className="text-lg font-semibold text-white">
                       Filtros
                     </h2>
-                    {activeFilter && (
+                    {activeFilterCount > 0 && (
                       <span className="px-2 py-0.5 bg-yellow-500/20 text-yellow-400 text-xs rounded-full">
-                        1 activo
+                        {activeFilterCount} activo
+                        {activeFilterCount !== 1 ? "s" : ""}
                       </span>
                     )}
                   </div>
@@ -230,23 +314,20 @@ function SearchClean() {
                 {/* Modal Body - Scrollable */}
                 <div className="overflow-y-auto max-h-[55vh]">
                   <Filters
-                    handleCategoryClick={(cat) =>
-                      handleFilterClick(cat, "category")
+                    brands={brands}
+                    categories={categories}
+                    handleCategoryClick={(slug) =>
+                      updateParams({ category: slug })
                     }
-                    handleBrandClick={(brand) =>
-                      handleFilterClick(brand, "brand")
-                    }
-                    getProductos={refreshData}
-                    activeCategory={
-                      filterType === "category" ? activeFilter : null
-                    }
-                    activeBrand={filterType === "brand" ? activeFilter : null}
+                    handleBrandClick={(slug) => updateParams({ brand: slug })}
+                    activeCategory={category}
+                    activeBrand={brand}
                   />
                 </div>
 
                 {/* Modal Footer - Actions */}
                 <div className="flex items-center gap-3 px-5 py-4 border-t border-white/10 bg-gray-900/50">
-                  {activeFilter && (
+                  {activeFilterCount > 0 && (
                     <button
                       onClick={() => {
                         clearFilters();
@@ -259,9 +340,9 @@ function SearchClean() {
                   )}
                   <button
                     onClick={() => setIsSidebarOpen(false)}
-                    className={`${activeFilter ? "flex-1" : "flex-2"} px-4 py-3 bg-yellow-500 text-gray-900 font-semibold rounded-xl hover:bg-yellow-400 transition-colors`}
+                    className={`${activeFilterCount > 0 ? "flex-1" : "flex-2"} px-4 py-3 bg-yellow-500 text-gray-900 font-semibold rounded-xl hover:bg-yellow-400 transition-colors`}
                   >
-                    {activeFilter ? "Aplicar filtros" : "Ver todos"}
+                    {activeFilterCount > 0 ? "Ver resultados" : "Cerrar"}
                   </button>
                 </div>
               </div>
@@ -294,14 +375,29 @@ function SearchClean() {
                 </button>
               </div>
             ) : products.length === 0 ? (
-              <ProductCardEmpty
-                title="No se encontraron productos"
-                message={
-                  activeFilter
-                    ? `No hay productos en la categoría "${activeFilter}"`
-                    : "Intenta con otros términos de búsqueda"
-                }
-              />
+              <div className="text-center">
+                <ProductCardEmpty
+                  title="No se encontraron productos"
+                  message={emptyMessage}
+                />
+                {page > 1 && totalPages > 0 && page > totalPages ? (
+                  <button
+                    onClick={() => handlePageChange(1)}
+                    className="mt-4 px-6 py-2 bg-yellow-500 text-gray-900 font-semibold rounded-lg hover:bg-yellow-400 transition-colors"
+                  >
+                    Ir a la primera página
+                  </button>
+                ) : (
+                  activePills.length > 0 && (
+                    <button
+                      onClick={clearAll}
+                      className="mt-4 px-6 py-2 bg-yellow-500 text-gray-900 font-semibold rounded-lg hover:bg-yellow-400 transition-colors"
+                    >
+                      Limpiar filtros
+                    </button>
+                  )
+                )}
+              </div>
             ) : (
               <>
                 <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
@@ -311,13 +407,13 @@ function SearchClean() {
                 </div>
 
                 {/* Pagination */}
-                {!activeFilter && !initialSearch && totalPages > 1 && (
+                {totalPages > 1 && (
                   <div className="mt-12 flex justify-center">
                     <div className="flex items-center gap-2">
                       {/* Previous */}
                       <button
-                        onClick={() => handlePageChange(currentPage - 1)}
-                        disabled={currentPage === 1}
+                        onClick={() => handlePageChange(page - 1)}
+                        disabled={page === 1}
                         className="p-2 rounded-lg bg-white/5 text-white/70 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       >
                         <ChevronLeft className="w-5 h-5" />
@@ -328,12 +424,12 @@ function SearchClean() {
                         let pageNum;
                         if (totalPages <= 5) {
                           pageNum = i + 1;
-                        } else if (currentPage <= 3) {
+                        } else if (page <= 3) {
                           pageNum = i + 1;
-                        } else if (currentPage >= totalPages - 2) {
+                        } else if (page >= totalPages - 2) {
                           pageNum = totalPages - 4 + i;
                         } else {
-                          pageNum = currentPage - 2 + i;
+                          pageNum = page - 2 + i;
                         }
 
                         return (
@@ -341,7 +437,7 @@ function SearchClean() {
                             key={pageNum}
                             onClick={() => handlePageChange(pageNum)}
                             className={`w-10 h-10 rounded-lg font-medium transition-colors ${
-                              currentPage === pageNum
+                              page === pageNum
                                 ? "bg-yellow-500 text-gray-900"
                                 : "bg-white/5 text-white/70 hover:bg-white/10"
                             }`}
@@ -353,8 +449,8 @@ function SearchClean() {
 
                       {/* Next */}
                       <button
-                        onClick={() => handlePageChange(currentPage + 1)}
-                        disabled={currentPage === totalPages}
+                        onClick={() => handlePageChange(page + 1)}
+                        disabled={page >= totalPages}
                         className="p-2 rounded-lg bg-white/5 text-white/70 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       >
                         <ChevronRight className="w-5 h-5" />
@@ -364,13 +460,9 @@ function SearchClean() {
                 )}
 
                 {/* Results Info */}
-                {!activeFilter && !initialSearch && (
-                  <div className="mt-8 text-center text-white/50 text-sm">
-                    Mostrando {(currentPage - 1) * currentSize + 1} -{" "}
-                    {Math.min(currentPage * currentSize, totalRows)} de{" "}
-                    {totalRows} productos
-                  </div>
-                )}
+                <div className="mt-8 text-center text-white/50 text-sm">
+                  Mostrando {firstShown} - {lastShown} de {totalRows} productos
+                </div>
               </>
             )}
           </main>

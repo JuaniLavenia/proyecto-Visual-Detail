@@ -36,12 +36,14 @@ function AdminProducto() {
     }
   }, [token, isAdmin, navigate]);
 
-  // Build key de request según búsqueda
+  // Build key de request: la búsqueda va como query param y pagina igual
   const getKey = () => {
-    if (search) {
-      return `${API_BASE}/api/productos/search/${search}`;
-    }
-    return `${API_BASE}/api/productos?page=${currentPage}&limit=${currentSize}`;
+    const query = new URLSearchParams();
+    const term = search.trim();
+    if (term) query.set("search", term);
+    query.set("page", String(currentPage));
+    query.set("limit", String(currentSize));
+    return `${API_BASE}/api/productos?${query.toString()}`;
   };
 
   // useSWR para productos
@@ -54,7 +56,7 @@ function AdminProducto() {
 
   const products = data?.data || [];
   const totalRows = data?.pagination?.totalProducts || 0;
-  const totalPages = Math.ceil(totalRows / currentSize);
+  const totalPages = data?.pagination?.totalPages || 0;
 
   // Stats separate fetch
   const [stats, setStats] = useState(null);
@@ -112,7 +114,7 @@ function AdminProducto() {
   };
 
   const handlePageChange = (newPage) => {
-    if (newPage !== currentPage && !search) {
+    if (newPage !== currentPage) {
       setCurrentPage(newPage);
       window.scrollTo({ top: 0, behavior: "smooth" });
     }
@@ -301,7 +303,11 @@ function AdminProducto() {
                   type="text"
                   placeholder="Buscar productos..."
                   value={search}
-                  onChange={(e) => setSearch(e.target.value)}
+                  maxLength={100}
+                  onChange={(e) => {
+                    setSearch(e.target.value);
+                    setCurrentPage(1); // Cada búsqueda nueva arranca en la página 1
+                  }}
                   className="w-full px-4 py-3 pl-12 bg-gray-800/50 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-yellow-500/50"
                 />
                 <Search className="absolute right-4 top-1/2 -translate-y-1/2 w-5 h-5 text-white/30" />
@@ -573,7 +579,7 @@ function AdminProducto() {
             </div>
 
             {/* Pagination */}
-            {totalPages > 1 && !search && (
+            {totalPages > 1 && (
               <div className="mt-8 flex justify-center">
                 <div className="flex items-center gap-2">
                   <button

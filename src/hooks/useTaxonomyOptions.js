@@ -1,5 +1,34 @@
 import { useEffect, useState } from "react";
 import api from "../lib/api";
+import { slugify } from "../lib/slugify";
+
+/**
+ * Maps taxonomy API items to `{ name, slug }` options. `name` is the
+ * canonical value stored on products; `slug` is what storefront URLs use.
+ * Falls back to slugifying the name when an item has no slug.
+ */
+const toOptions = (items) =>
+  Array.isArray(items)
+    ? items
+        .filter((item) => item?.name)
+        .map((item) => ({
+          name: item.name,
+          slug: item.slug || slugify(item.name),
+        }))
+    : [];
+
+/**
+ * True when a URL filter value refers to the option. URL values are usually
+ * slugs, but legacy links may still carry the display name.
+ */
+export const matchesTaxonomyOption = (option, value) =>
+  !!value &&
+  (option.slug === value ||
+    option.name === value ||
+    option.slug === slugify(value));
+
+export const findTaxonomyOption = (options, value) =>
+  options.find((option) => matchesTaxonomyOption(option, value));
 
 /**
  * Marcas y categorias activas para selects/filtros publicos. Consume los
@@ -24,16 +53,8 @@ function useTaxonomyOptions() {
 
         if (!active) return;
 
-        setBrands(
-          Array.isArray(brandsRes?.data?.data)
-            ? brandsRes.data.data.map((item) => item?.name).filter(Boolean)
-            : [],
-        );
-        setCategories(
-          Array.isArray(categoriesRes?.data?.data)
-            ? categoriesRes.data.data.map((item) => item?.name).filter(Boolean)
-            : [],
-        );
+        setBrands(toOptions(brandsRes?.data?.data));
+        setCategories(toOptions(categoriesRes?.data?.data));
         setError(null);
       } catch (err) {
         if (!active) return;

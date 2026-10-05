@@ -239,8 +239,12 @@ function ProductoCreate() {
                     {loadingTaxonomy ? "Cargando marcas..." : "Seleccionar marca"}
                   </option>
                   {brandOptions.map((brand) => (
-                    <option key={brand} value={brand} className="bg-gray-900">
-                      {brand}
+                    <option
+                      key={brand.name}
+                      value={brand.name}
+                      className="bg-gray-900"
+                    >
+                      {brand.name}
                     </option>
                   ))}
                 </select>
@@ -267,8 +271,12 @@ function ProductoCreate() {
                     {loadingTaxonomy ? "Cargando categorías..." : "Seleccionar categoría"}
                   </option>
                   {categoryOptions.map((cat) => (
-                    <option key={cat} value={cat} className="bg-gray-900">
-                      {cat}
+                    <option
+                      key={cat.name}
+                      value={cat.name}
+                      className="bg-gray-900"
+                    >
+                      {cat.name}
                     </option>
                   ))}
                 </select>

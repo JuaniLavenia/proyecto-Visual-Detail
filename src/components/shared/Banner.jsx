@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from "react";
 import "./Banner.css";
 import { Link } from "react-router-dom";
+import { slugify } from "../../lib/slugify";
 
 const Banner = ({ imagen, categoria }) => {
   const [estado, setEstado] = useState({ categoria: "" });
@@ -12,7 +13,7 @@ const Banner = ({ imagen, categoria }) => {
   return (
     <div className="conteinerBanner">
       <div className="card-banner imgBan">
-        <Link to={`/productos?category=${encodeURIComponent(categoria)}`}>
+        <Link to={`/productos?category=${slugify(categoria)}`}>
           <img
             src={imagen}
             className="card-img row bannerImg"

@@ -443,7 +443,7 @@ function Carrito() {
                 onClick={() => setShowModal(false)}
                 className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors"
               >
-                <X className="w-5 h-5" />
+                <Close className="w-5 h-5" />
               </button>
             </div>
 

@@ -9,6 +9,8 @@ import { onAuthTokenRefreshed, offAuthTokenRefreshed } from './lib/api';
 // Lazy loading de todas las páginas
 const HomePage = lazy(() => import('./pages/Home'));
 const Login = lazy(() => import('./pages/Auth'));
+const ForgotPassword = lazy(() => import('./pages/Auth/ForgotPassword'));
+const ResetPassword = lazy(() => import('./pages/Auth/ResetPassword'));
 const Products = lazy(() => import('./pages/Products'));
 const ProductDetail = lazy(() => import('./pages/ProductDetail'));
 const Cart = lazy(() => import('./pages/Cart'));
@@ -69,6 +71,8 @@ function App() {
             <Route path="/productos" element={<Products />} />
             <Route path="/productos/:id" element={<ProductDetail />} />
             <Route path="/login" element={<Login />} />
+            <Route path="/recuperar" element={<ForgotPassword />} />
+            <Route path="/reset/:id" element={<ResetPassword />} />
             <Route path="/carrito" element={<Cart />} />
             <Route path="/favoritos" element={<Favorites />} />
             <Route path="/contactanos" element={<Contact />} />

@@ -119,6 +119,10 @@ export function handleError(error, customMessages = {}) {
     isAuthError: type === ErrorTypes.AUTH_ERROR,
     isTimeout: type === ErrorTypes.TIMEOUT,
     isServerError: type === ErrorTypes.SERVER_ERROR,
+    // Raw HTTP status and backend error code, so screens can map specific
+    // cases (e.g. RESET_TOKEN_EXPIRED, MAIL_SEND_FAILED) to friendly copy.
+    status: error?.response?.status ?? null,
+    code: error?.response?.data?.error?.code ?? null,
   };
 }
 
@@ -260,7 +264,9 @@ api.interceptors.response.use(
       !originalRequest._retry &&
       !originalRequest.url?.includes("/api/refresh") &&
       !originalRequest.url?.includes("/api/login") &&
-      !originalRequest.url?.includes("/api/register")
+      !originalRequest.url?.includes("/api/register") &&
+      !originalRequest.url?.includes("/api/forgot") &&
+      !originalRequest.url?.includes("/api/reset")
     ) {
       if (isRefreshing) {
         // Ya se está refrescando — suscribirse y esperar

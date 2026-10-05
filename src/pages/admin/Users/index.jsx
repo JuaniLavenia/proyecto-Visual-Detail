@@ -7,8 +7,20 @@ import {
   Users,
   ShoppingCart,
   ArrowLeft,
+  Mail,
+  Spinner,
 } from "../../../components/common/Icons";
+import { sendPasswordResetLink } from "../../../lib/auth-api";
 import "../Products/index.css";
+
+const escapeHtml = (value = "") =>
+  String(value).replace(
+    /[&<>"']/g,
+    (char) =>
+      ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" })[
+        char
+      ],
+  );
 
 const ROLES = [
   { value: "minorista", label: "Minorista", color: "bg-blue-500" },
@@ -23,6 +35,7 @@ function UsersAdmin() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(null);
+  const [sendingLink, setSendingLink] = useState(null);
 
   // Verificar acceso admin
   useEffect(() => {
@@ -90,6 +103,71 @@ function UsersAdmin() {
       setUpdating(null);
     }
   };
+
+  const getResetLinkErrorMessage = (error) => {
+    if (error?.status === 404) return "El usuario ya no existe.";
+    if (error?.status === 502 || error?.code === "MAIL_SEND_FAILED")
+      return "No pudimos enviar el email. Revisá la configuración de correo e intentá de nuevo más tarde.";
+    if (error?.status === 429)
+      return "Demasiados intentos. Esperá unos minutos y volvé a intentar.";
+    return error?.message || "No se pudo enviar el link de recuperación";
+  };
+
+  const handleSendResetLink = async (user) => {
+    const { isConfirmed } = await Swal.fire({
+      icon: "question",
+      title: "Enviar link de recuperación",
+      html: `Se enviará un link para restablecer la contraseña a:<br/><strong>${escapeHtml(user.email)}</strong>`,
+      showCancelButton: true,
+      confirmButtonText: "Enviar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: "#eab308",
+    });
+    if (!isConfirmed) return;
+
+    setSendingLink(user._id);
+    try {
+      const data = await sendPasswordResetLink(user._id);
+      Swal.fire({
+        icon: "success",
+        title: "Link enviado",
+        text: data?.message || "Link de recuperación enviado",
+        timer: 2000,
+        showConfirmButton: false,
+      });
+    } catch (error) {
+      console.error("Error sending reset link:", error);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: getResetLinkErrorMessage(error),
+        confirmButtonColor: "#eab308",
+      });
+    } finally {
+      setSendingLink(null);
+    }
+  };
+
+  const renderResetLinkButton = (user, extraClass = "") => (
+    <button
+      type="button"
+      onClick={() => handleSendResetLink(user)}
+      disabled={sendingLink === user._id}
+      className={`inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10 disabled:opacity-50 disabled:cursor-not-allowed text-sm transition-colors ${extraClass}`}
+    >
+      {sendingLink === user._id ? (
+        <>
+          <Spinner className="w-4 h-4" />
+          Enviando...
+        </>
+      ) : (
+        <>
+          <Mail className="w-4 h-4" />
+          Enviar link de recuperación
+        </>
+      )}
+    </button>
+  );
 
   const getRoleBadge = (role) => {
     const roleObj = ROLES.find((r) => r.value === role) || ROLES[0];
@@ -220,6 +298,9 @@ function UsersAdmin() {
                       <th className="px-4 py-3.5 text-left text-xs font-semibold text-white/50 uppercase tracking-wider">
                         ID
                       </th>
+                      <th className="px-4 py-3.5 text-left text-xs font-semibold text-white/50 uppercase tracking-wider">
+                        Acciones
+                      </th>
                     </tr>
                   </thead>
                   <tbody className="divide-y divide-white/5">
@@ -264,6 +345,9 @@ function UsersAdmin() {
                           <code className="text-white/40 text-xs">
                             {user._id}
                           </code>
+                        </td>
+                        <td className="px-4 py-3.5">
+                          {renderResetLinkButton(user, "whitespace-nowrap")}
                         </td>
                       </tr>
                     ))}
@@ -314,6 +398,7 @@ function UsersAdmin() {
                       ))}
                     </select>
                   </div>
+                  {renderResetLinkButton(user, "w-full mt-4")}
                 </div>
               ))}
             </div>

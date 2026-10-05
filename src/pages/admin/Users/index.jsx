@@ -7,7 +7,7 @@ import {
   UserCheck,
   ShoppingCart,
   ArrowLeft,
-  Mail,
+  Plus,
   Spinner,
   Search,
   ChevronLeft,
@@ -16,9 +16,15 @@ import {
 import { sendPasswordResetLink } from "../../../lib/auth-api";
 import {
   listUsers,
-  updateUserRole,
+  createUser,
+  updateUser,
+  deleteUser,
   isUserActive,
 } from "../../../lib/users-api";
+import UserFormModal from "./UserFormModal";
+import UserRowActions from "./UserRowActions";
+import { ROLES, getRoleLabel, SELF_ACTION_HINT } from "./constants";
+import { getUserErrorMessage, isUserNotFoundError } from "./user-errors";
 import "../Products/index.css";
 
 const PAGE_SIZE = 20;
@@ -33,11 +39,12 @@ const escapeHtml = (value = "") =>
       ],
   );
 
-const ROLES = [
-  { value: "minorista", label: "Minorista", color: "bg-blue-500" },
-  { value: "mayorista", label: "Mayorista", color: "bg-green-500" },
-  { value: "admin", label: "Administrador", color: "bg-yellow-500" },
-];
+const DANGER_COLOR = "#ef4444";
+const ACCENT_COLOR = "#eab308";
+
+// Plain-text label for SweetAlert `text` (never interpolated into `html`).
+const describeUser = (user) =>
+  user.name ? `${user.name} (${user.email})` : user.email;
 
 const STATUS_OPTIONS = [
   { value: "", label: "Todos los estados" },
@@ -171,7 +178,7 @@ function UserIdentity({ user, avatarSize = "w-10 h-10" }) {
 }
 
 function UsersAdmin() {
-  const { token, isAdmin } = useAuthStore();
+  const { token, isAdmin, userId } = useAuthStore();
   const navigate = useNavigate();
 
   const [users, setUsers] = useState([]);
@@ -188,8 +195,12 @@ function UsersAdmin() {
   const [statusFilter, setStatusFilter] = useState("");
   const [sort, setSort] = useState("newest");
 
-  const [updating, setUpdating] = useState(null);
+  const [busyId, setBusyId] = useState(null);
   const [sendingLink, setSendingLink] = useState(null);
+  const [modal, setModal] = useState(null); // null | { mode: 'create' } | { mode: 'edit', user }
+  const [saving, setSaving] = useState(false);
+
+  const isSelf = (user) => Boolean(userId) && String(user._id) === String(userId);
 
   // Admin access guard
   useEffect(() => {
@@ -226,12 +237,16 @@ function UsersAdmin() {
     )
       .then((result) => {
         if (controller.signal.aborted) return;
+        // A deletion or filter change can leave us past the last page: move
+        // back without rendering the empty page in between.
+        const totalPages = result.pagination?.totalPages || 1;
+        if (page > totalPages) {
+          setPage(totalPages);
+          return;
+        }
         setUsers(result.users);
         setPagination(result.pagination);
         setCounts(result.counts);
-        // A deletion or filter change can leave us past the last page.
-        const totalPages = result.pagination?.totalPages || 1;
-        if (page > totalPages) setPage(totalPages);
       })
       .catch((error) => {
         if (controller.signal.aborted) return;
@@ -278,31 +293,190 @@ function UsersAdmin() {
     window.scrollTo({ top: 0, behavior: "smooth" });
   };
 
-  const handleRoleChange = async (targetUserId, newRole) => {
-    setUpdating(targetUserId);
+  const showSuccess = (title, text) =>
+    Swal.fire({
+      icon: "success",
+      title,
+      text,
+      timer: 1800,
+      showConfirmButton: false,
+    });
+
+  const showUserError = (error, title, fallback) => {
+    console.error(`${title}:`, error);
+    // The user was deleted elsewhere: the current page is stale.
+    if (isUserNotFoundError(error)) reload();
+    return Swal.fire({
+      icon: "error",
+      title,
+      text: getUserErrorMessage(error, fallback),
+      confirmButtonColor: ACCENT_COLOR,
+    });
+  };
+
+  // Runs one row mutation; on success refetches the page (and the KPIs).
+  const runRowMutation = async (user, request, success, failure) => {
+    setBusyId(user._id);
     try {
-      await updateUserRole(targetUserId, newRole);
-      const roleLabel =
-        ROLES.find((r) => r.value === newRole)?.label || newRole;
-      Swal.fire({
-        icon: "success",
-        title: "Rol actualizado",
-        text: `El usuario ahora es ${roleLabel}`,
-        timer: 1500,
-        showConfirmButton: false,
-      });
-    } catch (error) {
-      console.error("Error updating role:", error);
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: error?.message || "No se pudo actualizar el rol",
-        confirmButtonColor: "#eab308",
-      });
-    } finally {
-      setUpdating(null);
-      // Refetch so KPIs and filtered results reflect the change.
+      await request();
+      showSuccess(success.title, success.text);
       reload();
+      return true;
+    } catch (error) {
+      showUserError(error, failure.title, failure.fallback);
+      return false;
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const setUserActive = (user, isActive) =>
+    runRowMutation(
+      user,
+      () => updateUser(user._id, { isActive }),
+      {
+        title: isActive ? "Usuario activado" : "Usuario desactivado",
+        text: isActive
+          ? "El usuario puede volver a iniciar sesión."
+          : "Se cerró su sesión y ya no puede iniciar sesión.",
+      },
+      {
+        title: isActive ? "No se pudo activar" : "No se pudo desactivar",
+        fallback: "No se pudo actualizar el estado del usuario",
+      },
+    );
+
+  // The <select> is controlled by user.role, so a cancelled confirmation
+  // (or a failed request) leaves it showing the current role.
+  const handleRoleChange = async (user, newRole) => {
+    if (newRole === user.role) return;
+    const roleLabel = getRoleLabel(newRole);
+    const { isConfirmed } = await Swal.fire({
+      icon: "warning",
+      title: "¿Cambiar rol?",
+      text: `${describeUser(user)} pasará a ser ${roleLabel}. Se cerrará su sesión y deberá volver a iniciarla.`,
+      showCancelButton: true,
+      confirmButtonText: "Cambiar rol",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: ACCENT_COLOR,
+    });
+    if (!isConfirmed) return;
+
+    await runRowMutation(
+      user,
+      () => updateUser(user._id, { role: newRole }),
+      { title: "Rol actualizado", text: `El usuario ahora es ${roleLabel}` },
+      { title: "No se pudo cambiar el rol", fallback: "No se pudo actualizar el rol" },
+    );
+  };
+
+  const handleToggleActive = async (user) => {
+    const active = isUserActive(user);
+    const { isConfirmed } = await Swal.fire({
+      showCancelButton: true,
+      cancelButtonText: "Cancelar",
+      ...(active
+        ? {
+            icon: "warning",
+            title: "¿Desactivar usuario?",
+            text: `${describeUser(user)} no podrá iniciar sesión y se cerrará su sesión actual. Podés reactivarlo cuando quieras.`,
+            confirmButtonText: "Desactivar",
+            confirmButtonColor: DANGER_COLOR,
+          }
+        : {
+            icon: "question",
+            title: "¿Activar usuario?",
+            text: `${describeUser(user)} podrá volver a iniciar sesión.`,
+            confirmButtonText: "Activar",
+            confirmButtonColor: ACCENT_COLOR,
+          }),
+    });
+    if (!isConfirmed) return;
+    await setUserActive(user, !active);
+  };
+
+  const offerDeactivation = async (user) => {
+    const { isConfirmed } = await Swal.fire({
+      icon: "warning",
+      title: "No se puede eliminar",
+      text: `${getUserErrorMessage({ code: "USER_HAS_ORDERS" })} Al desactivarlo se cierra su sesión y no podrá iniciar sesión.`,
+      showCancelButton: true,
+      confirmButtonText: "Desactivar",
+      cancelButtonText: "Cerrar",
+      confirmButtonColor: DANGER_COLOR,
+    });
+    if (isConfirmed) await setUserActive(user, false);
+  };
+
+  const handleDelete = async (user) => {
+    const { isConfirmed } = await Swal.fire({
+      icon: "warning",
+      title: "¿Eliminar usuario?",
+      text: `Se eliminará ${describeUser(user)} junto con su carrito y favoritos. Solo se pueden eliminar usuarios sin pedidos; si tiene pedidos, desactivalo. Esta acción no se puede deshacer.`,
+      showCancelButton: true,
+      confirmButtonText: "Eliminar",
+      cancelButtonText: "Cancelar",
+      confirmButtonColor: DANGER_COLOR,
+    });
+    if (!isConfirmed) return;
+
+    setBusyId(user._id);
+    try {
+      await deleteUser(user._id);
+      showSuccess("Usuario eliminado");
+      reload();
+    } catch (error) {
+      if (error?.code === "USER_HAS_ORDERS" && isUserActive(user)) {
+        setBusyId(null);
+        await offerDeactivation(user);
+      } else {
+        showUserError(
+          error,
+          "No se pudo eliminar",
+          "Ocurrió un error al eliminar el usuario",
+        );
+      }
+    } finally {
+      setBusyId(null);
+    }
+  };
+
+  const handleFormSubmit = async (values) => {
+    setSaving(true);
+    try {
+      if (modal.mode === "edit") {
+        await updateUser(modal.user._id, values);
+        setModal(null);
+        showSuccess("Usuario actualizado");
+      } else {
+        const result = await createUser(values);
+        setModal(null);
+        if (result?.inviteSent) {
+          showSuccess(
+            "Usuario creado",
+            "Usuario creado. Se envió un mail para que defina su contraseña.",
+          );
+        } else {
+          Swal.fire({
+            icon: "warning",
+            title: "Usuario creado",
+            text: "Usuario creado, pero no se pudo enviar el mail. Reenvialo con 'Enviar link de recuperación'.",
+            confirmButtonColor: ACCENT_COLOR,
+          });
+        }
+      }
+      reload();
+    } catch (error) {
+      // Keep the modal open so the admin can fix the data, unless the
+      // edited user no longer exists.
+      if (isUserNotFoundError(error)) setModal(null);
+      showUserError(
+        error,
+        "No se pudo guardar",
+        "Verificá los datos e intentá de nuevo.",
+      );
+    } finally {
+      setSaving(false);
     }
   };
 
@@ -350,32 +524,26 @@ function UsersAdmin() {
     }
   };
 
-  const renderResetLinkButton = (user, extraClass = "") => (
-    <button
-      type="button"
-      onClick={() => handleSendResetLink(user)}
-      disabled={sendingLink === user._id}
-      className={`inline-flex items-center justify-center gap-2 px-3 py-2 rounded-lg border border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10 disabled:opacity-50 disabled:cursor-not-allowed text-sm transition-colors ${extraClass}`}
-    >
-      {sendingLink === user._id ? (
-        <>
-          <Spinner className="w-4 h-4" />
-          Enviando...
-        </>
-      ) : (
-        <>
-          <Mail className="w-4 h-4" />
-          Enviar link de recuperación
-        </>
-      )}
-    </button>
+  const renderRowActions = (user, compact) => (
+    <UserRowActions
+      user={user}
+      isSelf={isSelf(user)}
+      busy={busyId === user._id}
+      sendingLink={sendingLink === user._id}
+      compact={compact}
+      onEdit={(target) => setModal({ mode: "edit", user: target })}
+      onToggleActive={handleToggleActive}
+      onDelete={handleDelete}
+      onSendResetLink={handleSendResetLink}
+    />
   );
 
   const renderRoleSelect = (user, extraClass = "") => (
     <select
       value={user.role || "minorista"}
-      onChange={(e) => handleRoleChange(user._id, e.target.value)}
-      disabled={updating === user._id}
+      onChange={(e) => handleRoleChange(user, e.target.value)}
+      disabled={busyId === user._id || isSelf(user)}
+      title={isSelf(user) ? SELF_ACTION_HINT : undefined}
       aria-label={`Cambiar rol de ${user.email}`}
       className={`${SELECT_CLASS} ${extraClass}`}
     >
@@ -484,7 +652,7 @@ function UsersAdmin() {
                 {users.map((user) => (
                   <tr
                     key={user._id}
-                    className="hover:bg-white/5 transition-all duration-200"
+                    className="hover:bg-white/5 transition-colors duration-200"
                   >
                     <td className="px-4 py-3.5">
                       <UserIdentity user={user} />
@@ -497,7 +665,7 @@ function UsersAdmin() {
                       {renderRoleSelect(user, "min-w-[140px]")}
                     </td>
                     <td className="px-4 py-3.5">
-                      {renderResetLinkButton(user, "whitespace-nowrap")}
+                      {renderRowActions(user, true)}
                     </td>
                   </tr>
                 ))}
@@ -524,7 +692,7 @@ function UsersAdmin() {
                 </div>
                 {renderRoleSelect(user)}
               </div>
-              {renderResetLinkButton(user, "w-full mt-4")}
+              {renderRowActions(user, false)}
             </div>
           ))}
         </div>
@@ -563,6 +731,14 @@ function UsersAdmin() {
                 </p>
               </div>
             </div>
+            <button
+              type="button"
+              onClick={() => setModal({ mode: "create" })}
+              className="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-yellow-500 text-gray-900 font-semibold hover:bg-yellow-400 transition-colors"
+            >
+              <Plus className="w-4 h-4" />
+              Nuevo usuario
+            </button>
           </div>
 
           {/* KPI Cards (server-side counts, independent of filters) */}
@@ -688,6 +864,18 @@ function UsersAdmin() {
 
         {renderResults()}
       </div>
+
+      {modal && (
+        <UserFormModal
+          key={modal.mode === "edit" ? modal.user._id : "create"}
+          mode={modal.mode}
+          user={modal.mode === "edit" ? modal.user : null}
+          isSelf={modal.mode === "edit" && isSelf(modal.user)}
+          saving={saving}
+          onCancel={() => setModal(null)}
+          onSubmit={handleFormSubmit}
+        />
+      )}
     </div>
   );
 }

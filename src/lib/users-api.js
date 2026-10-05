@@ -10,6 +10,27 @@ export const USER_ROLES = ["minorista", "mayorista", "admin"];
 export const USER_STATUSES = ["active", "inactive"];
 export const USER_SORTS = ["newest", "email"];
 
+// express-validator answers 400 with { errors: [{ msg, ... }] }, a shape that
+// handleError() in api.js collapses into a generic message. Mutations accept
+// the 400 here and reject with the first validation message instead.
+const ACCEPT_VALIDATION_ERRORS = {
+  validateStatus: (status) => (status >= 200 && status < 300) || status === 400,
+};
+
+function rejectValidationError(res) {
+  if (res.status !== 400) return res;
+  const body = res.data || {};
+  const errors = Array.isArray(body.errors) ? body.errors : [];
+  const message = errors[0]?.msg || body.error?.message || "Datos inválidos";
+  // Same fields as handleError() so screens can treat both alike.
+  throw Object.assign(new Error(message), {
+    type: "VALIDATION_ERROR",
+    status: 400,
+    code: body.error?.code || "VALIDATION_ERROR",
+    errors,
+  });
+}
+
 /**
  * Lists users with server-side pagination, search and filters.
  * Empty params are omitted so the backend applies its defaults.
@@ -40,7 +61,13 @@ export async function listUsers(
  * Resolves to { user, inviteSent }.
  */
 export async function createUser({ email, name, role }) {
-  const res = await api.post("/api/users", { email, name, role });
+  const res = rejectValidationError(
+    await api.post(
+      "/api/users",
+      { email, name, role },
+      ACCEPT_VALIDATION_ERRORS,
+    ),
+  );
   return res.data?.data;
 }
 
@@ -49,9 +76,12 @@ export async function createUser({ email, name, role }) {
  * Resolves to { user }.
  */
 export async function updateUser(userId, changes) {
-  const res = await api.patch(
-    `/api/users/${encodeURIComponent(userId)}`,
-    changes,
+  const res = rejectValidationError(
+    await api.patch(
+      `/api/users/${encodeURIComponent(userId)}`,
+      changes,
+      ACCEPT_VALIDATION_ERRORS,
+    ),
   );
   return res.data?.data;
 }

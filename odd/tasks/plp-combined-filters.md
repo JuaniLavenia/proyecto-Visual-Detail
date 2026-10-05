@@ -29,10 +29,10 @@ Let shoppers combine brand + category filters, sort by price, and paginate filte
 
 Backend (`proyecto-Visual-Detail-backend`):
 
-- [ ] B1 — Validate `brand`, `category`, `search`, `sort` (`price_asc|price_desc`) on `GET /productos`; cap string lengths.
-- [ ] B2 — Taxonomy resolver: slug or name → canonical name; unknown value → empty page.
-- [ ] B3 — `findAll` ANDs brand/category/search (escaped), fixed sort map with `_id` tie-breaker (default `_id: -1`). Unit tests via `node --test src`, plus a `test` script.
-- [ ] B4 — Point legacy filter routes at `findAll` or keep as-is; confirm no consumer breaks.
+- [x] B1 — Validate `brand`, `category`, `search`, `sort` (`price_asc|price_desc`) on `GET /productos`; cap string lengths. (`493504d`)
+- [x] B2 — Taxonomy resolver: slug or name → canonical name; unknown value → empty page. (`7b83110`; empty-page wiring lands in B3)
+- [x] B3 — `findAll` ANDs brand/category/search (escaped), fixed sort map with `_id` tie-breaker (default `_id: -1`). Unit tests plus a `test` script. (`665b169`)
+- [x] B4 — Legacy `search` route reuses the escaped filter; legacy `brand`/`category` routes kept as-is (fuzzy match, consumers rely on it). (`0f5d73c`)
 
 Frontend (`proyecto-Visual-Detail`):
 
@@ -51,17 +51,20 @@ Frontend (`proyecto-Visual-Detail`):
 
 ## Checks
 
-- Backend: `node --test src` (new `test` script). No frontend test runner: `pnpm build` + manual QA in the browser.
+- Backend: `npm test` (`node --test "src/**/*.test.js"`; plain `node --test src` fails on Node 22). No frontend test runner: `pnpm build` + manual QA in the browser.
 
 ## Known risks / follow-ups
 
 - Renaming a Brand/Category does not cascade to product strings (rename drift). Not in scope; candidate for a follow-up.
 - No indexes on `Product.brand`, `category`, `price` (performance only).
+- Legacy `/productos/brand|category/:filter` still go through `sanitizeFindQuery`, which strips `$`; an input with `$` likely yields an invalid regex (500). Pre-existing; disappears once consumers move to `GET /productos`.
+- `findAll` filter intentionally bypasses `sanitizeFindQuery` (fixed keys, string-checked values) because stripping `$` corrupts escaped patterns.
 
 ## Progress
 
 - 2026-10-05: exploration done, feature document created.
 - 2026-10-05: branch `feature/plp-combined-filters` created in both repos (from local `main`, each 1 commit ahead of origin). Frontend `package.json` / `pnpm-lock.yaml` changes are pre-existing and out of scope; do not commit them.
+- 2026-10-05: backend B1–B4 done (delegated writer). `npm test`: 31/31 pass (re-run by parent). Test-first RED observed for B1–B4 helpers; `findAll` wiring tests written after. Review assess: medium (package.json), RDD off → writer self-verification + parent spot check. Next: F1.
 
 ## Route
 

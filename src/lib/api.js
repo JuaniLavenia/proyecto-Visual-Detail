@@ -351,9 +351,6 @@ export const fetcher = async (url) => {
 export const endpoints = {
   productos: "/api/productos",
   productosById: (id) => `/api/productos/${id}`,
-  productosByCategory: (category) => `/api/productos/category/${category}`,
-  productosByBrand: (brand) => `/api/productos/brand/${brand}`,
-  productoSearch: (term) => `/api/productos/search/${term}`,
   cart: (userId) => `/api/cart/${userId}`,
   addToCart: "/api/cart",
   favorites: (userId) => `/api/favorites/${userId}`,

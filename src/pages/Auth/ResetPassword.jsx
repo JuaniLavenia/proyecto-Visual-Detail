@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { Link, useNavigate, useParams } from "react-router-dom";
+import { Link, useNavigate, useParams, useSearchParams } from "react-router-dom";
 import Swal from "sweetalert2";
 import { Eye, EyeOff, Spinner, ArrowLeft } from "../../components/common/Icons";
 import {
@@ -25,13 +25,19 @@ const inputClass = (hasError) =>
   }`;
 
 function ResetPassword() {
-  const { id, token } = useParams();
+  const { id } = useParams();
+  // The token comes as a query param: JWTs contain dots, which breaks the
+  // SPA fallback when used as the last path segment.
+  const [searchParams] = useSearchParams();
+  const token = searchParams.get("token");
   const navigate = useNavigate();
   const [form, setForm] = useState({ password: "", password_confirmation: "" });
   const [showPassword, setShowPassword] = useState(false);
   const [isLoading, setIsLoading] = useState(false);
   const [errors, setErrors] = useState({});
-  const [invalidLinkMessage, setInvalidLinkMessage] = useState(null);
+  const [invalidLinkMessage, setInvalidLinkMessage] = useState(
+    token ? null : INVALID_LINK_MESSAGES.INVALID_RESET_TOKEN
+  );
 
   const validate = () => {
     const newErrors = {};

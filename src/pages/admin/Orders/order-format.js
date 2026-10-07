@@ -1,4 +1,4 @@
-import { phoneDigits } from "../../../lib/orders-api";
+import { normalizePhone, phoneDigits } from "../../../lib/orders-api";
 
 /**
  * Phone to contact the customer: the snapshot taken with the order, or the
@@ -9,10 +9,12 @@ export function getOrderPhone(order) {
 }
 
 /**
- * wa.me link for a phone, or null when it has no digits.
+ * wa.me link for a phone, or null when it cannot be normalized. Legacy
+ * stored values (e.g. "3814159688") are normalized to "+549..." first;
+ * wa.me takes digits only.
  */
 export function getWhatsAppUrl(phone) {
-  const digits = phoneDigits(phone);
+  const digits = phoneDigits(normalizePhone(phone));
   return digits ? `https://wa.me/${digits}` : null;
 }
 

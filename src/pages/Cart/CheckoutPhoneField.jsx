@@ -77,7 +77,7 @@ function CheckoutPhoneField({
           }
         }}
         disabled={disabled}
-        placeholder="+54 9 381 123 4567"
+        placeholder="Ej: 381 4159688"
         aria-invalid={error ? "true" : "false"}
         aria-describedby={describedBy}
         className={`w-full px-4 py-3 bg-gray-800/50 border rounded-xl text-white placeholder-white/30 focus:outline-none focus:bg-gray-800 transition-colors ${

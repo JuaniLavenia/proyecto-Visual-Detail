@@ -200,7 +200,7 @@ function Carrito() {
       if (!telefono) {
         setPhoneError(
           phoneInput.trim()
-            ? "Teléfono inválido: usá solo números, espacios, +, - o paréntesis (entre 8 y 15 dígitos)"
+            ? "Teléfono inválido: ingresá tu celular con código de área (ej: 381 4159688) o en formato internacional con +"
             : "Necesitamos un teléfono para coordinar tu pedido",
         );
         return;

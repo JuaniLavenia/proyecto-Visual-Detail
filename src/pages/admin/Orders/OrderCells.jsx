@@ -71,7 +71,13 @@ OrderCustomer.propTypes = { order: orderShape.isRequired };
 export function OrderPhoneLink({ order }) {
   const phone = getOrderPhone(order);
   const url = getWhatsAppUrl(phone);
-  if (!phone || !url) return <span className="text-white/40">—</span>;
+  if (!phone) return <span className="text-white/40">—</span>;
+  // Not normalizable: show the stored value without a WhatsApp link
+  if (!url) {
+    return (
+      <span className="text-white/70 text-sm whitespace-nowrap">{phone}</span>
+    );
+  }
   return (
     <a
       href={url}

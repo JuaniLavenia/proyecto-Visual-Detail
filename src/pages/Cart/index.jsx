@@ -533,14 +533,14 @@ function Carrito() {
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
             onClick={closeModal}
           />
-          <div className="relative w-full max-w-lg bg-gray-900 border border-white/10 rounded-2xl p-6 shadow-2xl">
+          <div className="relative w-full max-w-lg max-h-[90vh] flex flex-col bg-gray-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between px-6 pt-4 pb-3 shrink-0 border-b border-white/10">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-yellow-500/10 rounded-lg">
                   <Tag className="w-5 h-5 text-yellow-400" />
                 </div>
-                <h2 className="text-lg font-semibold text-white">
+                <h2 className="text-lg! mb-0! font-semibold text-white">
                   Resumen del pedido
                 </h2>
               </div>
@@ -552,93 +552,93 @@ function Carrito() {
               </button>
             </div>
 
-            {/* Items */}
-            <div className="bg-gray-800/30 rounded-xl p-4 mb-5 max-h-64 overflow-y-auto">
-              <div className="space-y-3">
-                {cartItems.map((item) => (
-                  <div
-                    key={item.product._id}
-                    className="flex items-center justify-between text-sm"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-white/50 bg-gray-700/50 px-2 py-0.5 rounded">
-                        x{item.quantity}
+            {/* Scrollable body: items only */}
+            <div className="flex-1 min-h-20 overflow-y-auto px-6 py-3">
+              <div className="bg-gray-800/30 rounded-xl px-4 py-3">
+                <div className="space-y-3">
+                  {cartItems.map((item) => (
+                    <div
+                      key={item.product._id}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-white/50 bg-gray-700/50 px-2 py-0.5 rounded">
+                          x{item.quantity}
+                        </span>
+                        <span className="text-white">{item.product.name}</span>
+                      </div>
+                      <span className="text-white/70">
+                        $
+                        {(item.product.price * item.quantity).toLocaleString(
+                          "es-AR",
+                        )}
                       </span>
-                      <span className="text-white">{item.product.name}</span>
                     </div>
-                    <span className="text-white/70">
-                      $
-                      {(item.product.price * item.quantity).toLocaleString(
-                        "es-AR",
-                      )}
-                    </span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Total */}
-            <div className="flex items-center justify-between mb-6 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
-              <span className="text-white font-medium">Total a pagar</span>
-              <span className="text-yellow-400 font-bold text-xl">
-                ${calculateTotal().toLocaleString("es-AR")}
-              </span>
-            </div>
+            {/* Footer: phone, total, notice and actions stay visible */}
+            <div className="shrink-0 px-6 pt-3 pb-4 border-t border-white/10">
+              {/* Contact phone */}
+              <CheckoutPhoneField
+                storedPhone={storedPhone}
+                editing={askForPhone}
+                value={phoneInput}
+                error={phoneError}
+                disabled={isLoading}
+                checking={checkingPhone}
+                onChange={handlePhoneChange}
+                onEdit={() => {
+                  setPhoneInput("");
+                  setPhoneError("");
+                  setEditingPhone(true);
+                }}
+                onCancelEdit={() => {
+                  setPhoneError("");
+                  setEditingPhone(false);
+                }}
+                onSubmit={handlePayment}
+              />
 
-            {/* Contact phone */}
-            <CheckoutPhoneField
-              storedPhone={storedPhone}
-              editing={askForPhone}
-              value={phoneInput}
-              error={phoneError}
-              disabled={isLoading}
-              checking={checkingPhone}
-              onChange={handlePhoneChange}
-              onEdit={() => {
-                setPhoneInput("");
-                setPhoneError("");
-                setEditingPhone(true);
-              }}
-              onCancelEdit={() => {
-                setPhoneError("");
-                setEditingPhone(false);
-              }}
-              onSubmit={handlePayment}
-            />
+              <div className="flex items-center justify-between mb-2 px-3 py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+                <span className="text-white font-medium">Total a pagar</span>
+                <span className="text-yellow-400 font-bold text-xl">
+                  ${calculateTotal().toLocaleString("es-AR")}
+                </span>
+              </div>
 
-            {/* Notice */}
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 mb-6">
-              <p className="text-blue-300/80 text-xs text-center">
-                Al generar el pedido serás redireccionado a WhatsApp para
-                completar la compra con el vendedor
+              <p className="text-white/50 text-xs text-center mb-4">
+                Al enviar el pedido te redirigimos a WhatsApp para completar la
+                compra con el vendedor.
               </p>
-            </div>
 
-            {/* Actions */}
-            <div className="flex gap-3">
-              <button
-                onClick={closeModal}
-                className="flex-1 py-3 bg-white/10 text-white font-medium rounded-xl border border-white/20 hover:bg-white/20 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handlePayment}
-                disabled={isLoading || checkingPhone}
-                className="flex-1 py-3 bg-green-500 hover:bg-green-400 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isLoading ? (
-                  <>
-                    <Spinner className="w-5 h-5" />
-                    Generando...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-5 h-5" />
-                    Enviar pedido
-                  </>
-                )}
-              </button>
+              <div className="flex gap-3">
+                <button
+                  onClick={closeModal}
+                  className="flex-1 py-2.5! bg-white/10 text-white font-medium rounded-xl border border-white/20 hover:bg-white/20 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handlePayment}
+                  disabled={isLoading || checkingPhone}
+                  className="flex-1 py-2.5! bg-green-500 hover:bg-green-400 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isLoading ? (
+                    <>
+                      <Spinner className="w-5 h-5" />
+                      Generando...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-5 h-5" />
+                      Enviar pedido
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

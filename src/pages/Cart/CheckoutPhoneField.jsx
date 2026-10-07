@@ -19,7 +19,7 @@ function CheckoutPhoneField({
 }) {
   if (checking) {
     return (
-      <div className="mb-5 p-3 bg-gray-800/30 rounded-xl">
+      <div className="mb-3 p-3 bg-gray-800/30 rounded-xl">
         <p className="text-white/50 text-sm">Verificando tus datos de contacto...</p>
       </div>
     );
@@ -27,7 +27,7 @@ function CheckoutPhoneField({
 
   if (storedPhone && !editing) {
     return (
-      <div className="mb-5 p-3 bg-gray-800/30 rounded-xl flex items-center justify-between gap-3">
+      <div className="mb-3 p-3 bg-gray-800/30 rounded-xl flex items-center justify-between gap-3">
         <p className="text-white/70 text-sm">
           Te contactamos al{" "}
           <span className="text-white font-medium">{storedPhone}</span>
@@ -47,7 +47,7 @@ function CheckoutPhoneField({
   const describedBy = error ? "checkout-phone-error" : "checkout-phone-help";
 
   return (
-    <div className="mb-5">
+    <div className="mb-3">
       <div className="flex items-center justify-between mb-2">
         <label htmlFor="checkout-phone" className="block text-white/70 text-sm">
           Teléfono de contacto *

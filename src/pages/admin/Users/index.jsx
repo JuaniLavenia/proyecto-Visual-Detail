@@ -10,9 +10,8 @@ import {
   Plus,
   Spinner,
   Search,
-  ChevronLeft,
-  ChevronRight,
 } from "../../../components/common/Icons";
+import Pagination from "../../../components/common/Pagination";
 import { sendPasswordResetLink } from "../../../lib/auth-api";
 import {
   listUsers,
@@ -59,64 +58,6 @@ const SORT_OPTIONS = [
 
 const SELECT_CLASS =
   "bg-gray-800 text-white px-3 py-2 rounded-lg border border-white/10 focus:outline-none focus:border-yellow-500 disabled:opacity-50 text-sm";
-
-// Windowed page numbers, same pattern as the PLP (src/pages/Products).
-function getPageNumbers(page, totalPages) {
-  const size = Math.min(5, totalPages);
-  let start = 1;
-  if (totalPages > 5) {
-    if (page >= totalPages - 2) start = totalPages - 4;
-    else if (page > 3) start = page - 2;
-  }
-  return Array.from({ length: size }, (_, i) => start + i);
-}
-
-function UsersPagination({ page, totalPages, onChange, disabled }) {
-  if (totalPages <= 1) return null;
-  return (
-    <nav
-      className="mt-8 flex justify-center"
-      aria-label="Paginación de usuarios"
-    >
-      <div className="flex items-center gap-2">
-        <button
-          type="button"
-          onClick={() => onChange(page - 1)}
-          disabled={disabled || page === 1}
-          aria-label="Página anterior"
-          className="p-2 rounded-lg bg-white/5 text-white/70 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-        >
-          <ChevronLeft className="w-5 h-5" />
-        </button>
-        {getPageNumbers(page, totalPages).map((pageNum) => (
-          <button
-            type="button"
-            key={pageNum}
-            onClick={() => onChange(pageNum)}
-            disabled={disabled}
-            aria-current={page === pageNum ? "page" : undefined}
-            className={`w-10 h-10 rounded-lg font-medium transition-colors ${
-              page === pageNum
-                ? "bg-yellow-500 text-gray-900"
-                : "bg-white/5 text-white/70 hover:bg-white/10"
-            }`}
-          >
-            {pageNum}
-          </button>
-        ))}
-        <button
-          type="button"
-          onClick={() => onChange(page + 1)}
-          disabled={disabled || page >= totalPages}
-          aria-label="Página siguiente"
-          className="p-2 rounded-lg bg-white/5 text-white/70 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
-        >
-          <ChevronRight className="w-5 h-5" />
-        </button>
-      </div>
-    </nav>
-  );
-}
 
 function KpiCard({ icon: Icon, label, value, accent }) {
   return (
@@ -697,11 +638,12 @@ function UsersAdmin() {
           ))}
         </div>
 
-        <UsersPagination
+        <Pagination
           page={page}
           totalPages={totalPages}
           onChange={handlePageChange}
           disabled={loading}
+          ariaLabel="Paginación de usuarios"
         />
       </div>
     );

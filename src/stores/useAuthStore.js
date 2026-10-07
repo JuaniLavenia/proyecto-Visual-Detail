@@ -14,11 +14,21 @@ const useAuthStore = create(
       userId: null,
       role: "minorista",
       isAdmin: false,
+      // Contact phone from the profile (null when unknown or not set yet)
+      phone: null,
       isLoading: false,
 
-      login: (token, refreshToken, userId, role) => {
+      login: (token, refreshToken, userId, role, phone = null) => {
         const isAdmin = role === "admin";
-        set({ token, refreshToken, userId, role, isAdmin, isLoading: false });
+        set({
+          token,
+          refreshToken,
+          userId,
+          role,
+          isAdmin,
+          phone: phone || null,
+          isLoading: false,
+        });
       },
 
       logout: () => {
@@ -28,8 +38,12 @@ const useAuthStore = create(
           userId: null,
           role: "minorista",
           isAdmin: false,
+          phone: null,
         });
       },
+
+      // Keeps the profile phone in sync (e.g. after checkout saved a new one)
+      setUserPhone: (phone) => set({ phone: phone || null }),
 
       setRole: (role) => {
         set({ role, isAdmin: role === "admin" });
@@ -56,6 +70,7 @@ const useAuthStore = create(
           userId: null,
           role: "minorista",
           isAdmin: false,
+          phone: null,
         });
 
         if (refreshToken) {
@@ -99,6 +114,7 @@ const useAuthStore = create(
         userId: state.userId,
         role: state.role,
         isAdmin: state.isAdmin,
+        phone: state.phone,
       }),
     },
   ),

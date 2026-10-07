@@ -3,7 +3,9 @@ import { Link, useNavigate } from "react-router-dom";
 import useAuthStore from "../../stores/useAuthStore";
 import useCartStore from "../../stores/useCartStore";
 import api, { API_BASE } from "../../lib/api";
+import { createOrder, normalizePhone } from "../../lib/orders-api";
 import Swal from "sweetalert2";
+import CheckoutPhoneField from "./CheckoutPhoneField";
 import {
   ShoppingCart,
   Trash,
@@ -22,7 +24,7 @@ import {
 import "./index.css";
 
 function Carrito() {
-  const { userId, token } = useAuthStore();
+  const { userId, token, phone: storedPhone, setUserPhone } = useAuthStore();
   const navigate = useNavigate();
   const { syncFromBackend: syncCartFromBackend } = useCartStore();
   const [cartItems, setCartItems] = useState([]);
@@ -30,6 +32,54 @@ function Carrito() {
   const [isFetching, setIsFetching] = useState(true);
   const [showModal, setShowModal] = useState(false);
   const [imageErrors, setImageErrors] = useState({});
+  const [phoneInput, setPhoneInput] = useState("");
+  const [phoneError, setPhoneError] = useState("");
+  const [editingPhone, setEditingPhone] = useState(false);
+  const [checkingPhone, setCheckingPhone] = useState(false);
+  const profilePhoneChecked = useRef(false);
+
+  const askForPhone = !storedPhone || editingPhone;
+
+  // Sessions started before phones existed (or logins that don't carry it)
+  // have no phone in the store: look it up once in the profile so customers
+  // who already gave it are not asked again.
+  useEffect(() => {
+    if (!showModal || storedPhone || !userId || profilePhoneChecked.current) {
+      return;
+    }
+    profilePhoneChecked.current = true;
+    let cancelled = false;
+    setCheckingPhone(true);
+    api
+      .get(`/api/user/${userId}`)
+      .then((res) => {
+        const profilePhone = res.data?.data?.usuario?.phone;
+        // The store is global, so keep the phone even if the modal closed.
+        if (profilePhone) setUserPhone(profilePhone);
+      })
+      .catch(() => {
+        // Best effort: without it the customer just types the phone.
+      })
+      .finally(() => {
+        if (!cancelled) setCheckingPhone(false);
+      });
+    return () => {
+      cancelled = true;
+      setCheckingPhone(false);
+    };
+  }, [showModal, storedPhone, userId, setUserPhone]);
+
+  const closeModal = () => {
+    if (isLoading) return;
+    setShowModal(false);
+    setPhoneError("");
+    setEditingPhone(false);
+  };
+
+  const handlePhoneChange = (value) => {
+    setPhoneInput(value);
+    if (phoneError) setPhoneError("");
+  };
 
   const fetchCartItems = async () => {
     try {
@@ -142,15 +192,37 @@ function Carrito() {
   };
 
   const handlePayment = async () => {
+    if (isLoading || checkingPhone) return;
+
+    let telefono;
+    if (askForPhone) {
+      telefono = normalizePhone(phoneInput);
+      if (!telefono) {
+        setPhoneError(
+          phoneInput.trim()
+            ? "Teléfono inválido: ingresá tu celular con código de área (ej: 381 4159688) o en formato internacional con +"
+            : "Necesitamos un teléfono para coordinar tu pedido",
+        );
+        return;
+      }
+    }
+
     setIsLoading(true);
     try {
-      await api.post("/api/pedidos", {
-        usuario: userId,
+      const order = await createOrder({
         productos: cartItems.map((item) => ({
           nombre: item.product.name,
           cantidad: item.quantity,
         })),
+        telefono,
       });
+
+      // The backend saves a typed phone to the profile: mirror it locally.
+      const savedPhone = order?.telefono || telefono;
+      if (savedPhone) setUserPhone(savedPhone);
+      setEditingPhone(false);
+      setPhoneInput("");
+      setPhoneError("");
 
       const whatsappText = `¡Hola! Quisiera realizar el siguiente pedido:%0A%0A${cartItems
         .map(
@@ -169,12 +241,45 @@ function Carrito() {
         timer: 2500,
       });
     } catch (error) {
-      setIsLoading(false);
+      if (error?.code === "PHONE_REQUIRED") {
+        // The profile has no phone after all: ask for it.
+        setUserPhone(null);
+        setEditingPhone(true);
+        setPhoneError(
+          error.message || "Necesitamos un teléfono de contacto para crear el pedido",
+        );
+        return;
+      }
+
+      const phoneFieldError = error?.errors?.find(
+        (e) => e.path === "telefono",
+      );
+      if (phoneFieldError) {
+        setEditingPhone(true);
+        setPhoneError(phoneFieldError.msg || "Teléfono inválido");
+        return;
+      }
+
+      if (error?.status === 401) {
+        // The api interceptor already tried to refresh and ended the session.
+        setShowModal(false);
+        Swal.fire({
+          icon: "warning",
+          title: "Sesión expirada",
+          text: "Iniciá sesión de nuevo para enviar tu pedido",
+          confirmButtonColor: "#eab308",
+        });
+        navigate("/login");
+        return;
+      }
+
       Swal.fire({
         icon: "error",
         title: "Error",
         text: "No se pudo generar el pedido",
       });
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -426,93 +531,114 @@ function Carrito() {
         <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
           <div
             className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={() => setShowModal(false)}
+            onClick={closeModal}
           />
-          <div className="relative w-full max-w-lg bg-gray-900 border border-white/10 rounded-2xl p-6 shadow-2xl">
+          <div className="relative w-full max-w-lg max-h-[90vh] flex flex-col bg-gray-900 border border-white/10 rounded-2xl shadow-2xl overflow-hidden">
             {/* Header */}
-            <div className="flex items-center justify-between mb-6">
+            <div className="flex items-center justify-between px-6 pt-4 pb-3 shrink-0 border-b border-white/10">
               <div className="flex items-center gap-3">
                 <div className="p-2 bg-yellow-500/10 rounded-lg">
                   <Tag className="w-5 h-5 text-yellow-400" />
                 </div>
-                <h2 className="text-lg font-semibold text-white">
+                <h2 className="text-lg! mb-0! font-semibold text-white">
                   Resumen del pedido
                 </h2>
               </div>
               <button
-                onClick={() => setShowModal(false)}
+                onClick={closeModal}
                 className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors"
               >
                 <Close className="w-5 h-5" />
               </button>
             </div>
 
-            {/* Items */}
-            <div className="bg-gray-800/30 rounded-xl p-4 mb-5 max-h-64 overflow-y-auto">
-              <div className="space-y-3">
-                {cartItems.map((item) => (
-                  <div
-                    key={item.product._id}
-                    className="flex items-center justify-between text-sm"
-                  >
-                    <div className="flex items-center gap-2">
-                      <span className="text-white/50 bg-gray-700/50 px-2 py-0.5 rounded">
-                        x{item.quantity}
+            {/* Scrollable body: items only */}
+            <div className="flex-1 min-h-20 overflow-y-auto px-6 py-3">
+              <div className="bg-gray-800/30 rounded-xl px-4 py-3">
+                <div className="space-y-3">
+                  {cartItems.map((item) => (
+                    <div
+                      key={item.product._id}
+                      className="flex items-center justify-between text-sm"
+                    >
+                      <div className="flex items-center gap-2">
+                        <span className="text-white/50 bg-gray-700/50 px-2 py-0.5 rounded">
+                          x{item.quantity}
+                        </span>
+                        <span className="text-white">{item.product.name}</span>
+                      </div>
+                      <span className="text-white/70">
+                        $
+                        {(item.product.price * item.quantity).toLocaleString(
+                          "es-AR",
+                        )}
                       </span>
-                      <span className="text-white">{item.product.name}</span>
                     </div>
-                    <span className="text-white/70">
-                      $
-                      {(item.product.price * item.quantity).toLocaleString(
-                        "es-AR",
-                      )}
-                    </span>
-                  </div>
-                ))}
+                  ))}
+                </div>
               </div>
             </div>
 
-            {/* Total */}
-            <div className="flex items-center justify-between mb-6 p-3 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
-              <span className="text-white font-medium">Total a pagar</span>
-              <span className="text-yellow-400 font-bold text-xl">
-                ${calculateTotal().toLocaleString("es-AR")}
-              </span>
-            </div>
-
-            {/* Notice */}
-            <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-3 mb-6">
-              <p className="text-blue-300/80 text-xs text-center">
-                Al generar el pedido serás redireccionado a WhatsApp para
-                completar la compra con el vendedor
-              </p>
-            </div>
-
-            {/* Actions */}
-            <div className="flex gap-3">
-              <button
-                onClick={() => setShowModal(false)}
-                className="flex-1 py-3 bg-white/10 text-white font-medium rounded-xl border border-white/20 hover:bg-white/20 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handlePayment}
+            {/* Footer: phone, total, notice and actions stay visible */}
+            <div className="shrink-0 px-6 pt-3 pb-4 border-t border-white/10">
+              {/* Contact phone */}
+              <CheckoutPhoneField
+                storedPhone={storedPhone}
+                editing={askForPhone}
+                value={phoneInput}
+                error={phoneError}
                 disabled={isLoading}
-                className="flex-1 py-3 bg-green-500 hover:bg-green-400 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isLoading ? (
-                  <>
-                    <Spinner className="w-5 h-5" />
-                    Generando...
-                  </>
-                ) : (
-                  <>
-                    <Send className="w-5 h-5" />
-                    Enviar pedido
-                  </>
-                )}
-              </button>
+                checking={checkingPhone}
+                onChange={handlePhoneChange}
+                onEdit={() => {
+                  setPhoneInput("");
+                  setPhoneError("");
+                  setEditingPhone(true);
+                }}
+                onCancelEdit={() => {
+                  setPhoneError("");
+                  setEditingPhone(false);
+                }}
+                onSubmit={handlePayment}
+              />
+
+              <div className="flex items-center justify-between mb-2 px-3 py-2 bg-yellow-500/10 border border-yellow-500/20 rounded-xl">
+                <span className="text-white font-medium">Total a pagar</span>
+                <span className="text-yellow-400 font-bold text-xl">
+                  ${calculateTotal().toLocaleString("es-AR")}
+                </span>
+              </div>
+
+              <p className="text-white/50 text-xs text-center mb-4">
+                Al enviar el pedido te redirigimos a WhatsApp para completar la
+                compra con el vendedor.
+              </p>
+
+              <div className="flex gap-3">
+                <button
+                  onClick={closeModal}
+                  className="flex-1 py-2.5! bg-white/10 text-white font-medium rounded-xl border border-white/20 hover:bg-white/20 transition-colors"
+                >
+                  Cancelar
+                </button>
+                <button
+                  onClick={handlePayment}
+                  disabled={isLoading || checkingPhone}
+                  className="flex-1 py-2.5! bg-green-500 hover:bg-green-400 text-white font-semibold rounded-xl transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
+                >
+                  {isLoading ? (
+                    <>
+                      <Spinner className="w-5 h-5" />
+                      Generando...
+                    </>
+                  ) : (
+                    <>
+                      <Send className="w-5 h-5" />
+                      Enviar pedido
+                    </>
+                  )}
+                </button>
+              </div>
             </div>
           </div>
         </div>

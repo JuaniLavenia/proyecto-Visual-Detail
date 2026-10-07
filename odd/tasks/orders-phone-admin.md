@@ -25,8 +25,9 @@ Out of scope: prices/totals on orders, order detail view, rest of hardening (Uni
 ## Tasks
 - [x] T1 (back) User.phone + Pedido.telefono/timestamps + authenticated POST /pedidos (user from token, phone from body or profile, saved to profile) + validators + tests. — back `b39a9f2`
 - [x] T2 (back) Admin list: search param, populate name, date fallback, total count + tests. — back `c4234b2`
-- [ ] T3 (front) Checkout modal: phone input when profile has none, send it, expose phone in auth/profile state.
-- [ ] T4 (front) Admin orders screen: phone column, server-side search, windowed pagination, inline loading/error, status confirm, total count, no double fetch.
+- [x] T3 (front) Checkout modal: phone input when profile has none, send it, expose phone in auth/profile state. — front `4fc10a3` (+ login passes `user.phone` to the store)
+- [x] T4 (front) Admin orders screen: phone column, server-side search, windowed pagination, inline loading/error, status confirm, total count, no double fetch. — front `d32e7bb`
+- [ ] T5 Browser QA (user, throwaway account — local API points to production).
 
 ## Acceptance criteria
 - A user without phone is asked once at checkout; later orders don't ask again and still carry the phone.
@@ -45,4 +46,6 @@ Out of scope: prices/totals on orders, order detail view, rest of hardening (Uni
 ## Progress
 - 2026-10-07: branches created from main (#7). Exploration done.
 - 2026-10-07: T1+T2 done (delegated). `pnpm test`: 151/151 pass (parent re-ran). Contract: POST /api/pedidos needs Bearer token, body `{productos, telefono?}`, 400 `PHONE_REQUIRED` when no phone anywhere; logged-in user `phone` comes in login `data.user.phone` (not in refresh); GET /api/admin/pedidos `?page&limit&estado&search` → `{pedidos, total, page, limit, totalPages}`, each order has `telefono`, `fecha`, `usuario{email,role,name,phone}`.
+- 2026-10-07: T3+T4 done (delegated). `pnpm build` OK (no test runner, no lint script). Checkout falls back to `GET /api/user/:id` when the store has no phone (old sessions). Shared `src/components/common/Pagination.jsx` now used by Users and Orders.
+- Merge both PRs together: the backend now requires a token on `POST /api/pedidos`.
 - Follow-ups: no profile edit for phone yet (`PUT /user/:id` untouched); user search has no cap.

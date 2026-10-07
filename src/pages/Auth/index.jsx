@@ -73,7 +73,7 @@ function Login() {
       // El backend devuelve: { success, data: { userId, accessToken, refreshToken, role, user }, message }
       const { accessToken, userId, role, user, refreshToken } = res.data.data;
       const roleUsuario = user?.role || role || "minorista";
-      login(accessToken, refreshToken, userId, roleUsuario);
+      login(accessToken, refreshToken, userId, roleUsuario, user?.phone);
 
       Swal.fire({
         position: "center",

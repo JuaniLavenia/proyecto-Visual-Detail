@@ -1,10 +1,24 @@
 import { Suspense, lazy, useEffect } from 'react';
-import { Routes, Route } from 'react-router';
+import { Routes, Route, useNavigate } from 'react-router';
 import './App.css';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import { toast } from './components/common/SimpleDialog';
 import useAuthStore from './stores/useAuthStore';
-import { onAuthTokenRefreshed, offAuthTokenRefreshed } from './lib/api';
+import useCartStore from './stores/useCartStore';
+import useFavoritesStore from './stores/useFavoritesStore';
+import {
+  onAuthTokenRefreshed,
+  offAuthTokenRefreshed,
+  SessionEndReasons,
+} from './lib/api';
+
+// Shown when the session ends without the user logging out.
+const FORCED_LOGOUT_MESSAGES = {
+  [SessionEndReasons.EXPIRED]: 'Tu sesión expiró. Iniciá sesión nuevamente.',
+  [SessionEndReasons.INACTIVE]:
+    'Tu cuenta está desactivada. Contactá a un administrador.',
+};
 
 // Lazy loading de todas las páginas
 const HomePage = lazy(() => import('./pages/Home'));
@@ -39,16 +53,33 @@ function PageLoader() {
 }
 
 function App() {
+  const navigate = useNavigate();
+
   // Sincronizar el store cuando el token se renueva desde el api interceptor
   useEffect(() => {
-    const handleTokenRefresh = (token, refreshToken) => {
+    const handleTokenRefresh = (token, refreshToken, endReason) => {
       if (token && refreshToken) {
         // Token actualizado exitosamente - sincronizar con el store
         useAuthStore.getState().updateTokens(token, refreshToken);
-      } else {
-        // Refresh falló - hacer logout
-        useAuthStore.getState().logout();
+        return;
       }
+
+      // The API layer ended the session (refresh rejected or account
+      // deactivated). Only explain it when this tab still had a session, so
+      // repeated failures or anonymous requests do not show the toast.
+      const hadSession = !!useAuthStore.getState().token;
+      useAuthStore.getState().logout();
+      if (!hadSession) return;
+
+      useCartStore.getState().clearCart();
+      useFavoritesStore.getState().clearFavorites();
+      toast(
+        FORCED_LOGOUT_MESSAGES[endReason] ||
+          FORCED_LOGOUT_MESSAGES[SessionEndReasons.EXPIRED],
+        'warning',
+        5000,
+      );
+      navigate('/login', { replace: true });
     };
 
     // Registrar el callback
@@ -58,7 +89,7 @@ function App() {
     return () => {
       offAuthTokenRefreshed(handleTokenRefresh);
     };
-  }, []);
+  }, [navigate]);
 
   return (
     <ErrorBoundary>

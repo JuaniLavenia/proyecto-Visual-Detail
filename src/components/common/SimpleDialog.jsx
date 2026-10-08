@@ -244,7 +244,7 @@ export function Toast({ message, type = 'info', isVisible, onClose }) {
  */
 let toastTimeout = null;
 
-export function toast(message, type = 'info') {
+export function toast(message, type = 'info', duration = 2000) {
   // Remove existing toast
   const existing = document.getElementById('global-toast');
   if (existing) existing.remove();
@@ -267,11 +267,11 @@ export function toast(message, type = 'info') {
   // Clear previous timeout
   if (toastTimeout) clearTimeout(toastTimeout);
 
-  // Auto remove after 2 seconds
+  // Auto remove after `duration` ms (2 seconds by default)
   toastTimeout = setTimeout(() => {
     toastEl.style.opacity = '0';
     setTimeout(() => toastEl.remove(), 300);
-  }, 2000);
+  }, duration);
 }
 
 export default SimpleDialog;

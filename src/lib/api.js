@@ -10,8 +10,19 @@ import axios from "axios";
 let onTokenRefreshCallbacks = [];
 
 /**
+ * Why a session ended without the user asking for it. Passed as the third
+ * callback argument when the tokens are null.
+ */
+export const SessionEndReasons = {
+  EXPIRED: "expired",
+  INACTIVE: "inactive",
+};
+
+/**
  * Registra un callback que se ejecutará cuando el token se renueve
- * @param {Function} callback - (newToken, newRefreshToken) => void
+ * @param {Function} callback - (newToken, newRefreshToken, endReason) => void
+ *   Tokens are null when the session was ended by the API layer; endReason is
+ *   then one of SessionEndReasons.
  */
 export function onAuthTokenRefreshed(callback) {
   onTokenRefreshCallbacks.push(callback);
@@ -30,8 +41,8 @@ export function offAuthTokenRefreshed(callback) {
 /**
  * Notifica a todos los callbacks registrados
  */
-function notifyTokenRefreshed(token, refreshToken) {
-  onTokenRefreshCallbacks.forEach((cb) => cb(token, refreshToken));
+function notifyTokenRefreshed(token, refreshToken, endReason = null) {
+  onTokenRefreshCallbacks.forEach((cb) => cb(token, refreshToken, endReason));
 }
 
 // Backend base URL. Set VITE_API_URL (e.g. in .env.local) to point at another
@@ -176,11 +187,21 @@ function clearAuthInStorage() {
       data.state.userId = null;
       data.state.role = "minorista";
       data.state.isAdmin = false;
+      data.state.phone = null;
       localStorage.setItem("auth-storage", JSON.stringify(data));
     }
   } catch {
     localStorage.removeItem("auth-storage");
   }
+}
+
+/**
+ * Ends the session from the API layer (not requested by the user): clears the
+ * persisted tokens and tells the app why, so it can explain it to the user.
+ */
+function endSession(reason) {
+  clearAuthInStorage();
+  notifyTokenRefreshed(null, null, reason);
 }
 
 // Crear instancia de axios
@@ -214,6 +235,10 @@ function onTokenRefreshed(newToken, newRefreshToken) {
 
 /**
  * Intenta refrescar el access token usando el refresh token
+ * @returns {Promise<{accessToken: string, refreshToken: string} | null>}
+ *   null when the session cannot be renewed (no refresh token, or the backend
+ *   rejected it). Throws when the backend could not be reached, so a network
+ *   blip does not end the session.
  */
 async function refreshAccessToken() {
   const { refreshToken } = getAuthFromStorage();
@@ -233,9 +258,7 @@ async function refreshAccessToken() {
     const { accessToken, refreshToken: newRefreshToken } = response.data.data;
     return { accessToken, refreshToken: newRefreshToken };
   } catch (error) {
-    // Refresh falló — limpiar y notificar logout
-    clearAuthInStorage();
-    onTokenRefreshed(null, null);
+    if (!error.response) throw error;
     return null;
   }
 }
@@ -270,8 +293,7 @@ api.interceptors.response.use(
       !originalRequest?.url?.includes("/api/forgot") &&
       !originalRequest?.url?.includes("/api/reset")
     ) {
-      clearAuthInStorage();
-      notifyTokenRefreshed(null, null);
+      endSession(SessionEndReasons.INACTIVE);
       return Promise.reject(handleError(error));
     }
 
@@ -319,16 +341,16 @@ api.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`;
           return api(originalRequest);
         } else {
-          // Refresh falló — notificar y rechazar
+          // The backend rejected the refresh token: the session is over.
           isRefreshing = false;
           onTokenRefreshed(null, null);
-          notifyTokenRefreshed(null, null);
+          endSession(SessionEndReasons.EXPIRED);
           return Promise.reject(handleError(error));
         }
       } catch (refreshError) {
+        // Backend unreachable: fail the waiting requests but keep the session.
         isRefreshing = false;
         onTokenRefreshed(null, null);
-        notifyTokenRefreshed(null, null);
         return Promise.reject(handleError(refreshError));
       }
     }

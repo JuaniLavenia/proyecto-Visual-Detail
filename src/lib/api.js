@@ -52,6 +52,12 @@ export const API_BASE = (
   import.meta.env.VITE_API_URL || DEFAULT_API_BASE
 ).replace(/\/+$/, "");
 
+// localStorage key where zustand persists the auth store (shared by all tabs)
+export const AUTH_STORAGE_KEY = "auth-storage";
+
+// Web Lock name that serializes token refreshes across tabs
+const REFRESH_LOCK_NAME = "auth-refresh";
+
 // Tipos de errores para manejo centralizado
 export const ErrorTypes = {
   NETWORK_ERROR: "network_error",
@@ -145,7 +151,7 @@ export function handleError(error, customMessages = {}) {
  */
 function getAuthFromStorage() {
   try {
-    const stored = localStorage.getItem("auth-storage");
+    const stored = localStorage.getItem(AUTH_STORAGE_KEY);
     if (!stored) return { token: null, refreshToken: null };
     const data = JSON.parse(stored);
     return {
@@ -162,12 +168,12 @@ function getAuthFromStorage() {
  */
 function updateTokensInStorage(newToken, newRefreshToken) {
   try {
-    const stored = localStorage.getItem("auth-storage");
+    const stored = localStorage.getItem(AUTH_STORAGE_KEY);
     if (stored) {
       const data = JSON.parse(stored);
       data.state.token = newToken;
       data.state.refreshToken = newRefreshToken;
-      localStorage.setItem("auth-storage", JSON.stringify(data));
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data));
     }
   } catch {
     // Si falla, no hacemos nada — el store se encargará
@@ -179,7 +185,7 @@ function updateTokensInStorage(newToken, newRefreshToken) {
  */
 function clearAuthInStorage() {
   try {
-    const stored = localStorage.getItem("auth-storage");
+    const stored = localStorage.getItem(AUTH_STORAGE_KEY);
     if (stored) {
       const data = JSON.parse(stored);
       data.state.token = null;
@@ -188,10 +194,10 @@ function clearAuthInStorage() {
       data.state.role = "minorista";
       data.state.isAdmin = false;
       data.state.phone = null;
-      localStorage.setItem("auth-storage", JSON.stringify(data));
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data));
     }
   } catch {
-    localStorage.removeItem("auth-storage");
+    localStorage.removeItem(AUTH_STORAGE_KEY);
   }
 }
 
@@ -240,36 +246,59 @@ function onTokenRefreshed(newToken, newRefreshToken) {
  *   rejected it). Throws when the backend could not be reached, so a network
  *   blip does not end the session.
  */
-async function refreshAccessToken() {
-  const { refreshToken } = getAuthFromStorage();
+async function refreshAccessToken(usedRefreshToken) {
+  const refresh = async () => {
+    // Re-read inside the lock: another tab may have rotated the tokens while
+    // this one waited. The backend revokes the session when an already
+    // rotated refresh token is reused, so never send the old one again.
+    const { token, refreshToken } = getAuthFromStorage();
 
-  if (!refreshToken) {
-    return null;
+    if (!refreshToken) {
+      return null;
+    }
+    if (usedRefreshToken && refreshToken !== usedRefreshToken && token) {
+      return { accessToken: token, refreshToken };
+    }
+
+    try {
+      // Llamar al endpoint de refresh sin interceptor de 401 (evita loop)
+      const response = await axios.post(
+        `${API_BASE}/api/refresh`,
+        { refreshToken },
+        { headers: { "Content-Type": "application/json" } },
+      );
+
+      const { accessToken, refreshToken: newRefreshToken } = response.data.data;
+      // Persist before releasing the lock so the next tab sees the new pair.
+      updateTokensInStorage(accessToken, newRefreshToken);
+      return { accessToken, refreshToken: newRefreshToken };
+    } catch (error) {
+      if (!error.response) throw error;
+      clearAuthInStorage();
+      return null;
+    }
+  };
+
+  // Web Locks serialize refreshes across tabs of this origin. Without them
+  // (older browsers) the re-read above still covers the common case where
+  // another tab finished rotating before this one started.
+  if (typeof navigator !== "undefined" && navigator.locks?.request) {
+    return navigator.locks.request(REFRESH_LOCK_NAME, refresh);
   }
-
-  try {
-    // Llamar al endpoint de refresh sin interceptor de 401 (evita loop)
-    const response = await axios.post(
-      `${API_BASE}/api/refresh`,
-      { refreshToken },
-      { headers: { "Content-Type": "application/json" } },
-    );
-
-    const { accessToken, refreshToken: newRefreshToken } = response.data.data;
-    return { accessToken, refreshToken: newRefreshToken };
-  } catch (error) {
-    if (!error.response) throw error;
-    return null;
-  }
+  return refresh();
 }
 
 // Request interceptor para agregar token automáticamente
 api.interceptors.request.use(
   (config) => {
-    const { token } = getAuthFromStorage();
+    const { token, refreshToken } = getAuthFromStorage();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // Remember which session this request used, to tell on a 401 whether
+    // another tab already rotated the tokens.
+    config._authToken = token;
+    config._authRefreshToken = refreshToken;
     return config;
   },
   (error) => Promise.reject(error),
@@ -309,12 +338,20 @@ api.interceptors.response.use(
       !originalRequest.url?.includes("/api/forgot") &&
       !originalRequest.url?.includes("/api/reset")
     ) {
+      originalRequest._retry = true;
+
+      // Another tab already rotated the tokens after this request was sent:
+      // retry with the newer access token instead of refreshing again.
+      const current = getAuthFromStorage();
+      if (current.token && current.token !== originalRequest._authToken) {
+        return api(originalRequest);
+      }
+
       if (isRefreshing) {
         // Ya se está refrescando — suscribirse y esperar
         return new Promise((resolve, reject) => {
           subscribeTokenRefresh((newToken) => {
             if (newToken) {
-              originalRequest.headers.Authorization = `Bearer ${newToken}`;
               resolve(api(originalRequest));
             } else {
               reject(error);
@@ -323,15 +360,15 @@ api.interceptors.response.use(
         });
       }
 
-      originalRequest._retry = true;
       isRefreshing = true;
 
       try {
-        const newTokens = await refreshAccessToken();
+        const newTokens = await refreshAccessToken(
+          originalRequest._authRefreshToken,
+        );
 
         if (newTokens) {
-          // Actualizar en storage y notificar suscriptores
-          updateTokensInStorage(newTokens.accessToken, newTokens.refreshToken);
+          // Notificar suscriptores (los tokens ya quedaron en storage)
           onTokenRefreshed(newTokens.accessToken, newTokens.refreshToken);
           // Notificar a los callbacks registrados (el store de zustand se subscribe desde App.jsx)
           notifyTokenRefreshed(newTokens.accessToken, newTokens.refreshToken);

@@ -4,7 +4,7 @@ import './App.css';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { toast } from './components/common/SimpleDialog';
-import useAuthStore from './stores/useAuthStore';
+import useAuthStore, { syncAuthAcrossTabs } from './stores/useAuthStore';
 import useCartStore from './stores/useCartStore';
 import useFavoritesStore from './stores/useFavoritesStore';
 import {
@@ -54,6 +54,9 @@ function PageLoader() {
 
 function App() {
   const navigate = useNavigate();
+
+  // Pick up logins, logouts and token rotations made in other tabs
+  useEffect(() => syncAuthAcrossTabs(), []);
 
   // Sincronizar el store cuando el token se renueva desde el api interceptor
   useEffect(() => {

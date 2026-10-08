@@ -34,9 +34,12 @@ function notifyTokenRefreshed(token, refreshToken) {
   onTokenRefreshCallbacks.forEach((cb) => cb(token, refreshToken));
 }
 
-// URL base del backend - un solo lugar para cambiar
-export const API_BASE = "https://visual-detail-backend.onrender.com";
-// export const API_BASE = "http://localhost:5000";
+// Backend base URL. Set VITE_API_URL (e.g. in .env.local) to point at another
+// backend; without it the production backend is used.
+const DEFAULT_API_BASE = "https://visual-detail-backend.onrender.com";
+export const API_BASE = (
+  import.meta.env.VITE_API_URL || DEFAULT_API_BASE
+).replace(/\/+$/, "");
 
 // Tipos de errores para manejo centralizado
 export const ErrorTypes = {

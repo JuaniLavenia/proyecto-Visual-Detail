@@ -17,7 +17,7 @@ In: tasks below. Out: refactors and renames (8d), behavior changes, `sdd/`, `ope
 - Lockfiles: pnpm only. Any dependency change must keep `pnpm install --frozen-lockfile` working on pnpm 10 (Render) and pnpm 9.
 
 ## Tasks
-- [~] F1 (front) Remove the Bootstrap CDN CSS/JS from `index.html` and the empty `vendor-ui` chunk; keep the reboot rules the design uses; `lang="es"`; load the Rubik font once.
+- [x] F1 (front) Remove the Bootstrap CDN CSS/JS from `index.html` and the empty `vendor-ui` chunk; keep the reboot rules the design uses; `lang="es"`; load the Rubik font once.
 - [x] F2 (front) Delete unused files (VirtualTable, OptimizedImage, Card, Button, shared/Brands, Banner + css, shared/Pagination + css, empty App.css / Profile index.css, assets/react.svg), after confirming each has no import.
 - [x] F3 (front) Remove unused dependencies (@fortawesome/*, aos, bootstrap, glider-js, material-icons, react-bootstrap, react-data-table-component, react-window, workbox-window, and any other confirmed unused) and `package-lock.json`; keep lucide-react unless trivially replaceable.
 - [x] F4 (front) Dead code: unused exports in `src/lib/api.js` (`endpoints`, `createAbortController`, redundant login/register branch and its stray comment), unused `useAuthStore` members, unused cart store members; consistent `react-router-dom` imports.
@@ -25,7 +25,7 @@ In: tasks below. Out: refactors and renames (8d), behavior changes, `sdd/`, `ope
 - [x] B2 (back) Dead code: `optionalAuth`, unused service methods (`pedidoService.findAll`, `getOrdersByStatus`, `userService.findByEmail`), unused `error()` formatter, unreachable `if (!pedido)` checks and status re-checks already done by validators, unused taxonomy `name` filter; duplicate index declarations (User.email, Brand/Category). Tests stay green.
 - [x] B3 (back) Deploy files: Dockerfile on Node 20 with a correct WORKDIR and pnpm; delete the broken `vercel.json` (Render is the host).
 - [x] B4 (back) README accurate: real routes (`/api/login`, refresh/logout/forgot/reset, admin users, taxonomy, admin orders, order body `{ productId, cantidad }`), roles, order statuses, bcrypt rounds, scripts.
-- [ ] Q1 Backend tests, frozen-lockfile installs (pnpm 10 + 9) in both repos, frontend build, visual comparison against the baseline.
+- [x] Q1 Backend tests, frozen-lockfile installs (pnpm 10 + 9) in both repos, frontend build, visual comparison against the baseline.
 
 ## Acceptance criteria
 - Same computed baseline values and no visible difference on the four baseline pages.
@@ -49,5 +49,8 @@ In: tasks below. Out: refactors and renames (8d), behavior changes, `sdd/`, `ope
 - 2026-10-09: front F1 `3e677f6` (Bootstrap JS + vendor-ui chunk removed, lang="es", Rubik once), F2 `0f78b6d`, F3 `3c8951d` (12 deps + package-lock.json), F4 `c7c0fba`; build OK; frozen installs OK on pnpm 10 and 9.
 - F1 finding (verified by the parent in the browser): the Bootstrap CSS is NOT just a reboot. Tailwind v4 emits everything in cascade layers and the CDN Bootstrap is unlayered, so Bootstrap element rules and its `!important` utilities (75 class names shared with Tailwind: px-4, border, mt-1, gap-*...) override Tailwind today. Live: `h1.text-3xl.font-bold` renders 40px/500, `border-white/10` renders #dee2e6, `px-4` 24px, body font system-ui instead of Rubik. Disabling the stylesheet in the browser shows the intended Tailwind design (Rubik, subtle borders, tighter spacing; the admin orders table then fits, "Cambiar estado" visible). Bootstrap CSS link kept pending the user's decision.
 
+- 2026-10-09: decision (user, option A): keep the Bootstrap CSS link in 8c; remove it in its own unit with page-by-page visual QA (it is a redesign, not a cleanup).
+- 2026-10-09: Q1. On the branch with the CSS kept: computed baseline identical on `/adm/pedidos` (all 8 values), no Bootstrap JS request, Rubik stylesheet requested once, `lang="es"`; `/`, `/carrito`, `/adm/pedidos` match the baseline screenshots; no console errors.
+
 ## Next step
-User decides: keep the Bootstrap CSS for now and remove it in its own unit with page-by-page QA, or remove it in 8c.
+Push + PRs (independent). Next units: remove the Bootstrap CSS (own unit), then 8d polish.

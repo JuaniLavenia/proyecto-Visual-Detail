@@ -394,7 +394,7 @@ function Login() {
                   </p>
                 )}
                 <p className="text-white/30 text-xs mt-2">
-                  Mínimo 6 caracteres
+                  Entre {PASSWORD_MIN_LENGTH} y {PASSWORD_MAX_LENGTH} caracteres
                 </p>
               </div>
 

@@ -47,7 +47,7 @@ function ResetPassword() {
       password.length < PASSWORD_MIN_LENGTH ||
       password.length > PASSWORD_MAX_LENGTH
     )
-      newErrors.password = `Entre ${PASSWORD_MIN_LENGTH} y ${PASSWORD_MAX_LENGTH} caracteres`;
+      newErrors.password = `La contraseña debe tener entre ${PASSWORD_MIN_LENGTH} y ${PASSWORD_MAX_LENGTH} caracteres`;
     if (!password_confirmation)
       newErrors.password_confirmation = "Confirmá tu contraseña";
     else if (password !== password_confirmation)
@@ -81,8 +81,12 @@ function ResetPassword() {
       });
       navigate("/login", { replace: true });
     } catch (err) {
+      const passwordError = err?.details?.find((d) => d.field === "password");
       if (isInvalidResetLinkError(err)) {
         setInvalidLinkMessage(INVALID_LINK_MESSAGES[err.code]);
+      } else if (passwordError) {
+        // The backend rejected the password itself: show it under the field.
+        setErrors({ password: passwordError.message });
       } else if (err?.status === 400) {
         // Password is validated client-side, so a bare 400 means a malformed link.
         setInvalidLinkMessage(INVALID_LINK_MESSAGES.INVALID_RESET_TOKEN);

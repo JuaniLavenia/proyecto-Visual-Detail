@@ -66,9 +66,9 @@ export function phoneDigits(phone) {
   return typeof phone === "string" ? phone.replace(/\D/g, "") : "";
 }
 
-// express-validator answers 400 with { errors: [{ path, msg }] }, a shape that
-// handleError() in api.js collapses into a generic message. Mutations accept
-// the 400 here and reject with the first message plus the raw errors.
+// Validation errors answer 400 with { error: { message, code, details } }.
+// Mutations accept the 400 here and reject with the same fields as
+// handleError(), so screens can show the message and per-field details.
 const ACCEPT_BAD_REQUEST = {
   validateStatus: (status) => (status >= 200 && status < 300) || status === 400,
 };
@@ -76,14 +76,14 @@ const ACCEPT_BAD_REQUEST = {
 function rejectBadRequest(res) {
   if (res.status !== 400) return res;
   const body = res.data || {};
-  const errors = Array.isArray(body.errors) ? body.errors : [];
-  const message = errors[0]?.msg || body.error?.message || "Datos inválidos";
+  const details = Array.isArray(body.error?.details) ? body.error.details : [];
+  const message = body.error?.message || "Datos inválidos";
   // Same fields as handleError() so screens can treat both alike.
   throw Object.assign(new Error(message), {
     type: "VALIDATION_ERROR",
     status: 400,
     code: body.error?.code || "VALIDATION_ERROR",
-    errors,
+    details,
   });
 }
 

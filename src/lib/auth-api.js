@@ -6,8 +6,8 @@ import api from "./api";
  * { type, message, status, code, ... }.
  */
 
-export const PASSWORD_MIN_LENGTH = 6;
-export const PASSWORD_MAX_LENGTH = 12;
+export const PASSWORD_MIN_LENGTH = 8;
+export const PASSWORD_MAX_LENGTH = 72;
 
 export const RATE_LIMIT_MESSAGE =
   "Demasiados intentos. Esperá unos minutos y volvé a intentar.";

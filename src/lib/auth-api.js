@@ -22,12 +22,13 @@ export async function requestPasswordReset(email) {
 }
 
 /**
- * Sets a new password using the id and token from the emailed link.
+ * Sets a new password using the id and token from the emailed link. The
+ * backend checks that `passwordConfirmation` matches `password` too.
  */
-export async function resetPassword(id, token, password) {
+export async function resetPassword(id, token, password, passwordConfirmation) {
   const res = await api.post(
     `/api/reset/${encodeURIComponent(id)}/${encodeURIComponent(token)}`,
-    { password },
+    { password, password_confirmation: passwordConfirmation },
   );
   return res.data;
 }

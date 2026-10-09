@@ -19,6 +19,20 @@ const INVALID_LINK_MESSAGES = {
     "El link para restablecer tu contraseña no es válido o ya fue usado. Pedí uno nuevo.",
 };
 
+const FORM_FIELDS = ["password", "password_confirmation"];
+
+// Backend VALIDATION_ERROR details for the form fields, as { field: message },
+// or null when none of them refer to a form field.
+const getFieldErrors = (err) => {
+  const fieldErrors = {};
+  for (const detail of err?.details || []) {
+    if (FORM_FIELDS.includes(detail?.field) && !fieldErrors[detail.field]) {
+      fieldErrors[detail.field] = detail.message;
+    }
+  }
+  return Object.keys(fieldErrors).length > 0 ? fieldErrors : null;
+};
+
 const inputClass = (hasError) =>
   `w-full px-4 py-3 bg-gray-800/50 border rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-yellow-500/50 focus:bg-gray-800 transition-colors pr-12 ${
     hasError ? "border-red-500" : "border-white/10"
@@ -72,7 +86,12 @@ function ResetPassword() {
     setIsLoading(true);
 
     try {
-      const data = await resetPassword(id, token, form.password);
+      const data = await resetPassword(
+        id,
+        token,
+        form.password,
+        form.password_confirmation,
+      );
       await Swal.fire({
         icon: "success",
         title: "¡Listo!",
@@ -81,12 +100,13 @@ function ResetPassword() {
       });
       navigate("/login", { replace: true });
     } catch (err) {
-      const passwordError = err?.details?.find((d) => d.field === "password");
+      const fieldErrors = getFieldErrors(err);
       if (isInvalidResetLinkError(err)) {
         setInvalidLinkMessage(INVALID_LINK_MESSAGES[err.code]);
-      } else if (passwordError) {
-        // The backend rejected the password itself: show it under the field.
-        setErrors({ password: passwordError.message });
+      } else if (fieldErrors) {
+        // The backend rejected the password or its confirmation: show the
+        // messages under their fields.
+        setErrors(fieldErrors);
       } else if (err?.status === 400) {
         // Password is validated client-side, so a bare 400 means a malformed link.
         setInvalidLinkMessage(INVALID_LINK_MESSAGES.INVALID_RESET_TOKEN);

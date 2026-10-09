@@ -10,8 +10,19 @@ import axios from "axios";
 let onTokenRefreshCallbacks = [];
 
 /**
+ * Why a session ended without the user asking for it. Passed as the third
+ * callback argument when the tokens are null.
+ */
+export const SessionEndReasons = {
+  EXPIRED: "expired",
+  INACTIVE: "inactive",
+};
+
+/**
  * Registra un callback que se ejecutará cuando el token se renueve
- * @param {Function} callback - (newToken, newRefreshToken) => void
+ * @param {Function} callback - (newToken, newRefreshToken, endReason) => void
+ *   Tokens are null when the session was ended by the API layer; endReason is
+ *   then one of SessionEndReasons.
  */
 export function onAuthTokenRefreshed(callback) {
   onTokenRefreshCallbacks.push(callback);
@@ -30,13 +41,22 @@ export function offAuthTokenRefreshed(callback) {
 /**
  * Notifica a todos los callbacks registrados
  */
-function notifyTokenRefreshed(token, refreshToken) {
-  onTokenRefreshCallbacks.forEach((cb) => cb(token, refreshToken));
+function notifyTokenRefreshed(token, refreshToken, endReason = null) {
+  onTokenRefreshCallbacks.forEach((cb) => cb(token, refreshToken, endReason));
 }
 
-// URL base del backend - un solo lugar para cambiar
-export const API_BASE = "https://visual-detail-backend.onrender.com";
-// export const API_BASE = "http://localhost:5000";
+// Backend base URL. Set VITE_API_URL (e.g. in .env.local) to point at another
+// backend; without it the production backend is used.
+const DEFAULT_API_BASE = "https://visual-detail-backend.onrender.com";
+export const API_BASE = (
+  import.meta.env.VITE_API_URL || DEFAULT_API_BASE
+).replace(/\/+$/, "");
+
+// localStorage key where zustand persists the auth store (shared by all tabs)
+export const AUTH_STORAGE_KEY = "auth-storage";
+
+// Web Lock name that serializes token refreshes across tabs
+const REFRESH_LOCK_NAME = "auth-refresh";
 
 // Tipos de errores para manejo centralizado
 export const ErrorTypes = {
@@ -131,7 +151,7 @@ export function handleError(error, customMessages = {}) {
  */
 function getAuthFromStorage() {
   try {
-    const stored = localStorage.getItem("auth-storage");
+    const stored = localStorage.getItem(AUTH_STORAGE_KEY);
     if (!stored) return { token: null, refreshToken: null };
     const data = JSON.parse(stored);
     return {
@@ -148,12 +168,12 @@ function getAuthFromStorage() {
  */
 function updateTokensInStorage(newToken, newRefreshToken) {
   try {
-    const stored = localStorage.getItem("auth-storage");
+    const stored = localStorage.getItem(AUTH_STORAGE_KEY);
     if (stored) {
       const data = JSON.parse(stored);
       data.state.token = newToken;
       data.state.refreshToken = newRefreshToken;
-      localStorage.setItem("auth-storage", JSON.stringify(data));
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data));
     }
   } catch {
     // Si falla, no hacemos nada — el store se encargará
@@ -165,7 +185,7 @@ function updateTokensInStorage(newToken, newRefreshToken) {
  */
 function clearAuthInStorage() {
   try {
-    const stored = localStorage.getItem("auth-storage");
+    const stored = localStorage.getItem(AUTH_STORAGE_KEY);
     if (stored) {
       const data = JSON.parse(stored);
       data.state.token = null;
@@ -173,11 +193,21 @@ function clearAuthInStorage() {
       data.state.userId = null;
       data.state.role = "minorista";
       data.state.isAdmin = false;
-      localStorage.setItem("auth-storage", JSON.stringify(data));
+      data.state.phone = null;
+      localStorage.setItem(AUTH_STORAGE_KEY, JSON.stringify(data));
     }
   } catch {
-    localStorage.removeItem("auth-storage");
+    localStorage.removeItem(AUTH_STORAGE_KEY);
   }
+}
+
+/**
+ * Ends the session from the API layer (not requested by the user): clears the
+ * persisted tokens and tells the app why, so it can explain it to the user.
+ */
+function endSession(reason) {
+  clearAuthInStorage();
+  notifyTokenRefreshed(null, null, reason);
 }
 
 // Crear instancia de axios
@@ -211,39 +241,64 @@ function onTokenRefreshed(newToken, newRefreshToken) {
 
 /**
  * Intenta refrescar el access token usando el refresh token
+ * @returns {Promise<{accessToken: string, refreshToken: string} | null>}
+ *   null when the session cannot be renewed (no refresh token, or the backend
+ *   rejected it). Throws when the backend could not be reached, so a network
+ *   blip does not end the session.
  */
-async function refreshAccessToken() {
-  const { refreshToken } = getAuthFromStorage();
+async function refreshAccessToken(usedRefreshToken) {
+  const refresh = async () => {
+    // Re-read inside the lock: another tab may have rotated the tokens while
+    // this one waited. The backend revokes the session when an already
+    // rotated refresh token is reused, so never send the old one again.
+    const { token, refreshToken } = getAuthFromStorage();
 
-  if (!refreshToken) {
-    return null;
+    if (!refreshToken) {
+      return null;
+    }
+    if (usedRefreshToken && refreshToken !== usedRefreshToken && token) {
+      return { accessToken: token, refreshToken };
+    }
+
+    try {
+      // Llamar al endpoint de refresh sin interceptor de 401 (evita loop)
+      const response = await axios.post(
+        `${API_BASE}/api/refresh`,
+        { refreshToken },
+        { headers: { "Content-Type": "application/json" } },
+      );
+
+      const { accessToken, refreshToken: newRefreshToken } = response.data.data;
+      // Persist before releasing the lock so the next tab sees the new pair.
+      updateTokensInStorage(accessToken, newRefreshToken);
+      return { accessToken, refreshToken: newRefreshToken };
+    } catch (error) {
+      if (!error.response) throw error;
+      clearAuthInStorage();
+      return null;
+    }
+  };
+
+  // Web Locks serialize refreshes across tabs of this origin. Without them
+  // (older browsers) the re-read above still covers the common case where
+  // another tab finished rotating before this one started.
+  if (typeof navigator !== "undefined" && navigator.locks?.request) {
+    return navigator.locks.request(REFRESH_LOCK_NAME, refresh);
   }
-
-  try {
-    // Llamar al endpoint de refresh sin interceptor de 401 (evita loop)
-    const response = await axios.post(
-      `${API_BASE}/api/refresh`,
-      { refreshToken },
-      { headers: { "Content-Type": "application/json" } },
-    );
-
-    const { accessToken, refreshToken: newRefreshToken } = response.data.data;
-    return { accessToken, refreshToken: newRefreshToken };
-  } catch (error) {
-    // Refresh falló — limpiar y notificar logout
-    clearAuthInStorage();
-    onTokenRefreshed(null, null);
-    return null;
-  }
+  return refresh();
 }
 
 // Request interceptor para agregar token automáticamente
 api.interceptors.request.use(
   (config) => {
-    const { token } = getAuthFromStorage();
+    const { token, refreshToken } = getAuthFromStorage();
     if (token) {
       config.headers.Authorization = `Bearer ${token}`;
     }
+    // Remember which session this request used, to tell on a 401 whether
+    // another tab already rotated the tokens.
+    config._authToken = token;
+    config._authRefreshToken = refreshToken;
     return config;
   },
   (error) => Promise.reject(error),
@@ -267,8 +322,7 @@ api.interceptors.response.use(
       !originalRequest?.url?.includes("/api/forgot") &&
       !originalRequest?.url?.includes("/api/reset")
     ) {
-      clearAuthInStorage();
-      notifyTokenRefreshed(null, null);
+      endSession(SessionEndReasons.INACTIVE);
       return Promise.reject(handleError(error));
     }
 
@@ -284,12 +338,20 @@ api.interceptors.response.use(
       !originalRequest.url?.includes("/api/forgot") &&
       !originalRequest.url?.includes("/api/reset")
     ) {
+      originalRequest._retry = true;
+
+      // Another tab already rotated the tokens after this request was sent:
+      // retry with the newer access token instead of refreshing again.
+      const current = getAuthFromStorage();
+      if (current.token && current.token !== originalRequest._authToken) {
+        return api(originalRequest);
+      }
+
       if (isRefreshing) {
         // Ya se está refrescando — suscribirse y esperar
         return new Promise((resolve, reject) => {
           subscribeTokenRefresh((newToken) => {
             if (newToken) {
-              originalRequest.headers.Authorization = `Bearer ${newToken}`;
               resolve(api(originalRequest));
             } else {
               reject(error);
@@ -298,15 +360,15 @@ api.interceptors.response.use(
         });
       }
 
-      originalRequest._retry = true;
       isRefreshing = true;
 
       try {
-        const newTokens = await refreshAccessToken();
+        const newTokens = await refreshAccessToken(
+          originalRequest._authRefreshToken,
+        );
 
         if (newTokens) {
-          // Actualizar en storage y notificar suscriptores
-          updateTokensInStorage(newTokens.accessToken, newTokens.refreshToken);
+          // Notificar suscriptores (los tokens ya quedaron en storage)
           onTokenRefreshed(newTokens.accessToken, newTokens.refreshToken);
           // Notificar a los callbacks registrados (el store de zustand se subscribe desde App.jsx)
           notifyTokenRefreshed(newTokens.accessToken, newTokens.refreshToken);
@@ -316,16 +378,16 @@ api.interceptors.response.use(
           originalRequest.headers.Authorization = `Bearer ${newTokens.accessToken}`;
           return api(originalRequest);
         } else {
-          // Refresh falló — notificar y rechazar
+          // The backend rejected the refresh token: the session is over.
           isRefreshing = false;
           onTokenRefreshed(null, null);
-          notifyTokenRefreshed(null, null);
+          endSession(SessionEndReasons.EXPIRED);
           return Promise.reject(handleError(error));
         }
       } catch (refreshError) {
+        // Backend unreachable: fail the waiting requests but keep the session.
         isRefreshing = false;
         onTokenRefreshed(null, null);
-        notifyTokenRefreshed(null, null);
         return Promise.reject(handleError(refreshError));
       }
     }

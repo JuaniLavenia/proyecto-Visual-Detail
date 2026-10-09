@@ -1,6 +1,6 @@
 import { create } from "zustand";
 import { persist } from "zustand/middleware";
-import { API_BASE } from "../lib/api";
+import { API_BASE, AUTH_STORAGE_KEY } from "../lib/api";
 
 /**
  * AuthStore - Store de Zustand para autenticación
@@ -107,7 +107,7 @@ const useAuthStore = create(
       },
     }),
     {
-      name: "auth-storage",
+      name: AUTH_STORAGE_KEY,
       partialize: (state) => ({
         token: state.token,
         refreshToken: state.refreshToken,
@@ -119,5 +119,32 @@ const useAuthStore = create(
     },
   ),
 );
+
+/**
+ * Keeps this tab's auth state in sync with other tabs. The `storage` event
+ * only fires in the tabs that did NOT write, so a token rotated, a login or a
+ * logout in one tab is re-read here from the shared persisted copy.
+ * @returns {Function} cleanup that removes the listener
+ */
+export function syncAuthAcrossTabs() {
+  if (typeof window === "undefined") return () => {};
+
+  const handleStorage = (event) => {
+    // key === null means localStorage.clear() in another tab
+    if (event.key !== AUTH_STORAGE_KEY && event.key !== null) return;
+    if (event.storageArea && event.storageArea !== window.localStorage) return;
+
+    if (event.key === null || event.newValue === null) {
+      // The persisted session is gone: rehydrate() would keep the in-memory
+      // state, so end it explicitly.
+      useAuthStore.getState().logout();
+      return;
+    }
+    useAuthStore.persist.rehydrate();
+  };
+
+  window.addEventListener("storage", handleStorage);
+  return () => window.removeEventListener("storage", handleStorage);
+}
 
 export default useAuthStore;

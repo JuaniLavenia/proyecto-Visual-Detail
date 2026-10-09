@@ -121,10 +121,15 @@ export function useProductActions(useOptimistic = true) {
         }
       }
 
-      await api.post('/api/favorites', {
-        userId,
-        productId,
-      });
+      // POST only adds (400 if already there); removing needs the DELETE route
+      if (isFavorite) {
+        await api.delete(`/api/favorites/${userId}/${productId}`);
+      } else {
+        await api.post('/api/favorites', {
+          userId,
+          productId,
+        });
+      }
 
       // Sync desde backend
       const res = await api.get(`/api/favorites/${userId}`);

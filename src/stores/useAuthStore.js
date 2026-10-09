@@ -16,7 +16,6 @@ const useAuthStore = create(
       isAdmin: false,
       // Contact phone from the profile (null when unknown or not set yet)
       phone: null,
-      isLoading: false,
 
       login: (token, refreshToken, userId, role, phone = null) => {
         const isAdmin = role === "admin";
@@ -27,7 +26,6 @@ const useAuthStore = create(
           role,
           isAdmin,
           phone: phone || null,
-          isLoading: false,
         });
       },
 
@@ -44,18 +42,6 @@ const useAuthStore = create(
 
       // Keeps the profile phone in sync (e.g. after checkout saved a new one)
       setUserPhone: (phone) => set({ phone: phone || null }),
-
-      setRole: (role) => {
-        set({ role, isAdmin: role === "admin" });
-      },
-
-      setLoading: (isLoading) => set({ isLoading }),
-
-      // Actualiza solo el access token (después de refresh)
-      setToken: (token) => set({ token }),
-
-      // Actualiza solo el refresh token (después de refresh)
-      setRefreshToken: (refreshToken) => set({ refreshToken }),
 
       // Actualiza ambos tokens (para usar desde el api interceptor)
       updateTokens: (token, refreshToken) => set({ token, refreshToken }),
@@ -85,25 +71,6 @@ const useAuthStore = create(
             console.warn("Logout API call failed:", error);
           }
         }
-      },
-
-      // Verifica si hay sesión activa
-      isAuthenticated: () => {
-        return !!get().token;
-      },
-
-      // Verifica si el usuario es mayorista
-      isMayorista: () => {
-        return get().role === "mayorista";
-      },
-
-      // Verifica si el usuario tiene el rol especificado
-      checkRole: (requiredRole) => {
-        const currentRole = get().role;
-        if (Array.isArray(requiredRole)) {
-          return requiredRole.includes(currentRole);
-        }
-        return currentRole === requiredRole;
       },
     }),
     {

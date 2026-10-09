@@ -79,7 +79,6 @@ export default defineConfig({
         // Manual chunks para mejor code splitting
         manualChunks: {
           'vendor-react': ['react', 'react-dom', 'react-router'],
-          'vendor-ui': ['react-bootstrap'],
           'vendor-utils': ['axios', 'zustand', 'swr'],
         },
       },

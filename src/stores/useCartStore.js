@@ -1,7 +1,5 @@
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
-import useAuthStore from './useAuthStore';
-import { getUnitPrice } from '../lib/pricing';
 
 /**
  * CartStore - Store de Zustand para el carrito de compras
@@ -11,7 +9,6 @@ const useCartStore = create(
   persist(
     (set, get) => ({
       items: [],
-      isLoading: false,
 
       // Sincronizar con datos del backend
       syncFromBackend: (backendItems) => {
@@ -78,17 +75,6 @@ const useCartStore = create(
       clearCart: () => {
         set({ items: [] });
       },
-
-      // Total at the buyer's unit price (role defaults to the logged-in user's)
-      getTotalPrice: (role = useAuthStore.getState().role) => {
-        return get().items.reduce(
-          (total, item) =>
-            total + getUnitPrice(item, role) * (item.quantity || 0),
-          0
-        );
-      },
-
-      setLoading: (isLoading) => set({ isLoading }),
     }),
     {
       name: 'cart-storage',

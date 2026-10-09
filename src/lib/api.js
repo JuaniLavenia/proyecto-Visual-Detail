@@ -399,25 +399,9 @@ api.interceptors.response.use(
       }
     }
 
-    // Para errores de auth en login/register, no进行处理
-    if (
-      originalRequest?.url?.includes("/api/login") ||
-      originalRequest?.url?.includes("/api/register")
-    ) {
-      return Promise.reject(handleError(error));
-    }
-
     return Promise.reject(handleError(error));
   },
 );
-
-/**
- * Crea un AbortController para cancelar requests
- */
-export function createAbortController() {
-  const controller = new AbortController();
-  return { controller, signal: controller.signal };
-}
 
 /**
  * Fetcher para SWR con manejo de errores
@@ -430,17 +414,6 @@ export const fetcher = async (url) => {
     console.error(`Error fetching ${url}:`, error);
     throw error;
   }
-};
-
-// Getters para endpoints comunes
-export const endpoints = {
-  productos: "/api/productos",
-  productosById: (id) => `/api/productos/${id}`,
-  cart: (userId) => `/api/cart/${userId}`,
-  addToCart: "/api/cart",
-  favorites: (userId) => `/api/favorites/${userId}`,
-  addToFavorites: "/api/favorites",
-  createOrder: "/api/pedidos",
 };
 
 export default api;

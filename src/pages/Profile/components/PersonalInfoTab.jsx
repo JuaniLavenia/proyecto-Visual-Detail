@@ -1,40 +1,30 @@
-import { useEffect, useState } from "react";
+import useSWR from "swr";
 import api from "../../../lib/api";
-import { useUserContext } from "../../../context/UserContext";
 import useAuthStore from "../../../stores/useAuthStore";
 import { LogOut, User } from "lucide-react";
 
+const userFetcher = (url) => api.get(url).then((res) => res.data.data.usuario);
+
 const PersonalInfoTab = () => {
-  const { userInfo, updateUser } = useUserContext();
   const { userId, logoutWithApi } = useAuthStore();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  // Keyed by userId so another user's cached data can never be shown; SWR
+  // revalidates on every mount, so profile changes show up.
+  const {
+    data: userInfo,
+    error: fetchError,
+    isLoading: isFetching,
+    isValidating,
+    mutate,
+  } = useSWR(userId ? `/api/user/${userId}` : null, userFetcher);
 
-  const fetchUserInfo = async () => {
-    if (!userId) {
-      setError("Debes iniciar sesión nuevamente");
-      return;
-    }
-
-    if (userInfo) {
-      return; // Ya tenemos datos
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await api.get(`/api/user/${userId}`);
-      updateUser(response.data.data.usuario);
-    } catch (err) {
-      console.error("Error fetching user info:", err);
-      setError("No se pudo cargar la información");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchUserInfo();
-  }, [userId]);
+  // A retry hides the previous error while the new request is in flight.
+  const isLoading = isFetching || (Boolean(fetchError) && isValidating);
+  const error = !userId
+    ? "Debes iniciar sesión nuevamente"
+    : fetchError
+      ? "No se pudo cargar la información"
+      : "";
+  const fetchUserInfo = () => mutate();
 
   if (isLoading) {
     return (

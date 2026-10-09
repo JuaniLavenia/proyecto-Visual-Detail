@@ -4,6 +4,12 @@ import api from "../../lib/api";
 import Swal from "sweetalert2";
 import useAuthStore from "../../stores/useAuthStore";
 import {
+  isRateLimitError,
+  RATE_LIMIT_MESSAGE,
+  PASSWORD_MIN_LENGTH,
+  PASSWORD_MAX_LENGTH,
+} from "../../lib/auth-api";
+import {
   Mail,
   Eye,
   EyeOff,
@@ -11,6 +17,30 @@ import {
   ArrowLeft,
 } from "../../components/common/Icons";
 import "./index.css";
+
+/**
+ * Message to show for a failed login/register request: the backend's own
+ * reason when it gave one, the generic fallback for network errors and 5xx.
+ */
+function getAuthErrorMessage(err, fallback) {
+  if (isRateLimitError(err)) return RATE_LIMIT_MESSAGE;
+  if (!err?.status || err.status >= 500) return fallback;
+  return err.serverMessage || fallback;
+}
+
+/**
+ * Maps validation details ([{ field, message }]) onto the form's own fields,
+ * so they show inline under each input.
+ */
+function getFieldErrors(err, formData) {
+  const fieldErrors = {};
+  (err?.details || []).forEach(({ field, message }) => {
+    if (Object.hasOwn(formData, field) && !fieldErrors[field]) {
+      fieldErrors[field] = message;
+    }
+  });
+  return fieldErrors;
+}
 
 function Login() {
   const { login } = useAuthStore();
@@ -48,8 +78,11 @@ function Login() {
       newErrors.email = "Email inválido";
     if (!registerData.password)
       newErrors.password = "La contraseña es requerida";
-    else if (registerData.password.length < 6)
-      newErrors.password = "Mínimo 6 caracteres";
+    else if (
+      registerData.password.length < PASSWORD_MIN_LENGTH ||
+      registerData.password.length > PASSWORD_MAX_LENGTH
+    )
+      newErrors.password = `La contraseña debe tener entre ${PASSWORD_MIN_LENGTH} y ${PASSWORD_MAX_LENGTH} caracteres`;
     if (!registerData.password_confirmation) {
       newErrors.password_confirmation = "Confirmá tu contraseña";
     } else if (registerData.password !== registerData.password_confirmation) {
@@ -86,13 +119,14 @@ function Login() {
       setLoginData({ email: "", password: "" });
       navigate("/");
     } catch (err) {
+      setErrors(getFieldErrors(err, loginData));
       Swal.fire({
         icon: "error",
         title: "Error de autenticación",
         text:
           err?.code === "USER_INACTIVE"
             ? "Tu cuenta está desactivada. Contactá a un administrador."
-            : "Email o contraseña incorrectos",
+            : getAuthErrorMessage(err, "Email o contraseña incorrectos"),
         confirmButtonColor: "#eab308",
       });
     } finally {
@@ -127,10 +161,14 @@ function Login() {
       setRegisterData({ email: "", password: "", password_confirmation: "" });
       navigate("/");
     } catch (err) {
+      setErrors(getFieldErrors(err, registerData));
       Swal.fire({
         icon: "error",
         title: "Error en el registro",
-        text: "El email ya está registrado o los datos son inválidos",
+        text: getAuthErrorMessage(
+          err,
+          "El email ya está registrado o los datos son inválidos",
+        ),
         confirmButtonColor: "#eab308",
       });
     } finally {
@@ -356,7 +394,7 @@ function Login() {
                   </p>
                 )}
                 <p className="text-white/30 text-xs mt-2">
-                  Mínimo 6 caracteres
+                  Entre {PASSWORD_MIN_LENGTH} y {PASSWORD_MAX_LENGTH} caracteres
                 </p>
               </div>
 

@@ -10,9 +10,9 @@ export const USER_ROLES = ["minorista", "mayorista", "admin"];
 export const USER_STATUSES = ["active", "inactive"];
 export const USER_SORTS = ["newest", "email"];
 
-// express-validator answers 400 with { errors: [{ msg, ... }] }, a shape that
-// handleError() in api.js collapses into a generic message. Mutations accept
-// the 400 here and reject with the first validation message instead.
+// Validation errors answer 400 with { error: { message, code, details } }.
+// Mutations accept the 400 here and reject with the same fields as
+// handleError(), so screens can show the message and per-field details.
 const ACCEPT_VALIDATION_ERRORS = {
   validateStatus: (status) => (status >= 200 && status < 300) || status === 400,
 };
@@ -20,14 +20,14 @@ const ACCEPT_VALIDATION_ERRORS = {
 function rejectValidationError(res) {
   if (res.status !== 400) return res;
   const body = res.data || {};
-  const errors = Array.isArray(body.errors) ? body.errors : [];
-  const message = errors[0]?.msg || body.error?.message || "Datos inválidos";
+  const details = Array.isArray(body.error?.details) ? body.error.details : [];
+  const message = body.error?.message || "Datos inválidos";
   // Same fields as handleError() so screens can treat both alike.
   throw Object.assign(new Error(message), {
     type: "VALIDATION_ERROR",
     status: 400,
     code: body.error?.code || "VALIDATION_ERROR",
-    errors,
+    details,
   });
 }
 

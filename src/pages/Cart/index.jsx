@@ -207,6 +207,11 @@ function Carrito() {
       }
     }
 
+    // Open the WhatsApp tab now, inside the click: opened after the await
+    // below, browsers treat it as a popup and may block it.
+    const whatsappWindow = window.open("", "_blank");
+    if (whatsappWindow) whatsappWindow.opener = null;
+
     setIsLoading(true);
     try {
       const order = await createOrder({
@@ -224,13 +229,19 @@ function Carrito() {
       setPhoneInput("");
       setPhoneError("");
 
-      const whatsappText = `¡Hola! Quisiera realizar el siguiente pedido:%0A%0A${cartItems
+      const whatsappText = `¡Hola! Quisiera realizar el siguiente pedido:\n\n${cartItems
         .map(
           (item) =>
             `• ${item.product.name} (x${item.quantity}) - $${(item.product.price * item.quantity).toLocaleString("es-AR")}`,
         )
-        .join("%0A")}%0A%0ATotal: $${calculateTotal().toLocaleString("es-AR")}`;
-      window.open(`https://wa.me/+543812026631?text=${whatsappText}`, "_blank");
+        .join("\n")}\n\nTotal: $${calculateTotal().toLocaleString("es-AR")}`;
+      const whatsappUrl = `https://wa.me/+543812026631?text=${encodeURIComponent(whatsappText)}`;
+      if (whatsappWindow) {
+        whatsappWindow.location.href = whatsappUrl;
+      } else {
+        // The blank tab could not be opened up front: last-chance attempt.
+        window.open(whatsappUrl, "_blank", "noopener");
+      }
 
       setShowModal(false);
       Swal.fire({
@@ -241,6 +252,9 @@ function Carrito() {
         timer: 2500,
       });
     } catch (error) {
+      // No order was created: drop the blank tab opened for WhatsApp.
+      whatsappWindow?.close();
+
       if (error?.code === "PHONE_REQUIRED") {
         // The profile has no phone after all: ask for it.
         setUserPhone(null);
@@ -251,12 +265,13 @@ function Carrito() {
         return;
       }
 
-      const phoneFieldError = error?.errors?.find(
-        (e) => e.path === "telefono",
+      // Validation errors list invalid fields as details: [{ field, message }].
+      const phoneFieldError = error?.details?.find(
+        (d) => d.field === "telefono",
       );
       if (phoneFieldError) {
         setEditingPhone(true);
-        setPhoneError(phoneFieldError.msg || "Teléfono inválido");
+        setPhoneError(phoneFieldError.message || "Teléfono inválido");
         return;
       }
 

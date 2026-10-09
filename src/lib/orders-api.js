@@ -89,9 +89,13 @@ function rejectBadRequest(res) {
 
 /**
  * Creates an order for the logged-in user (owner comes from the token).
+ * `productos` is [{ productId, cantidad }]: the backend looks each product
+ * up, snapshots its name and the unit price for the buyer role, and rejects
+ * unknown products with 400 PRODUCT_NOT_FOUND. The client never sends prices.
  * `telefono` is sent only when given; otherwise the backend uses the
  * profile phone and rejects with PHONE_REQUIRED when there is none.
- * Resolves to the created order (with the normalized `telefono`).
+ * Resolves to the created order (lines { producto, nombre, cantidad, precio },
+ * `total` and the normalized `telefono`).
  */
 export async function createOrder({ productos, telefono }) {
   const body = { productos };

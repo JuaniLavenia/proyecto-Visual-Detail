@@ -5,6 +5,7 @@ import {
   OrderProducts,
   OrderStatusBadge,
   OrderStatusSelect,
+  OrderTotal,
   orderShape,
 } from "./OrderCells";
 import { formatOrderDate } from "./order-format";
@@ -28,6 +29,7 @@ function OrdersList({ orders, busyId, onStatusChange }) {
                 <th className={TH_CLASS}>Cliente</th>
                 <th className={TH_CLASS}>Teléfono</th>
                 <th className={TH_CLASS}>Productos</th>
+                <th className={TH_CLASS}>Total</th>
                 <th className={TH_CLASS}>Estado</th>
                 <th className={TH_CLASS}>Cambiar estado</th>
                 <th className={TH_CLASS}>Fecha</th>
@@ -52,6 +54,9 @@ function OrdersList({ orders, busyId, onStatusChange }) {
                   </td>
                   <td className="px-4 py-3.5">
                     <OrderProducts productos={order.productos} compact />
+                  </td>
+                  <td className="px-4 py-3.5">
+                    <OrderTotal total={order.total} />
                   </td>
                   <td className="px-4 py-3.5">
                     <OrderStatusBadge estado={order.estado} />
@@ -107,6 +112,10 @@ function OrdersList({ orders, busyId, onStatusChange }) {
             <div className="mb-3">
               <p className="text-white/50 text-xs mb-1">Productos</p>
               <OrderProducts productos={order.productos} />
+              <div className="flex items-baseline justify-between gap-3 mt-2 pt-2 border-t border-white/5">
+                <span className="text-white/50 text-xs">Total</span>
+                <OrderTotal total={order.total} />
+              </div>
             </div>
 
             <div>

@@ -4,6 +4,7 @@ import useAuthStore from "../../stores/useAuthStore";
 import useCartStore from "../../stores/useCartStore";
 import api, { API_BASE } from "../../lib/api";
 import { createOrder, normalizePhone } from "../../lib/orders-api";
+import { getUnitPrice } from "../../lib/pricing";
 import Swal from "sweetalert2";
 import CheckoutPhoneField from "./CheckoutPhoneField";
 import {
@@ -24,7 +25,13 @@ import {
 import "./index.css";
 
 function Carrito() {
-  const { userId, token, phone: storedPhone, setUserPhone } = useAuthStore();
+  const {
+    userId,
+    token,
+    role,
+    phone: storedPhone,
+    setUserPhone,
+  } = useAuthStore();
   const navigate = useNavigate();
   const { syncFromBackend: syncCartFromBackend } = useCartStore();
   const [cartItems, setCartItems] = useState([]);
@@ -184,11 +191,12 @@ function Carrito() {
     }
   };
 
+  // Same price the backend stores for the order: depends on the buyer role.
+  const unitPrice = (item) => getUnitPrice(item.product, role);
+  const lineTotal = (item) => unitPrice(item) * (item.quantity || 0);
+
   const calculateTotal = () => {
-    return cartItems.reduce(
-      (acc, item) => acc + (item.product.price || 0) * (item.quantity || 0),
-      0,
-    );
+    return cartItems.reduce((acc, item) => acc + lineTotal(item), 0);
   };
 
   const handlePayment = async () => {
@@ -216,7 +224,7 @@ function Carrito() {
     try {
       const order = await createOrder({
         productos: cartItems.map((item) => ({
-          nombre: item.product.name,
+          productId: item.product._id,
           cantidad: item.quantity,
         })),
         telefono,
@@ -232,7 +240,7 @@ function Carrito() {
       const whatsappText = `¡Hola! Quisiera realizar el siguiente pedido:\n\n${cartItems
         .map(
           (item) =>
-            `• ${item.product.name} (x${item.quantity}) - $${(item.product.price * item.quantity).toLocaleString("es-AR")}`,
+            `• ${item.product.name} (x${item.quantity}) - $${lineTotal(item).toLocaleString("es-AR")}`,
         )
         .join("\n")}\n\nTotal: $${calculateTotal().toLocaleString("es-AR")}`;
       const whatsappUrl = `https://wa.me/+543812026631?text=${encodeURIComponent(whatsappText)}`;
@@ -288,6 +296,22 @@ function Carrito() {
         return;
       }
 
+      if (error?.code === "PRODUCT_NOT_FOUND") {
+        // A product in the cart no longer exists: reload the cart so the
+        // customer sees what is still available.
+        setShowModal(false);
+        Swal.fire({
+          icon: "error",
+          title: "Producto no disponible",
+          text:
+            error.message ||
+            "Uno de los productos del carrito ya no está disponible",
+          confirmButtonColor: "#eab308",
+        });
+        fetchCartItems();
+        return;
+      }
+
       Swal.fire({
         icon: "error",
         title: "Error",
@@ -302,7 +326,7 @@ function Carrito() {
     const orderDetail = cartItems
       .map(
         (item) =>
-          `${item.product.name} (x${item.quantity}) - $${(item.product.price * item.quantity).toLocaleString("es-AR")}`,
+          `${item.product.name} (x${item.quantity}) - $${lineTotal(item).toLocaleString("es-AR")}`,
       )
       .join("\n");
     const text = `¡Hola! Quisiera realizar el siguiente pedido:\n\n${orderDetail}\n\nTotal: $${calculateTotal().toLocaleString("es-AR")}`;
@@ -419,9 +443,12 @@ function Carrito() {
                           </div>
                           <div className="flex items-baseline gap-2 mt-2">
                             <span className="text-green-400 font-bold text-lg">
-                              ${item.product.price?.toLocaleString("es-AR")}
+                              ${unitPrice(item).toLocaleString("es-AR")}
                             </span>
-                            {item.product.precioMayorista && (
+                            {/* A mayorista already sees the wholesale price above */}
+                            {role !== "mayorista" &&
+                              typeof item.product.precioMayorista ===
+                                "number" && (
                               <span className="text-white/30 text-xs">
                                 Mayorista: $
                                 {item.product.precioMayorista?.toLocaleString(
@@ -436,9 +463,7 @@ function Carrito() {
                         <div className="text-right flex-shrink-0">
                           <p className="text-white font-bold text-lg">
                             $
-                            {(
-                              item.product.price * item.quantity
-                            ).toLocaleString("es-AR")}
+                            {lineTotal(item).toLocaleString("es-AR")}
                           </p>
                           <p className="text-white/30 text-xs">
                             x{item.quantity}
@@ -584,9 +609,7 @@ function Carrito() {
                       </div>
                       <span className="text-white/70">
                         $
-                        {(item.product.price * item.quantity).toLocaleString(
-                          "es-AR",
-                        )}
+                        {lineTotal(item).toLocaleString("es-AR")}
                       </span>
                     </div>
                   ))}

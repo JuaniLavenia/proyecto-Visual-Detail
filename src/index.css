@@ -25,20 +25,4 @@
   [role="button"]:not(:disabled) {
     cursor: pointer;
   }
-
-  /* Eliminar underline de todos los Links */
-  a {
-    text-decoration: none !important;
-  }
-  header a,
-  footer a {
-    color: white !important;
-  }
-
-  /* Estilos para Links en modo oscuro */
-  .dark-links a,
-  a.text-white,
-  a.text-light {
-    color: white;
-  }
 }

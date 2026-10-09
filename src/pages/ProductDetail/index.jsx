@@ -1,37 +1,44 @@
-import { useId } from "react";
-import { useNavigate, useParams } from "react-router-dom";
+import { useCallback, useId, useRef } from "react";
+import { useLocation, useNavigate, useParams } from "react-router-dom";
+import Modal from "../../components/common/Modal";
 import ProductDetailContent from "../../components/shared/ProductDetailContent";
-import { ArrowLeft } from "../../components/common/Icons";
 
-function ProductDetailPage() {
+/**
+ * Product detail shown as a modal over the page it was opened from.
+ * Opened from a product card (with `backgroundLocation` state), closing goes
+ * back in history so that page is restored as it was. Opened from a direct
+ * link, closing replaces the URL with the plain catalog.
+ */
+function ProductModalRoute() {
   const { id } = useParams();
   const navigate = useNavigate();
+  const location = useLocation();
   const titleId = useId();
-  const backToCatalog = () => navigate("/productos");
+  const isClosing = useRef(false);
+  const hasBackground = Boolean(location.state?.backgroundLocation);
+
+  const close = useCallback(() => {
+    // Esc + click in quick succession must not go back twice
+    if (isClosing.current) return;
+    isClosing.current = true;
+
+    if (hasBackground) {
+      navigate(-1);
+    } else {
+      navigate("/productos", { replace: true });
+    }
+  }, [hasBackground, navigate]);
 
   return (
-    <div className="min-h-screen bg-gray-950 pt-20 lg:pt-24 pb-12">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <button
-          type="button"
-          onClick={backToCatalog}
-          className="inline-flex items-center gap-2 text-white/60 hover:text-yellow-400 mb-6 transition-colors"
-        >
-          <ArrowLeft />
-          Volver a productos
-        </button>
-
-        <div className="bg-gray-900 rounded-2xl border border-white/5 overflow-hidden">
-          <ProductDetailContent
-            key={id}
-            productId={id}
-            titleId={titleId}
-            onBackToCatalog={backToCatalog}
-          />
-        </div>
-      </div>
-    </div>
+    <Modal onClose={close} labelledBy={titleId}>
+      <ProductDetailContent
+        key={id}
+        productId={id}
+        titleId={titleId}
+        onBackToCatalog={close}
+      />
+    </Modal>
   );
 }
 
-export default ProductDetailPage;
+export default ProductModalRoute;

@@ -1,5 +1,11 @@
 import { Suspense, lazy, useEffect } from 'react';
-import { Routes, Route, useNavigate } from 'react-router-dom';
+import {
+  Routes,
+  Route,
+  matchPath,
+  useLocation,
+  useNavigate,
+} from 'react-router-dom';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { toast } from './components/common/SimpleDialog';
@@ -25,7 +31,7 @@ const Login = lazy(() => import('./pages/Auth'));
 const ForgotPassword = lazy(() => import('./pages/Auth/ForgotPassword'));
 const ResetPassword = lazy(() => import('./pages/Auth/ResetPassword'));
 const Products = lazy(() => import('./pages/Products'));
-const ProductDetail = lazy(() => import('./pages/ProductDetail'));
+const ProductModalRoute = lazy(() => import('./pages/ProductDetail'));
 const Cart = lazy(() => import('./pages/Cart'));
 const Favorites = lazy(() => import('./pages/Favorites'));
 const Contact = lazy(() => import('./pages/Contact'));
@@ -42,6 +48,9 @@ const AdminOrders = lazy(() => import('./pages/admin/Orders'));
 const Header = lazy(() => import('./components/layout/Header'));
 const Footer = lazy(() => import('./components/layout/Footer'));
 
+// Shown under a product modal opened from a direct link
+const CATALOG_LOCATION = { pathname: '/productos', search: '', hash: '' };
+
 // Componente de fallback para Suspense
 function PageLoader() {
   return (
@@ -53,6 +62,14 @@ function PageLoader() {
 
 function App() {
   const navigate = useNavigate();
+  const location = useLocation();
+
+  // Product details open as a modal over the page they were opened from
+  // (`backgroundLocation`, set by the product card). A direct visit to a
+  // product URL has no background, so the plain catalog is shown under it.
+  const backgroundLocation =
+    location.state?.backgroundLocation ||
+    (matchPath('/productos/:id', location.pathname) ? CATALOG_LOCATION : null);
 
   // Pick up logins, logouts and token rotations made in other tabs
   useEffect(() => syncAuthAcrossTabs(), []);
@@ -99,10 +116,9 @@ function App() {
         <Header />
         
         <main className="min-h-screen">
-          <Routes>
+          <Routes location={backgroundLocation || location}>
             <Route path="/" element={<HomePage />} />
             <Route path="/productos" element={<Products />} />
-            <Route path="/productos/:id" element={<ProductDetail />} />
             <Route path="/login" element={<Login />} />
             <Route path="/recuperar" element={<ForgotPassword />} />
             <Route path="/reset/:id" element={<ResetPassword />} />
@@ -120,6 +136,15 @@ function App() {
             <Route path="/adm/usuarios" element={<AdminUsers />} />
             <Route path="/adm/taxonomia" element={<AdminTaxonomy />} />
           </Routes>
+
+          {backgroundLocation && (
+            // Own boundary so loading the modal chunk keeps the page visible
+            <Suspense fallback={null}>
+              <Routes>
+                <Route path="/productos/:id" element={<ProductModalRoute />} />
+              </Routes>
+            </Suspense>
+          )}
         </main>
         
         <Footer />

@@ -1,5 +1,5 @@
 import { useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { useLocation, useNavigate } from "react-router-dom";
 import "./index.css";
 import { useProductActions } from "../../../hooks/useProductActions";
 import useAuthStore from "../../../stores/useAuthStore";
@@ -21,6 +21,7 @@ function CardProductos({
 }) {
   const { role } = useAuthStore();
   const navigate = useNavigate();
+  const location = useLocation();
   const [imageError, setImageError] = useState(false);
 
   // Usar el hook personalizado
@@ -89,7 +90,8 @@ function CardProductos({
   };
 
   const handleViewProduct = () => {
-    navigate(`/productos/${_id}`);
+    // Open the detail as a modal over the current page (see App.jsx)
+    navigate(`/productos/${_id}`, { state: { backgroundLocation: location } });
   };
 
   // Obtener URL de imagen

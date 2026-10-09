@@ -15,7 +15,7 @@ Tailwind v4 emits its rules in cascade layers; the unlayered CDN Bootstrap overr
 ## Tasks
 - [x] T1 Inventory: every Bootstrap-only class used in `src` (no Tailwind equivalent: `row`, `col-*`, `container` behaviour, `modal*`, `alert*`, `badge`, `btn*`, `form-*`, `d-*`, `active`/`show` semantics, etc.) and every element style Bootstrap supplies that the UI depends on (body background/colour, form controls, tables, links).
 - [x] T2 Remove the CSS link from `index.html`; replace Bootstrap-only classes with Tailwind equivalents that keep the intended layout; add only the base styles the design needs (e.g. body background/text colour) in the main CSS.
-- [~] Q1 Build + page-by-page visual comparison against the "before" screenshots (13 pages) + user review.
+- [x] Q1 Build + page-by-page visual comparison against the "before" screenshots (13 pages) + user review.
 
 ## Pages for QA
 `/`, `/productos`, `/productos/:id`, `/carrito` (+ checkout modal), `/favoritos`, `/contactanos`, `/login` (login/register/forgot/reset), `/perfil` (both tabs), `/adm/dashboard`, `/adm/pedidos`, `/adm/productos` (+ create/edit), `/adm/usuarios` (+ modals), `/adm/taxonomia`; desktop and ~375px where possible; SweetAlert dialogs and toasts.
@@ -40,5 +40,7 @@ Session folder `claude-chrome-screenshots-ZxeMl5`: 0 home, 1 productos, 2 carrit
 - 2026-10-09: parent `bf28496`: headings that had no size class fell to 16px without Bootstrap (cart item title was ~28px); added `text-lg` to cart item title, profile "Pedido #" and "Cuenta", footer section titles. Admin products table name left at 16px (correct in a table); ProductCard titles sized by their own CSS.
 - 2026-10-09: Q1 desktop screenshots after (session folder, 18-30) vs before (0-17): `/`, `/productos`, detail, `/carrito`, `/perfil`, `/favoritos`, `/contactanos`, dashboard, pedidos, productos, usuarios, taxonomia, create product: Tailwind design renders (Rubik, subtle borders, tighter spacing), no broken layout, no light backgrounds. Mobile (375px iframe): `/`, `/productos`, `/carrito`, `/perfil`, `/adm/pedidos` no page overflow; `/adm/usuarios` 84px and `/adm/productos` 51px overflow, both pre-existing and smaller than with Bootstrap (119px / 205px) → 8e. `/login` not captured (redirects while logged in). Pending: user review.
 
+- 2026-10-09: user reviewed the screens ("quedaron muy bien") and logged out for the auth pages. `/login` (both tabs), `/recuperar`, `/reset/:id` (invalid link state) render fine. Pre-existing bug found and fixed: on desktop the fixed header (121px with the payments strip, from `lg`) covered the auth titles (`pt-24` = 96px); auth pages now use `pt-20 lg:pt-36` — title top 105px at 375/800 (header 64) and 144px at 1024/1536 (header 121).
+
 ## Next step
-User reviews the before/after screenshots, then push + PR. Then 8e polish.
+PR, then 8e polish.

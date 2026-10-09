@@ -119,7 +119,7 @@ function ResetPassword() {
   );
 
   return (
-    <div className="min-h-screen bg-gray-950 pt-20 lg:pt-24 pb-12 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-950 pt-20 lg:pt-36 pb-12 flex items-center justify-center px-4">
       <div className="fixed inset-0 bg-gradient-to-b from-gray-950/90 via-gray-950/95 to-gray-950/90" />
 
       <div className="relative w-full max-w-md">

@@ -428,7 +428,7 @@ function Carrito() {
                     <div className="flex-1 min-w-0">
                       <div className="flex items-start justify-between gap-3">
                         <div className="min-w-0">
-                          <h3 className="text-white font-semibold truncate">
+                          <h3 className="text-lg text-white font-semibold truncate">
                             {item.product.name}
                           </h3>
                           <div className="flex items-center gap-2 mt-1">

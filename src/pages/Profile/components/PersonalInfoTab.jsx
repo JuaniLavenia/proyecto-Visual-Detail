@@ -117,7 +117,7 @@ const PersonalInfoTab = () => {
 
       {/* Account Actions */}
       <div className="bg-gray-800/30 border border-white/5 rounded-xl p-6">
-        <h3 className="text-white font-semibold mb-4">Cuenta</h3>
+        <h3 className="text-lg text-white font-semibold mb-4">Cuenta</h3>
 
         <button
           onClick={logoutWithApi}

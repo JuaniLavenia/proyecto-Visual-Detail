@@ -190,7 +190,7 @@ function Login() {
   };
 
   return (
-    <div className="min-h-screen bg-gray-950 pt-20 lg:pt-24 pb-12 flex items-center justify-center px-4">
+    <div className="min-h-screen bg-gray-950 pt-20 lg:pt-36 pb-12 flex items-center justify-center px-4">
       {/* Background Pattern */}
       <div className="fixed inset-0 bg-[url('https://cdn.shopify.com/s/files/1/0272/1346/3623/files/DSC6756-Edit_1024x1024.jpg?v=1634901495')] bg-cover bg-center opacity-10" />
       <div className="fixed inset-0 bg-gradient-to-b from-gray-950/90 via-gray-950/95 to-gray-950/90" />

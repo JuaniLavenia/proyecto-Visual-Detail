@@ -1,11 +1,21 @@
+import { useState } from "react";
 import useSWR from "swr";
+import Swal from "sweetalert2";
 import api from "../../../lib/api";
+import { formatPrice } from "../../../lib/pricing";
 import useAuthStore from "../../../stores/useAuthStore";
 import { Check, Close, Clock } from "../../../components/common/Icons";
 import "./OrdersTab.css";
 
+// The api interceptor does not unwrap: the body is { success, data: { pedidos } }.
 const ordersFetcher = (url) =>
-  api.get(url).then((res) => res.data.pedidos || []);
+  api.get(url).then((res) => res.data?.data?.pedidos || []);
+
+// Legacy lines have no `precio`: their subtotal is unknown too.
+const lineSubtotal = (producto) =>
+  typeof producto.precio === "number"
+    ? producto.precio * (producto.cantidad || 0)
+    : undefined;
 
 const OrdersTab = () => {
   const { userId } = useAuthStore();
@@ -27,6 +37,25 @@ const OrdersTab = () => {
       ? "No se pudieron cargar los pedidos"
       : "";
   const fetchOrders = () => mutate();
+  const [cancellingId, setCancellingId] = useState(null);
+
+  const handleCancel = async (orderId) => {
+    if (cancellingId) return;
+    setCancellingId(orderId);
+    try {
+      await api.put(`/api/pedido/cancelar/${encodeURIComponent(orderId)}`);
+      await mutate();
+    } catch (err) {
+      console.error("Error cancelling order:", err);
+      Swal.fire({
+        icon: "error",
+        title: "Error",
+        text: err?.message || "No se pudo cancelar el pedido",
+      });
+    } finally {
+      setCancellingId(null);
+    }
+  };
 
   const getStatusStyle = (estado) => {
     switch (estado) {
@@ -146,36 +175,36 @@ const OrdersTab = () => {
               {order.productos?.map((producto, index) => (
                 <div
                   key={index}
-                  className="flex items-center justify-between py-2 px-3 bg-gray-900/30 rounded-lg"
+                  className="flex items-center justify-between gap-3 py-2 px-3 bg-gray-900/30 rounded-lg"
                 >
-                  <span className="text-white">{producto.nombre}</span>
-                  <span className="text-white/50 text-sm">
-                    x{producto.cantidad}
+                  <div className="min-w-0">
+                    <p className="text-white break-words">{producto.nombre}</p>
+                    <p className="text-white/50 text-sm">
+                      x{producto.cantidad} · {formatPrice(producto.precio)} c/u
+                    </p>
+                  </div>
+                  <span className="text-white/70 text-sm font-medium flex-shrink-0">
+                    {formatPrice(lineSubtotal(producto))}
                   </span>
                 </div>
               ))}
             </div>
 
             {/* Total & Actions */}
-            <div className="flex items-center justify-between pt-4 border-t border-white/5">
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-white/5">
               <div className="text-white font-semibold">
-                Total: ${order.total?.toLocaleString("es-AR") || "0"}
+                Total: {formatPrice(order.total)}
               </div>
 
               {order.estado === "Pendiente" && (
                 <button
-                  onClick={async () => {
-                    try {
-                      await api.put(`/api/pedido/cancelar/${order._id}`);
-                      const response = await api.get(`/api/pedidos/${userId}`);
-                      updateOrders(response.data.pedidos || []);
-                    } catch (err) {
-                      console.error("Error cancelling order:", err);
-                    }
-                  }}
-                  className="px-4 py-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg text-sm font-medium transition-colors"
+                  onClick={() => handleCancel(order._id)}
+                  disabled={Boolean(cancellingId)}
+                  className="px-4 py-2 bg-red-500/10 text-red-400 hover:bg-red-500/20 rounded-lg text-sm font-medium transition-colors disabled:opacity-50 disabled:cursor-not-allowed"
                 >
-                  Cancelar Pedido
+                  {cancellingId === order._id
+                    ? "Cancelando..."
+                    : "Cancelar Pedido"}
                 </button>
               )}
             </div>

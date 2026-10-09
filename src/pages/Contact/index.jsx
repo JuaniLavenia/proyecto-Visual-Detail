@@ -105,7 +105,10 @@ function Contactanos() {
               </a>
 
               {/* Location */}
-              <div className="flex items-center gap-4 p-4 bg-gray-900/50 border border-white/5 rounded-xl">
+              <Link
+                to="/ubicacion"
+                className="flex items-center gap-4 p-4 bg-gray-900/50 border border-white/5 rounded-xl hover:border-yellow-500/30 hover:bg-gray-800/50 transition-all group"
+              >
                 <div className="w-12 h-12 bg-yellow-500/10 rounded-xl flex items-center justify-center text-yellow-400">
                   <Location className="w-6 h-6" />
                 </div>
@@ -113,7 +116,7 @@ function Contactanos() {
                   <p className="text-white/50 text-sm">Ubicación</p>
                   <p className="text-white font-medium">Tucumán, Argentina</p>
                 </div>
-              </div>
+              </Link>
             </div>
 
             {/* Social Media */}

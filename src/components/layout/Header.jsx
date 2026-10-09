@@ -191,11 +191,7 @@ function Header() {
               <NavLink to="/productos" icon={<Grid className="w-6 h-6" />}>
                 Productos
               </NavLink>
-              <NavLink
-                to="https://goo.gl/maps/pyTLGSD6mtBn7HvN9"
-                external
-                icon={<Location className="w-6 h-6" />}
-              >
+              <NavLink to="/ubicacion" icon={<Location className="w-6 h-6" />}>
                 Ubicación
               </NavLink>
               <NavLink to="/contactanos" icon={<Contact className="w-6 h-6" />}>
@@ -412,9 +408,9 @@ function Header() {
               Productos
             </NavLink>
             <NavLink
-              to="https://goo.gl/maps/pyTLGSD6mtBn7HvN9"
-              external
+              to="/ubicacion"
               icon={<Location className="w-6 h-6" />}
+              onClick={() => setMobileMenuOpen(false)}
             >
               Ubicación
             </NavLink>

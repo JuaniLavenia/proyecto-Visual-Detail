@@ -19,7 +19,8 @@ const STATUS_BADGES = {
   },
 };
 
-// Legacy lines and orders lack `producto`, `precio` and `total`.
+// Legacy lines and orders lack `producto`, `precio` and `total`; the oldest
+// lines only have `nombre` (no `cantidad`).
 const productLineShape = PropTypes.shape({
   producto: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
   nombre: PropTypes.string,
@@ -135,7 +136,8 @@ OrderStatusSelect.propTypes = {
   className: PropTypes.string,
 };
 
-// Unit price per line; legacy orders have no `precio` and show "—".
+// Unit price per line; legacy orders have no `precio` (or `cantidad`) and
+// show "—" in its place.
 export function OrderProducts({ productos, compact }) {
   return (
     <div className={compact ? "max-w-xs" : undefined}>
@@ -145,7 +147,8 @@ export function OrderProducts({ productos, compact }) {
           className="flex items-baseline justify-between gap-3 text-white/70 text-sm"
         >
           <span className={`min-w-0 ${compact ? "truncate" : "break-words"}`}>
-            {prod.cantidad}x {prod.nombre || "Producto"}
+            {Number.isFinite(prod.cantidad) ? `${prod.cantidad}x` : "— x"}{" "}
+            {prod.nombre || "Producto"}
           </span>
           <span className="flex-shrink-0 text-white/50 whitespace-nowrap">
             {formatPrice(prod.precio)}

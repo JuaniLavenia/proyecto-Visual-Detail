@@ -156,7 +156,7 @@ const OrdersTab = () => {
             {/* Header */}
             <div className="flex items-center justify-between mb-4">
               <div>
-                <h3 className="text-white font-semibold">
+                <h3 className="text-lg text-white font-semibold">
                   Pedido #{order.numeroPedido}
                 </h3>
                 <p className="text-white/50 text-sm">ID: {order._id}</p>

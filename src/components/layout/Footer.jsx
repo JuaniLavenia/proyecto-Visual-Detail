@@ -65,7 +65,7 @@ function Footer() {
 
           {/* Quick Links */}
           <div>
-            <h4 className="text-white font-semibold mb-4">Navegación</h4>
+            <h4 className="text-lg text-white font-semibold mb-4">Navegación</h4>
             <ul className="space-y-3">
               <li>
                 <Link
@@ -104,7 +104,7 @@ function Footer() {
 
           {/* Categories */}
           <div>
-            <h4 className="text-white font-semibold mb-4">Categorías</h4>
+            <h4 className="text-lg text-white font-semibold mb-4">Categorías</h4>
             <ul className="space-y-3">
               {FOOTER_CATEGORIES.map((name) => (
                 <li key={name}>
@@ -121,7 +121,7 @@ function Footer() {
 
           {/* Contact Info */}
           <div>
-            <h4 className="text-white font-semibold mb-4">Contacto</h4>
+            <h4 className="text-lg text-white font-semibold mb-4">Contacto</h4>
             <ul className="space-y-3">
               <li className="flex items-start gap-3">
                 <Location className="w-5 h-5 text-yellow-400 flex-shrink-0 mt-0.5" />

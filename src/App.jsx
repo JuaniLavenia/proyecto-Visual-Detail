@@ -1,6 +1,5 @@
 import { Suspense, lazy, useEffect } from 'react';
 import { Routes, Route, useNavigate } from 'react-router';
-import './App.css';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import ErrorBoundary from './components/common/ErrorBoundary';
 import { toast } from './components/common/SimpleDialog';

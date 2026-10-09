@@ -1,4 +1,3 @@
-import "./index.css";
 import { useState } from "react";
 import OrdersTab from "./components/OrdersTab";
 import PersonalInfoTab from "./components/PersonalInfoTab";

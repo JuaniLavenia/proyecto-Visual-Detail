@@ -13,8 +13,17 @@
     font-family: var(--font-rubik);
   }
 
+  /* Match the pages' dark background so overscroll and short pages never
+     show a light strip; pages still paint their own bg-gray-950. */
   body {
-    @apply bg-gray-50 text-gray-900;
+    @apply bg-gray-950 text-gray-900;
+  }
+
+  /* Tailwind's preflight leaves buttons with the default cursor; keep the
+     pointer the site had while Bootstrap's reboot was loaded. */
+  button:not(:disabled),
+  [role="button"]:not(:disabled) {
+    cursor: pointer;
   }
 
   /* Eliminar underline de todos los Links */
@@ -26,9 +35,6 @@
     color: white !important;
   }
 
-  .space-y-3 {
-    padding: 0 !important;
-  }
   /* Estilos para Links en modo oscuro */
   .dark-links a,
   a.text-white,

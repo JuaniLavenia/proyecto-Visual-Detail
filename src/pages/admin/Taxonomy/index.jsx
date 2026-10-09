@@ -13,6 +13,7 @@ import {
   Check,
   Close,
   Spinner,
+  Image as ImageIcon,
 } from "../../../components/common/Icons";
 
 // El interceptor de api.js ya normaliza el error de axios en
@@ -20,11 +21,48 @@ import {
 // src/lib/api.js) - el .response original no sobrevive.
 const getErrorMessage = (err, fallback) => err?.message || fallback;
 
+const isHttpUrl = (value) => /^https?:\/\/\S+$/i.test(value);
+
+// Small square thumbnail that falls back to a placeholder icon when the URL
+// is empty or fails to load. Callers key it by src so a new URL retries.
+function TaxonomyThumb({ src, alt, className = "w-10 h-10" }) {
+  const [failed, setFailed] = useState(false);
+  const showImage = Boolean(src) && !failed;
+
+  return (
+    <div
+      className={`${className} flex-shrink-0 rounded-lg bg-gray-800/60 border border-white/10 overflow-hidden flex items-center justify-center`}
+    >
+      {showImage ? (
+        <img
+          src={src}
+          alt={alt}
+          onError={() => setFailed(true)}
+          className="w-full h-full object-contain"
+        />
+      ) : (
+        <ImageIcon className="w-1/2 h-1/2 text-white/30" />
+      )}
+    </div>
+  );
+}
+
 function TaxonomyFormModal({ mode, initialValues, onCancel, onSubmit, saving }) {
   const [name, setName] = useState(initialValues?.name || "");
   const [sortOrder, setSortOrder] = useState(initialValues?.sortOrder ?? 0);
   const [isActive, setIsActive] = useState(initialValues?.isActive ?? true);
+  const [image, setImage] = useState(initialValues?.image || "");
+  const [showOnHome, setShowOnHome] = useState(
+    initialValues?.showOnHome ?? false
+  );
   const [error, setError] = useState("");
+  const [imageError, setImageError] = useState("");
+
+  const trimmedImage = image.trim();
+  const isRenaming =
+    mode === "edit" &&
+    Boolean(name.trim()) &&
+    name.trim() !== (initialValues?.name || "");
 
   const handleSubmit = (e) => {
     e.preventDefault();
@@ -33,12 +71,23 @@ function TaxonomyFormModal({ mode, initialValues, onCancel, onSubmit, saving }) 
       return;
     }
     setError("");
-    onSubmit({ name: name.trim(), sortOrder: Number(sortOrder) || 0, isActive });
+    if (trimmedImage && !isHttpUrl(trimmedImage)) {
+      setImageError("La URL debe empezar con http:// o https://");
+      return;
+    }
+    setImageError("");
+    onSubmit({
+      name: name.trim(),
+      sortOrder: Number(sortOrder) || 0,
+      isActive,
+      image: trimmedImage,
+      showOnHome,
+    });
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70">
-      <div className="w-full max-w-md bg-gray-900 border border-white/10 rounded-2xl p-6">
+      <div className="w-full max-w-md max-h-[90vh] overflow-y-auto bg-gray-900 border border-white/10 rounded-2xl p-6">
         <div className="flex items-center justify-between mb-5">
           <h3 className="text-lg font-semibold text-white">
             {mode === "edit" ? "Editar" : "Nueva entrada"}
@@ -64,6 +113,40 @@ function TaxonomyFormModal({ mode, initialValues, onCancel, onSubmit, saving }) 
               className="w-full px-4 py-2.5 bg-gray-800/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-yellow-500/50 transition-colors"
             />
             {error && <p className="text-red-400 text-xs mt-1">{error}</p>}
+            {isRenaming && (
+              <p className="text-yellow-400/80 text-xs mt-1">
+                Los productos que usan este nombre también se van a actualizar.
+              </p>
+            )}
+          </div>
+
+          <div>
+            <label className="block text-white/70 text-sm mb-2">
+              Imagen (URL)
+            </label>
+            <div className="flex items-center gap-3">
+              <TaxonomyThumb
+                key={trimmedImage}
+                src={isHttpUrl(trimmedImage) ? trimmedImage : ""}
+                alt="Vista previa"
+                className="w-12 h-12"
+              />
+              <input
+                type="url"
+                value={image}
+                onChange={(e) => setImage(e.target.value)}
+                placeholder="https://..."
+                maxLength={2048}
+                className="min-w-0 flex-1 px-4 py-2.5 bg-gray-800/50 border border-white/10 rounded-xl text-white focus:outline-none focus:border-yellow-500/50 transition-colors"
+              />
+            </div>
+            {imageError ? (
+              <p className="text-red-400 text-xs mt-1">{imageError}</p>
+            ) : (
+              <p className="text-white/40 text-xs mt-1">
+                Opcional. Se muestra en la home.
+              </p>
+            )}
           </div>
 
           <div>
@@ -84,6 +167,21 @@ function TaxonomyFormModal({ mode, initialValues, onCancel, onSubmit, saving }) 
               className="w-4 h-4 accent-yellow-500"
             />
             Activa (visible en la tienda)
+          </label>
+
+          <label className="flex items-center justify-between gap-3 text-white/70 text-sm cursor-pointer">
+            <span>Mostrar en la home</span>
+            <input
+              type="checkbox"
+              role="switch"
+              checked={showOnHome}
+              onChange={(e) => setShowOnHome(e.target.checked)}
+              className="sr-only peer"
+            />
+            <span
+              aria-hidden="true"
+              className="relative w-10 h-6 flex-shrink-0 rounded-full bg-gray-600/60 transition-colors peer-checked:bg-yellow-500 peer-focus-visible:ring-2 peer-focus-visible:ring-yellow-500/50 after:content-[''] after:absolute after:top-1 after:left-1 after:w-4 after:h-4 after:rounded-full after:bg-white after:transition-transform peer-checked:after:translate-x-4"
+            />
           </label>
 
           <div className="flex gap-3 pt-2">
@@ -141,9 +239,9 @@ function TaxonomyManager({ title, basePath, icon: Icon }) {
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [basePath]);
 
-  const handleToggleActive = async (item) => {
+  const handleToggle = async (item, field) => {
     try {
-      await api.put(`/api/${basePath}/${item._id}`, { isActive: !item.isActive });
+      await api.put(`/api/${basePath}/${item._id}`, { [field]: !item[field] });
       fetchItems();
     } catch (err) {
       Swal.fire({
@@ -237,25 +335,47 @@ function TaxonomyManager({ title, basePath, icon: Icon }) {
               key={item._id}
               className="py-3 flex items-center justify-between gap-3"
             >
-              <div className="min-w-0">
-                <div className="flex items-center gap-2">
-                  <span className="text-white font-medium truncate">
-                    {item.name}
-                  </span>
-                  <button
-                    type="button"
-                    onClick={() => handleToggleActive(item)}
-                    className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
-                      item.isActive
-                        ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
-                        : "bg-gray-600/30 text-white/50 hover:bg-gray-600/50"
-                    }`}
-                    title="Click para cambiar el estado"
-                  >
-                    {item.isActive ? "Activa" : "Inactiva"}
-                  </button>
+              <div className="min-w-0 flex-1 flex items-center gap-3">
+                {item.image && (
+                  <TaxonomyThumb
+                    key={item.image}
+                    src={item.image}
+                    alt={item.name}
+                  />
+                )}
+                <div className="min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 min-w-0">
+                    <span className="text-white font-medium truncate min-w-0 max-w-full">
+                      {item.name}
+                    </span>
+                    <button
+                      type="button"
+                      onClick={() => handleToggle(item, "isActive")}
+                      className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
+                        item.isActive
+                          ? "bg-green-500/20 text-green-400 hover:bg-green-500/30"
+                          : "bg-gray-600/30 text-white/50 hover:bg-gray-600/50"
+                      }`}
+                      title="Click para cambiar el estado"
+                    >
+                      {item.isActive ? "Activa" : "Inactiva"}
+                    </button>
+                    <button
+                      type="button"
+                      onClick={() => handleToggle(item, "showOnHome")}
+                      aria-pressed={Boolean(item.showOnHome)}
+                      className={`px-2 py-0.5 rounded-full text-xs font-medium transition-colors ${
+                        item.showOnHome
+                          ? "bg-yellow-500/20 text-yellow-400 hover:bg-yellow-500/30"
+                          : "bg-gray-600/30 text-white/50 hover:bg-gray-600/50"
+                      }`}
+                      title="Click para mostrar u ocultar en la home"
+                    >
+                      Home
+                    </button>
+                  </div>
+                  <p className="text-white/40 text-xs truncate">{item.slug}</p>
                 </div>
-                <p className="text-white/40 text-xs truncate">{item.slug}</p>
               </div>
               <div className="flex items-center gap-1 flex-shrink-0">
                 <button

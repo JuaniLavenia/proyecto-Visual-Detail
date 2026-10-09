@@ -11,10 +11,13 @@ import "./OrdersTab.css";
 const ordersFetcher = (url) =>
   api.get(url).then((res) => res.data?.data?.pedidos || []);
 
-// Legacy lines have no `precio`: their subtotal is unknown too.
+// Legacy lines have no `precio`, and the oldest ones no `cantidad` either:
+// their subtotal is unknown too ("—" instead of $0 or NaN).
+const hasQuantity = (producto) => Number.isFinite(producto.cantidad);
+
 const lineSubtotal = (producto) =>
-  typeof producto.precio === "number"
-    ? producto.precio * (producto.cantidad || 0)
+  Number.isFinite(producto.precio) && hasQuantity(producto)
+    ? producto.precio * producto.cantidad
     : undefined;
 
 const OrdersTab = () => {
@@ -180,7 +183,8 @@ const OrdersTab = () => {
                   <div className="min-w-0">
                     <p className="text-white break-words">{producto.nombre}</p>
                     <p className="text-white/50 text-sm">
-                      x{producto.cantidad} · {formatPrice(producto.precio)} c/u
+                      {hasQuantity(producto) ? `x${producto.cantidad}` : "x —"}{" "}
+                      · {formatPrice(producto.precio)} c/u
                     </p>
                   </div>
                   <span className="text-white/70 text-sm font-medium flex-shrink-0">

@@ -20,7 +20,8 @@ const TONES = {
   accent: "border-yellow-500/30 text-yellow-400 hover:bg-yellow-500/10",
 };
 
-// compact: icon-only buttons (desktop table); otherwise labelled (mobile cards).
+// compact: icon-only buttons (desktop table); otherwise labelled (mobile
+// cards), with the label hidden below `sm` so three buttons fit at 375px.
 function ActionButton({
   icon: Icon,
   label,
@@ -39,11 +40,11 @@ function ActionButton({
       aria-label={label}
       title={title || label}
       className={`${BASE_BUTTON} ${TONES[tone]} ${
-        compact ? "p-2" : "px-3 py-2"
+        compact ? "p-2" : "min-w-0 px-3 py-2"
       } ${className}`}
     >
-      <Icon className="w-4 h-4" />
-      {!compact && label}
+      <Icon className="w-4 h-4 flex-shrink-0" />
+      {!compact && <span className="hidden sm:inline truncate">{label}</span>}
     </button>
   );
 }
@@ -101,8 +102,8 @@ function UserRowActions({
         type="button"
         onClick={() => onSendResetLink(user)}
         disabled={sendingLink}
-        className={`${BASE_BUTTON} ${TONES.accent} px-3 py-2 whitespace-nowrap ${
-          compact ? "" : "col-span-3"
+        className={`${BASE_BUTTON} ${TONES.accent} px-3 py-2 ${
+          compact ? "whitespace-nowrap" : "col-span-3 min-w-0 text-center"
         }`}
       >
         {sendingLink ? (

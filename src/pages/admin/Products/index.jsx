@@ -238,53 +238,53 @@ function AdminProducto() {
 
           {/* KPI Cards */}
           <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="bg-gray-800/30 border border-white/5 rounded-xl p-4">
-              <div className="flex items-center gap-3">
+            <div className="min-w-0 bg-gray-800/30 border border-white/5 rounded-xl p-4">
+              <div className="flex flex-col items-start sm:flex-row sm:items-center gap-3">
                 <div className="p-2 bg-yellow-500/10 rounded-lg text-yellow-400">
                   <Package className="w-6 h-6" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-white/50 text-xs">Total Productos</p>
-                  <p className="text-xl font-bold text-white">
+                  <p className="text-lg sm:text-xl font-bold text-white">
                     {stats?.totalProducts ?? totalRows}
                   </p>
                 </div>
               </div>
             </div>
-            <div className="bg-gray-800/30 border border-white/5 rounded-xl p-4">
-              <div className="flex items-center gap-3">
+            <div className="min-w-0 bg-gray-800/30 border border-white/5 rounded-xl p-4">
+              <div className="flex flex-col items-start sm:flex-row sm:items-center gap-3">
                 <div className="p-2 bg-green-500/10 rounded-lg text-green-400">
                   <Cube className="w-6 h-6" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-white/50 text-xs">En Stock</p>
-                  <p className="text-xl font-bold text-white">
+                  <p className="text-lg sm:text-xl font-bold text-white">
                     {stats?.inStock ?? 0}
                   </p>
                 </div>
               </div>
             </div>
-            <div className="bg-gray-800/30 border border-white/5 rounded-xl p-4">
-              <div className="flex items-center gap-3">
+            <div className="min-w-0 bg-gray-800/30 border border-white/5 rounded-xl p-4">
+              <div className="flex flex-col items-start sm:flex-row sm:items-center gap-3">
                 <div className="p-2 bg-red-500/10 rounded-lg text-red-400">
                   <Exclamation className="w-6 h-6" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-white/50 text-xs">Sin Stock</p>
-                  <p className="text-xl font-bold text-white">
+                  <p className="text-lg sm:text-xl font-bold text-white">
                     {stats?.outOfStock ?? 0}
                   </p>
                 </div>
               </div>
             </div>
-            <div className="bg-gray-800/30 border border-white/5 rounded-xl p-4">
-              <div className="flex items-center gap-3">
+            <div className="min-w-0 bg-gray-800/30 border border-white/5 rounded-xl p-4">
+              <div className="flex flex-col items-start sm:flex-row sm:items-center gap-3">
                 <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
                   <Dollar className="w-6 h-6" />
                 </div>
-                <div>
+                <div className="min-w-0">
                   <p className="text-white/50 text-xs">Valor Stock</p>
-                  <p className="text-xl font-bold text-white">
+                  <p className="text-lg sm:text-xl font-bold text-white">
                     $
                     {(stats?.totalStockValue ?? 0).toLocaleString("es-AR", {
                       maximumFractionDigits: 0,
@@ -298,7 +298,7 @@ function AdminProducto() {
           {/* Search */}
           <form onSubmit={handleSearch} className="mt-6">
             <div className="flex gap-3 max-w-xl">
-              <div className="flex-1 relative">
+              <div className="flex-1 min-w-0 relative">
                 <input
                   type="text"
                   placeholder="Buscar productos..."
@@ -520,7 +520,7 @@ function AdminProducto() {
               {products.map((product) => (
                 <div
                   key={product._id}
-                  className="bg-gray-900/50 border border-white/5 rounded-xl p-4"
+                  className="min-w-0 bg-gray-900/50 border border-white/5 rounded-xl p-4"
                 >
                   <div className="flex gap-4">
                     <img
@@ -530,17 +530,19 @@ function AdminProducto() {
                           : `${API_BASE}/img/productos/${product.image}`
                       }
                       alt={product.name}
-                      className="w-20 h-20 object-cover rounded-lg"
+                      className="w-20 h-20 flex-shrink-0 object-cover rounded-lg"
                     />
                     <div className="flex-1 min-w-0">
                       <h3 className="text-white font-medium truncate">
                         {product.name}
                       </h3>
-                      <p className="text-yellow-400 text-sm">{product.brand}</p>
-                      <p className="text-white/50 text-sm">
+                      <p className="text-yellow-400 text-sm truncate">
+                        {product.brand}
+                      </p>
+                      <p className="text-white/50 text-sm truncate">
                         {product.category}
                       </p>
-                      <div className="flex items-center gap-4 mt-2">
+                      <div className="flex flex-wrap items-center gap-x-4 gap-y-1 mt-2">
                         <span className="text-white font-semibold">
                           ${product.price?.toLocaleString("es-AR")}
                         </span>

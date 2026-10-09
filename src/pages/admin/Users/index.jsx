@@ -61,12 +61,12 @@ const SELECT_CLASS =
 
 function KpiCard({ icon: Icon, label, value, accent }) {
   return (
-    <div className="bg-gray-800/30 border border-white/5 rounded-xl p-4">
+    <div className="min-w-0 bg-gray-800/30 border border-white/5 rounded-xl p-4">
       <div className="flex items-center gap-3">
         <div className={`p-2 rounded-lg ${accent.bg} ${accent.text}`}>
           <Icon className="w-6 h-6" />
         </div>
-        <div>
+        <div className="min-w-0">
           <p className="text-white/50 text-xs">{label}</p>
           <p className={`text-xl font-bold ${accent.value}`}>{value ?? "-"}</p>
         </div>
@@ -620,13 +620,13 @@ function UsersAdmin() {
           {users.map((user) => (
             <div
               key={user._id}
-              className="bg-gray-900/50 border border-white/5 rounded-xl p-4"
+              className="min-w-0 bg-gray-900/50 border border-white/5 rounded-xl p-4"
             >
               <div className="flex items-start justify-between gap-3 mb-4">
                 <UserIdentity user={user} avatarSize="w-12 h-12" />
                 <StatusBadge user={user} />
               </div>
-              <div className="flex items-center justify-between">
+              <div className="flex flex-wrap items-center justify-between gap-3">
                 <div>
                   <p className="text-white/50 text-xs mb-1">Rol actual</p>
                   {getRoleBadge(user.role)}
@@ -655,7 +655,7 @@ function UsersAdmin() {
       <div className="bg-gradient-to-b from-gray-900 to-gray-950 border-b border-white/5">
         <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
-            <div className="flex items-center gap-4">
+            <div className="flex items-center gap-4 min-w-0">
               <Link
                 to="/adm/dashboard"
                 aria-label="Volver al panel"
@@ -663,7 +663,7 @@ function UsersAdmin() {
               >
                 <ArrowLeft className="w-5 h-5" />
               </Link>
-              <div>
+              <div className="min-w-0">
                 <h1 className="text-2xl lg:text-3xl font-bold text-white">
                   Administración de Usuarios
                 </h1>

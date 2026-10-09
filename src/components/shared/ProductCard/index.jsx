@@ -249,12 +249,10 @@ export function ProductCardEmpty({
   message = "Intenta con otros filtros o ingresa otro término de búsqueda.",
 }) {
   return (
-    <div className="col-12">
-      <div className="empty-state">
-        <div className="empty-state-icon">📦</div>
-        <h3 className="empty-state-title">{title}</h3>
-        <p className="empty-state-text">{message}</p>
-      </div>
+    <div className="empty-state">
+      <div className="empty-state-icon">📦</div>
+      <h3 className="empty-state-title">{title}</h3>
+      <p className="empty-state-text">{message}</p>
     </div>
   );
 }

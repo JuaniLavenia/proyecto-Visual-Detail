@@ -164,14 +164,6 @@
     justify-content: center;
   }
 
-  .navbar-collapse {
-    text-align: center;
-  }
-
-  .nav-item {
-    padding-bottom: 0.5rem;
-  }
-
   .badgeCart {
     left: 30px;
     top: 35px;

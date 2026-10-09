@@ -1,6 +1,7 @@
 import PropTypes from "prop-types";
 import { Clock, Check, Close, WhatsApp } from "../../../components/common/Icons";
 import { ORDER_STATUSES } from "../../../lib/orders-api";
+import { formatPrice } from "../../../lib/pricing";
 import { getOrderPhone, getWhatsAppUrl } from "./order-format";
 
 const STATUS_BADGES = {
@@ -18,11 +19,21 @@ const STATUS_BADGES = {
   },
 };
 
+// Legacy lines and orders lack `producto`, `precio` and `total`.
+const productLineShape = PropTypes.shape({
+  producto: PropTypes.oneOfType([PropTypes.string, PropTypes.object]),
+  nombre: PropTypes.string,
+  cantidad: PropTypes.number,
+  precio: PropTypes.number,
+});
+
 const orderShape = PropTypes.shape({
   _id: PropTypes.string.isRequired,
   numeroPedido: PropTypes.oneOfType([PropTypes.number, PropTypes.string]),
   estado: PropTypes.string,
   telefono: PropTypes.string,
+  productos: PropTypes.arrayOf(productLineShape),
+  total: PropTypes.number,
   usuario: PropTypes.shape({
     email: PropTypes.string,
     name: PropTypes.string,
@@ -124,15 +135,22 @@ OrderStatusSelect.propTypes = {
   className: PropTypes.string,
 };
 
+// Unit price per line; legacy orders have no `precio` and show "—".
 export function OrderProducts({ productos, compact }) {
   return (
     <div className={compact ? "max-w-xs" : undefined}>
       {productos?.map((prod, i) => (
         <div
           key={i}
-          className={`text-white/70 text-sm ${compact ? "truncate" : ""}`}
+          className="flex items-baseline justify-between gap-3 text-white/70 text-sm"
         >
-          {prod.cantidad}x {prod.nombre || "Producto"}
+          <span className={`min-w-0 ${compact ? "truncate" : "break-words"}`}>
+            {prod.cantidad}x {prod.nombre || "Producto"}
+          </span>
+          <span className="flex-shrink-0 text-white/50 whitespace-nowrap">
+            {formatPrice(prod.precio)}
+            {typeof prod.precio === "number" && " c/u"}
+          </span>
         </div>
       ))}
     </div>
@@ -140,10 +158,23 @@ export function OrderProducts({ productos, compact }) {
 }
 
 OrderProducts.propTypes = {
-  productos: PropTypes.arrayOf(
-    PropTypes.shape({ nombre: PropTypes.string, cantidad: PropTypes.number }),
-  ),
+  productos: PropTypes.arrayOf(productLineShape),
   compact: PropTypes.bool,
 };
+
+export function OrderTotal({ total }) {
+  const missing = typeof total !== "number";
+  return (
+    <span
+      className={`text-sm whitespace-nowrap ${
+        missing ? "text-white/40" : "text-white font-semibold"
+      }`}
+    >
+      {formatPrice(total)}
+    </span>
+  );
+}
+
+OrderTotal.propTypes = { total: PropTypes.number };
 
 export { orderShape };

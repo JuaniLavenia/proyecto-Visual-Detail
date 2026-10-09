@@ -35,6 +35,7 @@ const ProductModalRoute = lazy(() => import('./pages/ProductDetail'));
 const Cart = lazy(() => import('./pages/Cart'));
 const Favorites = lazy(() => import('./pages/Favorites'));
 const Contact = lazy(() => import('./pages/Contact'));
+const LocationPage = lazy(() => import('./pages/Location'));
 const Profile = lazy(() => import('./pages/Profile'));
 const AdminProducts = lazy(() => import('./pages/admin/Products'));
 const ProductEdit = lazy(() => import('./pages/admin/Products/ProductEdit'));
@@ -125,6 +126,7 @@ function App() {
             <Route path="/carrito" element={<Cart />} />
             <Route path="/favoritos" element={<Favorites />} />
             <Route path="/contactanos" element={<Contact />} />
+            <Route path="/ubicacion" element={<LocationPage />} />
             <Route path="/perfil" element={<Profile />} />
             
             {/* Rutas de Admin */}

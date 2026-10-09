@@ -33,7 +33,7 @@ Home images are hardcoded in `src/pages/Home/index.jsx` (Wix URLs for categories
 - [x] B3 (back) `scripts/backfill-home-taxonomy.js` (`pnpm backfill:home`): dry-run by default, `--apply` writes; sets `showOnHome: true` on active entries that do not have it yet and the 5 category images above when `image` is empty (match names case/accent-insensitively). Idempotent. Pure planning logic under `src/` with tests. README line.
 - [x] F1 (front) Admin taxonomy: image URL input with preview, "Mostrar en la home" switch separate from "Activa", home badge/toggle per row, note on rename that products are updated.
 - [x] F2 (front) Home: fetch `?home=true` lists, keep `_id/slug/image`, DB image first and the bundled brand PNG map only as a fallback; remove the category Wix map; brand cards link to `/productos?brand=<slug>`; stable keys (`_id`).
-- [~] Q1 Tests, build, dry-run + apply of the backfill on the dev DB, browser: admin toggles/images reflected on the home, brand link filters the PLP, rename updates products.
+- [x] Q1 Tests, build, dry-run + apply of the backfill on the dev DB, browser: admin toggles/images reflected on the home, brand link filters the PLP, rename updates products.
 
 ## Checks
 - Backend `pnpm test` (test-first B1-B3). Frontend `pnpm build` + browser. Frozen installs if deps change (none expected).
@@ -52,5 +52,9 @@ Home images are hardcoded in `src/pages/Home/index.jsx` (Wix URLs for categories
 - 2026-10-09: front F1 `0245e06`, F2 `ea9b025`; build OK.
 - 2026-10-09: Q1 (dev DB). Backfill dry-run: brands 6, categories 12 (5 with image); `--apply` wrote them; second run plans 0. API: `?home=true` 6 brands / 12 categories (5 images); plain list unchanged. Home renders 6 `/productos?brand=<slug>` links and the category links. Functional checks with the admin session: brand filter returns only that brand (15 Laffitte); hiding "Otros" removes it from the home list only, showing it again restores it; rename "Laffitte" → "Laffitte QA" moved 15 products and back again; rename to an existing name → 409 TAXONOMY_NAME_TAKEN. Pending: visual check of the admin taxonomy screen and the home (screenshots need the window visible).
 
+- 2026-10-09: Q1 visual. Home: brands carousel and categories grid render with Rubik and the 5 DB category images; clicking the Laffitte card opens `/productos?brand=laffitte` (15 products, active filter chip). Admin taxonomy: "Activa" + "Home" pills per row, thumbnails, edit modal with image URL + preview, order, Activa checkbox and "Mostrar en la home" switch.
+- Finding (local only): the home first rendered with Bootstrap again. Cause: vite-plugin-pwa `devOptions.enabled: true` registered a dev service worker that served a precached pre-8d `index.html` for `/`. Code and the served HTML were clean (curl: 0 matches). Unregistering the SW and clearing caches fixed it. Production uses `registerType: 'autoUpdate'`, so deployed clients update on their own. The 8d home screenshot was affected by the same stale cache.
+- Backlog for 9d: consider `devOptions.enabled: false` (or document clearing the SW) to avoid stale dev renders; icon-only edit/delete buttons in the admin taxonomy rows have no accessible name.
+
 ## Next step
-Visual check, then push + PRs. Deploy order: backend → `pnpm backfill:home -- --apply` on production → front.
+Push + PRs. Deploy order: backend → `pnpm backfill:home -- --apply` on production → front.

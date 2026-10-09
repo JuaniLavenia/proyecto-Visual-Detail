@@ -1,41 +1,32 @@
-import { useEffect, useState } from "react";
+import useSWR from "swr";
 import api from "../../../lib/api";
 import useAuthStore from "../../../stores/useAuthStore";
-import { useUserContext } from "../../../context/UserContext";
 import { Check, Close, Clock } from "../../../components/common/Icons";
 import "./OrdersTab.css";
 
+const ordersFetcher = (url) =>
+  api.get(url).then((res) => res.data.pedidos || []);
+
 const OrdersTab = () => {
-  const { ordersInfo, updateOrders } = useUserContext();
   const { userId } = useAuthStore();
-  const [isLoading, setIsLoading] = useState(false);
-  const [error, setError] = useState("");
+  // Keyed by userId so another user's cached orders can never be shown; SWR
+  // revalidates on every mount, so new orders appear without a reload.
+  const {
+    data: ordersInfo,
+    error: fetchError,
+    isLoading: isFetching,
+    isValidating,
+    mutate,
+  } = useSWR(userId ? `/api/pedidos/${userId}` : null, ordersFetcher);
 
-  const fetchOrders = async () => {
-    if (!userId) {
-      setError("Debes iniciar sesión nuevamente");
-      return;
-    }
-
-    if (ordersInfo && ordersInfo.length > 0) {
-      return; // Ya tenemos datos
-    }
-
-    setIsLoading(true);
-    try {
-      const response = await api.get(`/api/pedidos/${userId}`);
-      updateOrders(response.data.pedidos || []);
-    } catch (err) {
-      console.error("Error fetching orders:", err);
-      setError("No se pudieron cargar los pedidos");
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  useEffect(() => {
-    fetchOrders();
-  }, [userId]);
+  // A retry hides the previous error while the new request is in flight.
+  const isLoading = isFetching || (Boolean(fetchError) && isValidating);
+  const error = !userId
+    ? "Debes iniciar sesión nuevamente"
+    : fetchError
+      ? "No se pudieron cargar los pedidos"
+      : "";
+  const fetchOrders = () => mutate();
 
   const getStatusStyle = (estado) => {
     switch (estado) {

@@ -251,12 +251,13 @@ function Carrito() {
         return;
       }
 
-      const phoneFieldError = error?.errors?.find(
-        (e) => e.path === "telefono",
+      // Validation errors list invalid fields as details: [{ field, message }].
+      const phoneFieldError = error?.details?.find(
+        (d) => d.field === "telefono",
       );
       if (phoneFieldError) {
         setEditingPhone(true);
-        setPhoneError(phoneFieldError.msg || "Teléfono inválido");
+        setPhoneError(phoneFieldError.message || "Teléfono inválido");
         return;
       }
 

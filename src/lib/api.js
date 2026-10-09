@@ -143,6 +143,13 @@ export function handleError(error, customMessages = {}) {
     // cases (e.g. RESET_TOKEN_EXPIRED, MAIL_SEND_FAILED) to friendly copy.
     status: error?.response?.status ?? null,
     code: error?.response?.data?.error?.code ?? null,
+    // The backend's own message, kept even when `message` above was replaced
+    // by a status-based one (e.g. 401 on login).
+    serverMessage: error?.response?.data?.error?.message ?? null,
+    // VALIDATION_ERROR (400) lists each invalid field: [{ field, message }].
+    details: Array.isArray(error?.response?.data?.error?.details)
+      ? error.response.data.error.details
+      : [],
   };
 }
 

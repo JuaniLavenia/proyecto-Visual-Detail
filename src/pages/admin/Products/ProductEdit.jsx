@@ -206,6 +206,7 @@ function ProductoEdit() {
           <div className="flex items-center gap-4 mb-2">
             <Link
               to="/adm/productos"
+              aria-label="Volver a productos"
               className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />

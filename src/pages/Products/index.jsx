@@ -305,6 +305,7 @@ function SearchClean() {
                   </div>
                   <button
                     onClick={() => setIsSidebarOpen(false)}
+                    aria-label="Cerrar filtros"
                     className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors"
                   >
                     <Close className="w-6 h-6" />
@@ -414,6 +415,7 @@ function SearchClean() {
                       <button
                         onClick={() => handlePageChange(page - 1)}
                         disabled={page === 1}
+                        aria-label="Página anterior"
                         className="p-2 rounded-lg bg-white/5 text-white/70 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       >
                         <ChevronLeft className="w-5 h-5" />
@@ -451,6 +453,7 @@ function SearchClean() {
                       <button
                         onClick={() => handlePageChange(page + 1)}
                         disabled={page >= totalPages}
+                        aria-label="Página siguiente"
                         className="p-2 rounded-lg bg-white/5 text-white/70 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                       >
                         <ChevronRight className="w-5 h-5" />

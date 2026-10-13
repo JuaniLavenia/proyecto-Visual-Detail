@@ -274,6 +274,7 @@ function Header() {
                   />
                   <button
                     type="submit"
+                    aria-label="Buscar"
                     className="absolute right-2 top-1/2 -translate-y-1/2 text-white/70 hover:text-yellow-400 transition-colors"
                   >
                     <Search className="w-5 h-5" />
@@ -331,6 +332,8 @@ function Header() {
               {/* Mobile Menu Button */}
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+                aria-label={mobileMenuOpen ? "Cerrar menú" : "Abrir menú"}
+                aria-expanded={mobileMenuOpen}
                 className="lg:hidden p-2.5 text-white/80 hover:text-white hover:bg-white/10 rounded-full transition-all"
               >
                 {mobileMenuOpen ? (

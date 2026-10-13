@@ -94,6 +94,7 @@ function TaxonomyFormModal({ mode, initialValues, onCancel, onSubmit, saving }) 
           <button
             type="button"
             onClick={onCancel}
+            aria-label="Cerrar"
             className="p-1 text-white/50 hover:text-white rounded-lg transition-colors"
           >
             <Close className="w-5 h-5" />
@@ -380,6 +381,8 @@ function TaxonomyManager({ title, basePath, icon: Icon }) {
                 <button
                   type="button"
                   onClick={() => setModal({ mode: "edit", item })}
+                  aria-label={`Editar ${item.name}`}
+                  title="Editar"
                   className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
                 >
                   <Edit className="w-4 h-4" />
@@ -387,6 +390,8 @@ function TaxonomyManager({ title, basePath, icon: Icon }) {
                 <button
                   type="button"
                   onClick={() => handleDelete(item)}
+                  aria-label={`Eliminar ${item.name}`}
+                  title="Eliminar"
                   className="p-2 text-white/50 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                 >
                   <Trash className="w-4 h-4" />
@@ -418,6 +423,7 @@ function TaxonomyAdmin() {
           <div className="flex items-center gap-4">
             <Link
               to="/adm/dashboard"
+              aria-label="Volver al panel"
               className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />

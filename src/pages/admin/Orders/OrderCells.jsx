@@ -143,7 +143,7 @@ export function OrderProducts({ productos, compact }) {
     <div className={compact ? "max-w-xs" : undefined}>
       {productos?.map((prod, i) => (
         <div
-          key={i}
+          key={prod._id ?? i}
           className="flex items-baseline justify-between gap-3 text-white/70 text-sm"
         >
           <span className={`min-w-0 ${compact ? "truncate" : "break-words"}`}>

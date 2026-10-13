@@ -177,7 +177,7 @@ const OrdersTab = () => {
               <p className="text-white/50 text-sm font-medium">Productos:</p>
               {order.productos?.map((producto, index) => (
                 <div
-                  key={index}
+                  key={producto._id ?? index}
                   className="flex items-center justify-between gap-3 py-2 px-3 bg-gray-900/30 rounded-lg"
                 >
                   <div className="min-w-0">

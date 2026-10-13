@@ -54,6 +54,8 @@ npm run build        # Build de producción
 npm run preview      # Preview del build de producción
 ```
 
+El service worker de la PWA no se registra en desarrollo (`devOptions.enabled: false` en `vite.config.js`). Para probar la PWA usá `pnpm build && pnpm preview`. Si en `localhost:5173` quedó un service worker de antes que sirve una versión vieja: DevTools → Application → Service Workers → Unregister.
+
 ### Variables de entorno
 
 No requiere variables de entorno propias. La autenticación se maneja mediante JWT guardado en `localStorage` a través del store de Zustand.
@@ -70,11 +72,12 @@ El carrito y los favoritos viven en el **backend** (MongoDB), pero el frontend m
 
 ```
 Accion del usuario
-    → POST al backend (autoridad)
-    → GET al backend (trae estado completo)
+    → POST/DELETE al backend (autoridad), que responde la lista actualizada
     → syncFromBackend() → actualiza Zustand
     → UI re-renderiza con datos reales
 ```
+
+Todas las llamadas de carrito y favoritos pasan por `src/lib/cart-favorites-api.js` (un request por operación).
 
 ### API Response Format
 
@@ -102,6 +105,8 @@ El fetcher de SWR ya está configurado para extraer `res.data.data`.
 | `/login`         | Inicio de sesión                |
 | `/perfil`        | Perfil del usuario              |
 | `/adm/*`         | Panel de administración         |
+
+Los guards están en `src/components/routing/RouteGuards.jsx`: `/carrito`, `/favoritos` y `/perfil` piden sesión (si no, `/login`); `/adm/*` pide sesión de admin (sin sesión → `/login`, usuario sin rol admin → `/`).
 
 ## Sistema de diseño
 

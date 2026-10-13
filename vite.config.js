@@ -66,9 +66,10 @@ export default defineConfig({
           },
         ],
       },
-      // No mostrar prompts automáticamente (usar manualmente si se quiere)
+      // No service worker in development: a dev SW kept serving a stale index.html.
+      // Test the PWA with `pnpm build && pnpm preview`.
       devOptions: {
-        enabled: true,
+        enabled: false,
       },
     }),
   ],

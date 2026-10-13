@@ -17,6 +17,34 @@ import {
 } from "../../../components/common/Icons";
 import "./index.css";
 
+const productImageUrl = (image) => {
+  if (!image) return null;
+  return image.startsWith("http") ? image : `${API_BASE}/img/productos/${image}`;
+};
+
+// Thumbnail that shows the placeholder icon when the product has no image or
+// the URL fails to load. Callers key it by src so a new URL retries.
+function ProductThumb({ src, alt, className }) {
+  const [failed, setFailed] = useState(false);
+
+  if (!src || failed) {
+    return (
+      <div className={`${className} bg-gray-800 flex items-center justify-center`}>
+        <Package className="w-1/2 h-1/2 text-white/20" />
+      </div>
+    );
+  }
+
+  return (
+    <img
+      src={src}
+      alt={alt}
+      onError={() => setFailed(true)}
+      className={`${className} object-cover`}
+    />
+  );
+}
+
 function AdminProducto() {
   const token = useAuthStore((state) => state.token);
   const isAdmin = useAuthStore((state) => state.isAdmin);
@@ -392,36 +420,12 @@ function AdminProducto() {
                         style={{ animationDelay: `${index * 0.03}s` }}
                       >
                         <td className="px-4 py-3.5">
-                          <div className="relative">
-                            <img
-                              src={
-                                product.image?.startsWith("http")
-                                  ? product.image
-                                  : `${API_BASE}/img/productos/${product.image}`
-                              }
-                              alt={product.name}
-                              className="w-12 h-12 object-cover rounded-lg ring-1 ring-white/10 group-hover:ring-yellow-500/30 transition-all"
-                              onError={(e) => {
-                                e.target.style.display = "none";
-                                e.target.nextSibling.style.display = "flex";
-                              }}
-                            />
-                            <div className="w-12 h-12 bg-gray-800 rounded-lg hidden items-center justify-center">
-                              <svg
-                                className="w-6 h-6 text-white/20"
-                                fill="none"
-                                viewBox="0 0 24 24"
-                                stroke="white"
-                              >
-                                <path
-                                  strokeLinecap="round"
-                                  strokeLinejoin="round"
-                                  strokeWidth={1}
-                                  d="M20 7l-8-4-8 4m16 0l-8 4m8-4v10l-8 4m0-10L4 7m8 4v10M4 7v10l8 4"
-                                />
-                              </svg>
-                            </div>
-                          </div>
+                          <ProductThumb
+                            key={product.image || "none"}
+                            src={productImageUrl(product.image)}
+                            alt={product.name}
+                            className="w-12 h-12 rounded-lg ring-1 ring-white/10 group-hover:ring-yellow-500/30 transition-all"
+                          />
                         </td>
                         <td className="px-4 py-3.5">
                           <div className="max-w-xs">
@@ -485,6 +489,7 @@ function AdminProducto() {
                               to={`/adm/productos/edit/${product._id}`}
                               className="p-2 text-yellow-400/70 hover:text-yellow-400 hover:bg-yellow-500/10 rounded-lg transition-all"
                               title="Editar"
+                              aria-label={`Editar ${product.name}`}
                             >
                               <Edit className="w-4.5 h-4.5" />
                             </Link>
@@ -492,6 +497,7 @@ function AdminProducto() {
                               onClick={() => destroy(product._id)}
                               className="p-2 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-all"
                               title="Eliminar"
+                              aria-label={`Eliminar ${product.name}`}
                             >
                               <Delete className="w-4.5 h-4.5" />
                             </button>
@@ -512,14 +518,11 @@ function AdminProducto() {
                   className="min-w-0 bg-gray-900/50 border border-white/5 rounded-xl p-4"
                 >
                   <div className="flex gap-4">
-                    <img
-                      src={
-                        product.image?.startsWith("http")
-                          ? product.image
-                          : `${API_BASE}/img/productos/${product.image}`
-                      }
+                    <ProductThumb
+                      key={product.image || "none"}
+                      src={productImageUrl(product.image)}
                       alt={product.name}
-                      className="w-20 h-20 flex-shrink-0 object-cover rounded-lg"
+                      className="w-20 h-20 flex-shrink-0 rounded-lg"
                     />
                     <div className="flex-1 min-w-0">
                       <h3 className="text-white font-medium truncate">

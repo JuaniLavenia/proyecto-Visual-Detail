@@ -1,5 +1,5 @@
 import { useState, useEffect, useRef } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import useSWR, { mutate } from "swr";
 import api, { fetcher, API_BASE } from "../../../lib/api";
 import Swal from "sweetalert2";
@@ -18,8 +18,8 @@ import {
 import "./index.css";
 
 function AdminProducto() {
-  const navigate = useNavigate();
-  const { token, userId, isAdmin } = useAuthStore();
+  const token = useAuthStore((state) => state.token);
+  const isAdmin = useAuthStore((state) => state.isAdmin);
   const [currentPage, setCurrentPage] = useState(1);
   const [currentSize, setCurrentSize] = useState(12);
   const [search, setSearch] = useState("");
@@ -28,13 +28,6 @@ function AdminProducto() {
   const [isUploading, setIsUploading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
   const fileInputRef = useRef();
-
-  // Validar acceso admin
-  useEffect(() => {
-    if (!token || !isAdmin) {
-      navigate("/login");
-    }
-  }, [token, isAdmin, navigate]);
 
   // Build key de request: la búsqueda va como query param y pagina igual
   const getKey = () => {
@@ -205,10 +198,6 @@ function AdminProducto() {
       setIsExporting(false);
     }
   };
-
-  if (!token || !isAdmin) {
-    return null;
-  }
 
   return (
     <div className="min-h-screen bg-gray-950 pt-20 lg:pt-24 pb-12">

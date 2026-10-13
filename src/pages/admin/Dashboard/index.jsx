@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import api from "../../../lib/api";
 import Swal from "sweetalert2";
 import useAuthStore from "../../../stores/useAuthStore";
@@ -17,19 +17,12 @@ import {
 import "../Products/index.css";
 
 function AdminDashboard() {
-  const navigate = useNavigate();
-  const { token, isAdmin } = useAuthStore();
+  const token = useAuthStore((state) => state.token);
+  const isAdmin = useAuthStore((state) => state.isAdmin);
 
   const [stats, setStats] = useState(null);
   const [recentOrders, setRecentOrders] = useState([]);
   const [loading, setLoading] = useState(true);
-
-  // Validar acceso admin
-  useEffect(() => {
-    if (!token || !isAdmin) {
-      navigate("/login");
-    }
-  }, [token, isAdmin, navigate]);
 
   // Fetch dashboard data
   useEffect(() => {

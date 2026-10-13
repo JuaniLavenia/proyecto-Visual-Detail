@@ -19,7 +19,7 @@ function CardProductos({
   brand,
   precioMayorista,
 }) {
-  const { role } = useAuthStore();
+  const role = useAuthStore((state) => state.role);
   const navigate = useNavigate();
   const location = useLocation();
   const [imageError, setImageError] = useState(false);

@@ -16,7 +16,8 @@ import useAuthStore from '../stores/useAuthStore';
  * @returns {object} Funciones y estados para manipular el carrito y favoritos
  */
 export function useProductActions(useOptimistic = true) {
-  const { userId, token } = useAuthStore();
+  const userId = useAuthStore((state) => state.userId);
+  const isLoggedIn = useAuthStore((state) => Boolean(state.token));
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
   
@@ -26,8 +27,8 @@ export function useProductActions(useOptimistic = true) {
 
   // Check si el usuario está autenticado
   const requireAuth = useCallback(() => {
-    return !!(token && userId);
-  }, [token, userId]);
+    return !!(isLoggedIn && userId);
+  }, [isLoggedIn, userId]);
 
   // Agregar al carrito con optimistic update ( opcional)
   const addToCart = useCallback(async (product) => {

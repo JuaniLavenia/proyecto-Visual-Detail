@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import { API_BASE } from "../../lib/api";
 import {
   fetchFavoriteProducts,
@@ -23,8 +23,8 @@ import {
 import "./index.css";
 
 function Favoritos() {
-  const { userId, token } = useAuthStore();
-  const navigate = useNavigate();
+  const userId = useAuthStore((state) => state.userId);
+  const isLoggedIn = useAuthStore((state) => Boolean(state.token));
   const [favorites, setFavorites] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [imageErrors, setImageErrors] = useState({});
@@ -41,11 +41,8 @@ function Favoritos() {
     }
   };
 
+  // AuthRoute only renders this page with a session
   useEffect(() => {
-    if (!token || !userId) {
-      navigate("/login");
-      return;
-    }
     fetchFavorites();
   }, []);
 
@@ -94,7 +91,7 @@ function Favoritos() {
   };
 
   const handleAddToCart = async (product) => {
-    if (!token) {
+    if (!isLoggedIn) {
       Swal.fire({
         position: "center",
         icon: "info",

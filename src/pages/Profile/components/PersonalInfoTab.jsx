@@ -55,7 +55,9 @@ InfoRow.propTypes = {
 };
 
 const PersonalInfoTab = () => {
-  const { userId, logoutWithApi, setUserPhone } = useAuthStore();
+  const userId = useAuthStore((state) => state.userId);
+  const logoutWithApi = useAuthStore((state) => state.logoutWithApi);
+  const setUserPhone = useAuthStore((state) => state.setUserPhone);
   // Keyed by userId so another user's cached data can never be shown; SWR
   // revalidates on every mount, so profile changes show up.
   const {

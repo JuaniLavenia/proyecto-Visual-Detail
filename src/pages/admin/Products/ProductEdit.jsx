@@ -2,7 +2,6 @@ import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import api from "../../../lib/api";
 import Swal from "sweetalert2";
-import useAuthStore from "../../../stores/useAuthStore";
 import useTaxonomyOptions from "../../../hooks/useTaxonomyOptions";
 import {
   ArrowLeft,
@@ -16,7 +15,6 @@ import "./index.css";
 function ProductoEdit() {
   const { id } = useParams();
   const navigate = useNavigate();
-  const { token, isAdmin } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
   const {
@@ -65,12 +63,6 @@ function ProductoEdit() {
     }
     return activeCategories;
   }, [activeCategories, formData.category]);
-
-  // Validar acceso admin
-  if (!token || !isAdmin) {
-    navigate("/login");
-    return null;
-  }
 
   // Fetch producto
   useEffect(() => {

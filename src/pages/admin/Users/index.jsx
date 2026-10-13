@@ -119,7 +119,9 @@ function UserIdentity({ user, avatarSize = "w-10 h-10" }) {
 }
 
 function UsersAdmin() {
-  const { token, isAdmin, userId } = useAuthStore();
+  const token = useAuthStore((state) => state.token);
+  const isAdmin = useAuthStore((state) => state.isAdmin);
+  const userId = useAuthStore((state) => state.userId);
 
   const [users, setUsers] = useState([]);
   const [pagination, setPagination] = useState(null);

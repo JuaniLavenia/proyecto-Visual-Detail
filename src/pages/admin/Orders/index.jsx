@@ -23,7 +23,8 @@ import {
 import "../Products/index.css";
 
 function AdminOrders() {
-  const { token, isAdmin } = useAuthStore();
+  const token = useAuthStore((state) => state.token);
+  const isAdmin = useAuthStore((state) => state.isAdmin);
 
   const [orders, setOrders] = useState([]);
   const [total, setTotal] = useState(null);

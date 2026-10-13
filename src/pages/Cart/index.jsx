@@ -29,13 +29,10 @@ import {
 import "./index.css";
 
 function Carrito() {
-  const {
-    userId,
-    token,
-    role,
-    phone: storedPhone,
-    setUserPhone,
-  } = useAuthStore();
+  const userId = useAuthStore((state) => state.userId);
+  const role = useAuthStore((state) => state.role);
+  const storedPhone = useAuthStore((state) => state.phone);
+  const setUserPhone = useAuthStore((state) => state.setUserPhone);
   const navigate = useNavigate();
   const [cartItems, setCartItems] = useState([]);
   const [isLoading, setIsLoading] = useState(false);

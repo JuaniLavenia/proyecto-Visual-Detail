@@ -21,7 +21,7 @@ const lineSubtotal = (producto) =>
     : undefined;
 
 const OrdersTab = () => {
-  const { userId } = useAuthStore();
+  const userId = useAuthStore((state) => state.userId);
   // Keyed by userId so another user's cached orders can never be shown; SWR
   // revalidates on every mount, so new orders appear without a reload.
   const {

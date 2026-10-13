@@ -17,7 +17,8 @@ import {
 import "../Products/index.css";
 
 function AdminDashboard() {
-  const { token, isAdmin } = useAuthStore();
+  const token = useAuthStore((state) => state.token);
+  const isAdmin = useAuthStore((state) => state.isAdmin);
 
   const [stats, setStats] = useState(null);
   const [recentOrders, setRecentOrders] = useState([]);

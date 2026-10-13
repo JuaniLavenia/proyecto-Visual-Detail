@@ -23,7 +23,8 @@ import {
 import "./index.css";
 
 function Favoritos() {
-  const { userId, token } = useAuthStore();
+  const userId = useAuthStore((state) => state.userId);
+  const isLoggedIn = useAuthStore((state) => Boolean(state.token));
   const [favorites, setFavorites] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
   const [imageErrors, setImageErrors] = useState({});
@@ -90,7 +91,7 @@ function Favoritos() {
   };
 
   const handleAddToCart = async (product) => {
-    if (!token) {
+    if (!isLoggedIn) {
       Swal.fire({
         position: "center",
         icon: "info",

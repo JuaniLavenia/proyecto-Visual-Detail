@@ -43,7 +43,7 @@ function getFieldErrors(err, formData) {
 }
 
 function Login() {
-  const { login } = useAuthStore();
+  const login = useAuthStore((state) => state.login);
   const navigate = useNavigate();
   const [isLoading, setIsLoading] = useState(false);
   const [isLoginForm, setIsLoginForm] = useState(true);

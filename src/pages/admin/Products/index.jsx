@@ -18,7 +18,8 @@ import {
 import "./index.css";
 
 function AdminProducto() {
-  const { token, userId, isAdmin } = useAuthStore();
+  const token = useAuthStore((state) => state.token);
+  const isAdmin = useAuthStore((state) => state.isAdmin);
   const [currentPage, setCurrentPage] = useState(1);
   const [currentSize, setCurrentSize] = useState(12);
   const [search, setSearch] = useState("");

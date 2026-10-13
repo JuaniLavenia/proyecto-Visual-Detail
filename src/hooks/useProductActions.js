@@ -1,5 +1,9 @@
 import { useState, useCallback } from 'react';
-import api from '../lib/api';
+import {
+  setCartProductQuantity,
+  addFavoriteProduct,
+  removeFavoriteProduct,
+} from '../lib/cart-favorites-api';
 import useCartStore from '../stores/useCartStore';
 import useFavoritesStore from '../stores/useFavoritesStore';
 import useAuthStore from '../stores/useAuthStore';
@@ -15,13 +19,10 @@ export function useProductActions(useOptimistic = true) {
   const { userId, token } = useAuthStore();
   const [isAddingToCart, setIsAddingToCart] = useState(false);
   const [isTogglingFavorite, setIsTogglingFavorite] = useState(false);
-  const [isRemovingFromCart, setIsRemovingFromCart] = useState(false);
   
   // Store getters
   const cartItems = useCartStore((state) => state.items);
   const favoriteItems = useFavoritesStore((state) => state.items);
-  const syncCartFromBackend = useCartStore((state) => state.syncFromBackend);
-  const syncFavoritesFromBackend = useFavoritesStore((state) => state.syncFromBackend);
 
   // Check si el usuario está autenticado
   const requireAuth = useCallback(() => {
@@ -44,17 +45,8 @@ export function useProductActions(useOptimistic = true) {
         cartStore.addItem(product);
       }
 
-      // API call
-      await api.post('/api/cart', {
-        userId,
-        productId,
-        quantity: 1,
-      });
-
-      // Sync completo desde backend para mantener consistencia
-      const res = await api.get(`/api/cart/${userId}`);
-      const backendItems = res.data.data.products || [];
-      syncCartFromBackend(backendItems);
+      // API call: the response carries the updated cart and syncs the store
+      await setCartProductQuantity(productId, 1);
 
       return { success: true };
     } catch (error) {
@@ -69,36 +61,7 @@ export function useProductActions(useOptimistic = true) {
     } finally {
       setIsAddingToCart(false);
     }
-  }, [userId, requireAuth, syncCartFromBackend, useOptimistic, isAddingToCart]);
-
-  // Remover del carrito
-  const removeFromCart = useCallback(async (productId) => {
-    if (!requireAuth()) return { success: false, needsAuth: true };
-    
-    if (isRemovingFromCart) return { success: false, loading: true };
-    setIsRemovingFromCart(true);
-
-    try {
-      // Optimistic remove
-      if (useOptimistic) {
-        const cartStore = useCartStore.getState();
-        cartStore.removeItem(productId);
-      }
-
-      await api.delete(`/api/cart/${userId}/${productId}`);
-
-      // Sync desde backend
-      const res = await api.get(`/api/cart/${userId}`);
-      syncCartFromBackend(res.data.data.products || []);
-
-      return { success: true };
-    } catch (error) {
-      console.error('Error removing from cart:', error);
-      return { success: false, error };
-    } finally {
-      setIsRemovingFromCart(false);
-    }
-  }, [userId, requireAuth, syncCartFromBackend, useOptimistic, isRemovingFromCart]);
+  }, [requireAuth, useOptimistic, isAddingToCart]);
 
   // Toggle favorito
   const toggleFavorite = useCallback(async (product) => {
@@ -121,20 +84,13 @@ export function useProductActions(useOptimistic = true) {
         }
       }
 
-      // POST only adds (400 if already there); removing needs the DELETE route
+      // POST only adds (400 if already there); removing needs the DELETE route.
+      // Either response carries the updated favorites and syncs the store.
       if (isFavorite) {
-        await api.delete(`/api/favorites/${userId}/${productId}`);
+        await removeFavoriteProduct(userId, productId);
       } else {
-        await api.post('/api/favorites', {
-          userId,
-          productId,
-        });
+        await addFavoriteProduct(productId);
       }
-
-      // Sync desde backend
-      const res = await api.get(`/api/favorites/${userId}`);
-      const backendItems = res.data.data.products || [];
-      syncFavoritesFromBackend(backendItems);
 
       return { success: true, wasAdded: !isFavorite };
     } catch (error) {
@@ -153,43 +109,7 @@ export function useProductActions(useOptimistic = true) {
     } finally {
       setIsTogglingFavorite(false);
     }
-  }, [userId, requireAuth, favoriteItems, syncFavoritesFromBackend, useOptimistic, isTogglingFavorite]);
-
-  // Actualizar cantidad en carrito
-  const updateCartQuantity = useCallback(async (productId, quantity) => {
-    if (!requireAuth()) return { success: false, needsAuth: true };
-
-    if (quantity <= 0) {
-      return removeFromCart(productId);
-    }
-
-    const cartStore = useCartStore.getState();
-    const existingItem = cartStore.items.find(i => (i._id || i.id) === productId);
-    
-    if (!existingItem) return { success: false, notFound: true };
-
-    try {
-      // Optimistic update
-      if (useOptimistic) {
-        cartStore.updateQuantity(productId, quantity);
-      }
-
-      await api.post('/api/cart', {
-        userId,
-        productId,
-        quantity,
-      });
-
-      // Sync
-      const res = await api.get(`/api/cart/${userId}`);
-      syncCartFromBackend(res.data.data.products || []);
-
-      return { success: true };
-    } catch (error) {
-      console.error('Error updating quantity:', error);
-      return { success: false, error };
-    }
-  }, [userId, requireAuth, removeFromCart, syncCartFromBackend, useOptimistic]);
+  }, [userId, requireAuth, favoriteItems, useOptimistic, isTogglingFavorite]);
 
   // Helpers para UI
   const isInCart = useCallback((productId) => {
@@ -209,14 +129,11 @@ export function useProductActions(useOptimistic = true) {
     // Estados de carga
     isAddingToCart,
     isTogglingFavorite,
-    isRemovingFromCart,
-    isLoading: isAddingToCart || isTogglingFavorite || isRemovingFromCart,
+    isLoading: isAddingToCart || isTogglingFavorite,
     
     // Acciones
     addToCart,
-    removeFromCart,
     toggleFavorite,
-    updateCartQuantity,
     
     // Helpers
     isInCart,

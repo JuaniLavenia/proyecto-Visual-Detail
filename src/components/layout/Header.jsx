@@ -3,7 +3,10 @@ import { useEffect, useState, useRef } from "react";
 import useAuthStore from "../../stores/useAuthStore";
 import useCartStore from "../../stores/useCartStore";
 import useFavoritesStore from "../../stores/useFavoritesStore";
-import api from "../../lib/api";
+import {
+  fetchCartProducts,
+  fetchFavoriteProducts,
+} from "../../lib/cart-favorites-api";
 import Swal from "sweetalert2";
 import visual from "../../assets/img/visual.png";
 import {
@@ -80,16 +83,9 @@ function NavLink({ to, icon, children, onClick, external, badge }) {
 
 function Header() {
   const { userId, token, logoutWithApi, isAdmin } = useAuthStore();
-  const {
-    items: cartItems,
-    syncFromBackend: syncCartFromBackend,
-    clearCart: clearCartStore,
-  } = useCartStore();
-  const {
-    items: favoriteItems,
-    syncFromBackend: syncFavoritesFromBackend,
-    clearFavorites: clearFavoritesStore,
-  } = useFavoritesStore();
+  const { items: cartItems, clearCart: clearCartStore } = useCartStore();
+  const { items: favoriteItems, clearFavorites: clearFavoritesStore } =
+    useFavoritesStore();
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
@@ -144,19 +140,13 @@ function Header() {
   // Sync cart and favorites from backend on mount and when token changes
   useEffect(() => {
     if (token && userId) {
+      // Each helper syncs its own store
       Promise.all([
-        api.get(`/api/cart/${userId}`),
-        api.get(`/api/favorites/${userId}`),
-      ])
-        .then(([cartRes, favRes]) => {
-          const cartBackendItems = cartRes.data.data.products || [];
-          const favBackendItems = favRes.data.data.products || [];
-          syncCartFromBackend(cartBackendItems);
-          syncFavoritesFromBackend(favBackendItems);
-        })
-        .catch(() => {});
+        fetchCartProducts(userId),
+        fetchFavoriteProducts(userId),
+      ]).catch(() => {});
     }
-  }, [token, userId, syncCartFromBackend, syncFavoritesFromBackend]);
+  }, [token, userId]);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300">

@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import api, { API_BASE } from "../../lib/api";
+import { API_BASE } from "../../lib/api";
+import {
+  fetchFavoriteProducts,
+  removeFavoriteProduct,
+  setCartProductQuantity,
+} from "../../lib/cart-favorites-api";
 import Swal from "sweetalert2";
 import useAuthStore from "../../stores/useAuthStore";
-import useFavoritesStore from "../../stores/useFavoritesStore";
-import useCartStore from "../../stores/useCartStore";
 import {
   Heart,
   Trash,
@@ -29,12 +32,8 @@ function Favoritos() {
 
   const fetchFavorites = async () => {
     try {
-      const response = await api.get(`/api/favorites/${userId}`);
-      const favItems = response.data.data.products || [];
-      setFavorites(favItems);
-
-      // Sync Zustand
-      useFavoritesStore.getState().syncFromBackend(favItems);
+      // Also syncs the Zustand store
+      setFavorites(await fetchFavoriteProducts(userId));
     } catch (error) {
       console.error("Error fetching favorites:", error);
     } finally {
@@ -73,13 +72,8 @@ function Favoritos() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await api.delete(`/api/favorites/${userId}/${product._id}`);
-
-          // Sync Zustand
-          const res = await api.get(`/api/favorites/${userId}`);
-          useFavoritesStore
-            .getState()
-            .syncFromBackend(res.data.data.products || []);
+          // The response is the updated list; it also syncs the Zustand store
+          setFavorites(await removeFavoriteProduct(userId, product._id));
 
           Swal.fire({
             icon: "success",
@@ -87,8 +81,6 @@ function Favoritos() {
             showConfirmButton: false,
             timer: 1500,
           });
-
-          fetchFavorites();
         } catch (error) {
           console.error("Error removing favorite:", error);
           Swal.fire({
@@ -114,15 +106,8 @@ function Favoritos() {
     }
 
     try {
-      await api.post(`/api/cart`, {
-        userId,
-        productId: product._id,
-        quantity: 1,
-      });
-
-      // Sync Zustand
-      const res = await api.get(`/api/cart/${userId}`);
-      useCartStore.getState().syncFromBackend(res.data.data.products || []);
+      // Also syncs the Zustand cart store
+      await setCartProductQuantity(product._id, 1);
 
       Swal.fire({
         position: "center",

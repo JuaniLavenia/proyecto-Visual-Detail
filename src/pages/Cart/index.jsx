@@ -1,9 +1,13 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useAuthStore from "../../stores/useAuthStore";
-import useCartStore from "../../stores/useCartStore";
 import api, { API_BASE } from "../../lib/api";
 import { createOrder, normalizePhone } from "../../lib/orders-api";
+import {
+  fetchCartProducts,
+  removeCartProduct,
+  setCartProductQuantity,
+} from "../../lib/cart-favorites-api";
 import { getUnitPrice } from "../../lib/pricing";
 import Swal from "sweetalert2";
 import CheckoutPhoneField from "./CheckoutPhoneField";
@@ -33,7 +37,6 @@ function Carrito() {
     setUserPhone,
   } = useAuthStore();
   const navigate = useNavigate();
-  const { syncFromBackend: syncCartFromBackend } = useCartStore();
   const [cartItems, setCartItems] = useState([]);
   const [isLoading, setIsLoading] = useState(false);
   const [isFetching, setIsFetching] = useState(true);
@@ -90,12 +93,8 @@ function Carrito() {
 
   const fetchCartItems = async () => {
     try {
-      const response = await api.get(`/api/cart/${userId}`);
-      const items = response.data.data.products || [];
-      setCartItems(items);
-
-      // Sync Zustand store for badge consistency
-      syncCartFromBackend(items);
+      // Also syncs the Zustand store for badge consistency
+      setCartItems(await fetchCartProducts(userId));
     } catch (error) {
       console.error("Error fetching cart items:", error);
     } finally {
@@ -134,11 +133,8 @@ function Carrito() {
     }).then(async (result) => {
       if (result.isConfirmed) {
         try {
-          await api.delete(`/api/cart/${userId}/${product._id}`);
-
-          // Sync Zustand store for badge update
-          const res = await api.get(`/api/cart/${userId}`);
-          syncCartFromBackend(res.data.data.products || []);
+          // Also syncs the Zustand store for badge update
+          await removeCartProduct(userId, product._id);
 
           // Update local state
           setCartItems((prev) =>
@@ -177,15 +173,8 @@ function Carrito() {
     }
 
     try {
-      await api.post("/api/cart", {
-        userId,
-        productId: item.product._id,
-        quantity: value,
-      });
-
-      // Sync Zustand store for badge update
-      const res = await api.get(`/api/cart/${userId}`);
-      syncCartFromBackend(res.data.data.products || []);
+      // Also syncs the Zustand store for badge update
+      await setCartProductQuantity(item.product._id, value);
     } catch (error) {
       console.error("Error updating quantity:", error);
     }

@@ -30,62 +30,51 @@ import {
   Tag,
 } from "../common/Icons";
 
-function NavLink({ to, icon, children, onClick, external, badge }) {
-  const navigate = useNavigate();
+const NAV_ITEM_CLASS =
+  "flex items-center px-4 py-2.5 text-white no-underline hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 cursor-pointer";
 
-  const content = (
+function NavItemContent({ icon, children }) {
+  return (
     <>
       <span className="flex-shrink-0">{icon}</span>
       <span className="ml-2 font-medium">{children}</span>
-      {badge && (
-        <span className="ml-auto bg-red-500 text-white text-xs font-bold px-2 py-0.5 rounded-full">
-          {badge}
-        </span>
-      )}
     </>
   );
+}
 
-  const baseClass =
-    "flex items-center px-4 py-2.5 text-white no-underline hover:text-white hover:bg-white/10 rounded-xl transition-all duration-200 cursor-pointer";
-
-  const handleClick = (e) => {
-    // If external link, let browser handle it
-    if (external) return;
-
-    // Close menu first, then navigate
-    if (onClick) {
-      onClick();
-    }
-    // Navigate to the new page
-    navigate(to);
-  };
-
-  if (external) {
-    return (
-      <a
-        href={to}
-        target="_blank"
-        rel="noopener noreferrer"
-        className={baseClass}
-        onClick={onClick}
-      >
-        {content}
-      </a>
-    );
-  }
-
+// Navigation entry: a real link, so it can be opened in a new tab.
+function NavItem({ to, icon, children, onClick }) {
   return (
-    <div className={baseClass} onClick={handleClick}>
-      {content}
-    </div>
+    <Link to={to} className={NAV_ITEM_CLASS} onClick={onClick}>
+      <NavItemContent icon={icon}>{children}</NavItemContent>
+    </Link>
+  );
+}
+
+// Action entry styled like a navigation item (e.g. logging out).
+function NavButton({ icon, children, onClick, className = "" }) {
+  return (
+    <button
+      type="button"
+      className={`${NAV_ITEM_CLASS} ${className}`.trim()}
+      onClick={onClick}
+    >
+      <NavItemContent icon={icon}>{children}</NavItemContent>
+    </button>
   );
 }
 
 function Header() {
-  const { userId, token, logoutWithApi, isAdmin } = useAuthStore();
-  const { items: cartItems, clearCart: clearCartStore } = useCartStore();
-  const { items: favoriteItems, clearFavorites: clearFavoritesStore } =
-    useFavoritesStore();
+  const userId = useAuthStore((state) => state.userId);
+  const isLoggedIn = useAuthStore((state) => Boolean(state.token));
+  const isAdmin = useAuthStore((state) => state.isAdmin);
+  const logoutWithApi = useAuthStore((state) => state.logoutWithApi);
+  const cartItems = useCartStore((state) => state.items);
+  const clearCartStore = useCartStore((state) => state.clearCart);
+  const favoriteItems = useFavoritesStore((state) => state.items);
+  const clearFavoritesStore = useFavoritesStore(
+    (state) => state.clearFavorites,
+  );
 
   const [searchTerm, setSearchTerm] = useState("");
   const [isScrolled, setIsScrolled] = useState(false);
@@ -137,16 +126,18 @@ function Header() {
     return () => document.removeEventListener("mousedown", handleClickOutside);
   }, []);
 
-  // Sync cart and favorites from backend on mount and when token changes
+  // Sync cart and favorites from backend on login, logout and user switch.
+  // Depends on whether there is a session, not on the token value, so a
+  // token rotation does not refetch.
   useEffect(() => {
-    if (token && userId) {
+    if (isLoggedIn && userId) {
       // Each helper syncs its own store
       Promise.all([
         fetchCartProducts(userId),
         fetchFavoriteProducts(userId),
       ]).catch(() => {});
     }
-  }, [token, userId]);
+  }, [userId, isLoggedIn]);
 
   return (
     <header className="fixed top-0 left-0 right-0 z-50 transition-all duration-300">
@@ -175,28 +166,30 @@ function Header() {
 
             {/* Desktop Navigation - Center */}
             <div className="hidden lg:flex items-center space-x-1">
-              <NavLink to="/" icon={<Home className="w-6 h-6" />}>
+              <NavItem to="/" icon={<Home className="w-6 h-6" />}>
                 Inicio
-              </NavLink>
-              <NavLink to="/productos" icon={<Grid className="w-6 h-6" />}>
+              </NavItem>
+              <NavItem to="/productos" icon={<Grid className="w-6 h-6" />}>
                 Productos
-              </NavLink>
-              <NavLink to="/ubicacion" icon={<Location className="w-6 h-6" />}>
+              </NavItem>
+              <NavItem to="/ubicacion" icon={<Location className="w-6 h-6" />}>
                 Ubicación
-              </NavLink>
-              <NavLink to="/contactanos" icon={<Contact className="w-6 h-6" />}>
+              </NavItem>
+              <NavItem to="/contactanos" icon={<Contact className="w-6 h-6" />}>
                 Contacto
-              </NavLink>
+              </NavItem>
 
-              {token ? (
+              {isLoggedIn ? (
                 <>
-                  <NavLink
-                    to="/"
-                    onClick={handleLogout}
+                  <NavButton
+                    onClick={() => {
+                      handleLogout();
+                      navigate("/");
+                    }}
                     icon={<Logout className="w-6 h-6" />}
                   >
                     Cerrar Sesión
-                  </NavLink>
+                  </NavButton>
                   {isAdmin && (
                     <div className="relative" ref={dropdownRef}>
                       <button
@@ -258,9 +251,9 @@ function Header() {
                   )}
                 </>
               ) : (
-                <NavLink to="/login" icon={<User className="w-6 h-6" />}>
+                <NavItem to="/login" icon={<User className="w-6 h-6" />}>
                   Iniciar Sesión
-                </NavLink>
+                </NavItem>
               )}
             </div>
 
@@ -325,7 +318,7 @@ function Header() {
                 </Link>
 
                 {/* Profile - Only when logged in */}
-                {token && (
+                {isLoggedIn && (
                   <Link
                     to="/perfil"
                     className="p-2.5 text-white/80 hover:text-blue-400 hover:bg-white/10 rounded-full transition-all"
@@ -383,101 +376,102 @@ function Header() {
               </div>
             </form>
 
-            <NavLink
+            <NavItem
               to="/"
               icon={<Home className="w-6 h-6" />}
               onClick={() => setMobileMenuOpen(false)}
             >
               Inicio
-            </NavLink>
-            <NavLink
+            </NavItem>
+            <NavItem
               to="/productos"
               icon={<Grid className="w-6 h-6" />}
               onClick={() => setMobileMenuOpen(false)}
             >
               Productos
-            </NavLink>
-            <NavLink
+            </NavItem>
+            <NavItem
               to="/ubicacion"
               icon={<Location className="w-6 h-6" />}
               onClick={() => setMobileMenuOpen(false)}
             >
               Ubicación
-            </NavLink>
-            <NavLink
+            </NavItem>
+            <NavItem
               to="/contactanos"
               icon={<Contact className="w-6 h-6" />}
               onClick={() => setMobileMenuOpen(false)}
             >
               Contacto
-            </NavLink>
+            </NavItem>
 
             <div className="border-t border-white/10 my-2" />
 
-            {token ? (
+            {isLoggedIn ? (
               <>
-                <NavLink
-                  to="/"
+                <NavButton
+                  className="w-full"
                   onClick={() => {
                     handleLogout();
                     setMobileMenuOpen(false);
+                    navigate("/");
                   }}
                   icon={<Logout className="w-6 h-6" />}
                 >
                   Cerrar Sesión
-                </NavLink>
+                </NavButton>
                 {isAdmin && (
                   <>
                     <div className="border-t border-white/10 my-2" />
                     <div className="px-4 py-2 text-xs font-semibold text-white/30 uppercase tracking-wider">
                       Panel Admin
                     </div>
-                    <NavLink
+                    <NavItem
                       to="/adm/dashboard"
                       icon={<Package className="w-5 h-5" />}
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       Dashboard
-                    </NavLink>
-                    <NavLink
+                    </NavItem>
+                    <NavItem
                       to="/adm/pedidos"
                       icon={<Dollar className="w-5 h-5" />}
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       Pedidos
-                    </NavLink>
-                    <NavLink
+                    </NavItem>
+                    <NavItem
                       to="/adm/productos"
                       icon={<Grid className="w-5 h-5" />}
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       Productos
-                    </NavLink>
-                    <NavLink
+                    </NavItem>
+                    <NavItem
                       to="/adm/usuarios"
                       icon={<Users className="w-5 h-5" />}
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       Usuarios
-                    </NavLink>
-                    <NavLink
+                    </NavItem>
+                    <NavItem
                       to="/adm/taxonomia"
                       icon={<Tag className="w-5 h-5" />}
                       onClick={() => setMobileMenuOpen(false)}
                     >
                       Marcas y Categorías
-                    </NavLink>
+                    </NavItem>
                   </>
                 )}
               </>
             ) : (
-              <NavLink
+              <NavItem
                 to="/login"
                 icon={<User className="w-6 h-6" />}
                 onClick={() => setMobileMenuOpen(false)}
               >
                 Iniciar Sesión
-              </NavLink>
+              </NavItem>
             )}
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useAuthStore from "../../stores/useAuthStore";
+import useCartStore from "../../stores/useCartStore";
 import api, { API_BASE } from "../../lib/api";
 import { createOrder, normalizePhone } from "../../lib/orders-api";
 import {
@@ -212,6 +213,11 @@ function Carrito() {
         })),
         telefono,
       });
+
+      // The backend emptied the cart together with the order: mirror it.
+      // The WhatsApp text below still uses the cartItems captured by this render.
+      useCartStore.getState().clearCart();
+      setCartItems([]);
 
       // The backend saves a typed phone to the profile: mirror it locally.
       const savedPhone = order?.telefono || telefono;

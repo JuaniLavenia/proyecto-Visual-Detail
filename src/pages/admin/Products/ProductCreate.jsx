@@ -2,7 +2,6 @@ import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../../../lib/api";
 import Swal from "sweetalert2";
-import useAuthStore from "../../../stores/useAuthStore";
 import useTaxonomyOptions from "../../../hooks/useTaxonomyOptions";
 import {
   ArrowLeft,
@@ -15,7 +14,6 @@ import "./index.css";
 
 function ProductoCreate() {
   const navigate = useNavigate();
-  const { token, isAdmin } = useAuthStore();
   const [isLoading, setIsLoading] = useState(false);
   const [showPassword, setShowPassword] = useState(false);
   const {
@@ -38,12 +36,6 @@ function ProductoCreate() {
   });
 
   const [errors, setErrors] = useState({});
-
-  // Validar acceso admin
-  if (!token || !isAdmin) {
-    navigate("/login");
-    return null;
-  }
 
   const validateForm = () => {
     const newErrors = {};

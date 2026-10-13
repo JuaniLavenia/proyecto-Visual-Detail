@@ -102,11 +102,8 @@ function Carrito() {
     }
   };
 
+  // AuthRoute only renders this page with a session
   useEffect(() => {
-    if (!token || !userId) {
-      navigate("/login");
-      return;
-    }
     fetchCartItems();
   }, []);
 

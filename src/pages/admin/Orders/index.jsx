@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
 import useAuthStore from "../../../stores/useAuthStore";
 import {
@@ -23,7 +23,6 @@ import {
 import "../Products/index.css";
 
 function AdminOrders() {
-  const navigate = useNavigate();
   const { token, isAdmin } = useAuthStore();
 
   const [orders, setOrders] = useState([]);
@@ -38,11 +37,6 @@ function AdminOrders() {
   const [searchInput, setSearchInput] = useState("");
   const [search, setSearch] = useState("");
   const [busyId, setBusyId] = useState(null);
-
-  // Admin access guard
-  useEffect(() => {
-    if (!token || !isAdmin) navigate("/login");
-  }, [token, isAdmin, navigate]);
 
   // Debounce the search box; a new term always starts at page 1.
   useEffect(() => {

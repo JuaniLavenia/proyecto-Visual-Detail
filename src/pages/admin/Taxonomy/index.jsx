@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
 import api from "../../../lib/api";
-import useAuthStore from "../../../stores/useAuthStore";
 import {
   ArrowLeft,
   Tag,
@@ -412,20 +411,6 @@ function TaxonomyManager({ title, basePath, icon: Icon }) {
 }
 
 function TaxonomyAdmin() {
-  const { token, isAdmin } = useAuthStore();
-  const navigate = useNavigate();
-
-  useEffect(() => {
-    if (!token || !isAdmin) {
-      navigate("/");
-    }
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [token, isAdmin]);
-
-  if (!token || !isAdmin) {
-    return null;
-  }
-
   return (
     <div className="min-h-screen bg-gray-950 pt-20 lg:pt-24 pb-12">
       <div className="bg-gradient-to-b from-gray-900 to-gray-950 border-b border-white/5">

@@ -8,6 +8,7 @@ import {
 } from 'react-router-dom';
 import LoadingSpinner from './components/common/LoadingSpinner';
 import ErrorBoundary from './components/common/ErrorBoundary';
+import { AdminRoute, AuthRoute } from './components/routing/RouteGuards';
 import { toast } from './components/common/SimpleDialog';
 import useAuthStore, { syncAuthAcrossTabs } from './stores/useAuthStore';
 import useCartStore from './stores/useCartStore';
@@ -123,20 +124,26 @@ function App() {
             <Route path="/login" element={<Login />} />
             <Route path="/recuperar" element={<ForgotPassword />} />
             <Route path="/reset/:id" element={<ResetPassword />} />
-            <Route path="/carrito" element={<Cart />} />
-            <Route path="/favoritos" element={<Favorites />} />
             <Route path="/contactanos" element={<Contact />} />
             <Route path="/ubicacion" element={<LocationPage />} />
-            <Route path="/perfil" element={<Profile />} />
-            
-            {/* Rutas de Admin */}
-            <Route path="/adm/dashboard" element={<AdminDashboard />} />
-            <Route path="/adm/pedidos" element={<AdminOrders />} />
-            <Route path="/adm/productos" element={<AdminProducts />} />
-            <Route path="/adm/productos/edit/:id" element={<ProductEdit />} />
-            <Route path="/adm/productos/create" element={<ProductCreate />} />
-            <Route path="/adm/usuarios" element={<AdminUsers />} />
-            <Route path="/adm/taxonomia" element={<AdminTaxonomy />} />
+
+            {/* Account pages: require a session */}
+            <Route element={<AuthRoute />}>
+              <Route path="/carrito" element={<Cart />} />
+              <Route path="/favoritos" element={<Favorites />} />
+              <Route path="/perfil" element={<Profile />} />
+            </Route>
+
+            {/* Admin pages: require an admin session */}
+            <Route element={<AdminRoute />}>
+              <Route path="/adm/dashboard" element={<AdminDashboard />} />
+              <Route path="/adm/pedidos" element={<AdminOrders />} />
+              <Route path="/adm/productos" element={<AdminProducts />} />
+              <Route path="/adm/productos/edit/:id" element={<ProductEdit />} />
+              <Route path="/adm/productos/create" element={<ProductCreate />} />
+              <Route path="/adm/usuarios" element={<AdminUsers />} />
+              <Route path="/adm/taxonomia" element={<AdminTaxonomy />} />
+            </Route>
           </Routes>
 
           {backgroundLocation && (

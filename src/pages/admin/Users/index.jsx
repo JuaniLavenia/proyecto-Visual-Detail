@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { Link } from "react-router-dom";
 import Swal from "sweetalert2";
 import useAuthStore from "../../../stores/useAuthStore";
 import {
@@ -120,7 +120,6 @@ function UserIdentity({ user, avatarSize = "w-10 h-10" }) {
 
 function UsersAdmin() {
   const { token, isAdmin, userId } = useAuthStore();
-  const navigate = useNavigate();
 
   const [users, setUsers] = useState([]);
   const [pagination, setPagination] = useState(null);
@@ -142,11 +141,6 @@ function UsersAdmin() {
   const [saving, setSaving] = useState(false);
 
   const isSelf = (user) => Boolean(userId) && String(user._id) === String(userId);
-
-  // Admin access guard
-  useEffect(() => {
-    if (!token || !isAdmin) navigate("/");
-  }, [token, isAdmin, navigate]);
 
   // Debounce the search box; a new term always starts at page 1.
   useEffect(() => {

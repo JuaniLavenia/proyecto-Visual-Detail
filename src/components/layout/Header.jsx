@@ -358,6 +358,8 @@ function Header() {
             lg:hidden absolute top-full left-0 right-0 bg-gray-900/98 backdrop-blur-xl border-t border-white/10 transition-all duration-300 overflow-hidden
             ${mobileMenuOpen ? "max-h-screen opacity-100" : "max-h-0 opacity-0"}
           `}
+          // Keep the collapsed menu out of the tab order (React 18 needs a string for inert)
+          inert={mobileMenuOpen ? undefined : ""}
         >
           <div className="px-4 py-4 space-y-2">
             {/* Mobile Search */}

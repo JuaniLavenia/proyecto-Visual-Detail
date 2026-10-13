@@ -235,6 +235,7 @@ function AdminProducto() {
           <div className="flex flex-col md:flex-row md:items-center md:justify-between gap-4">
             <Link
               to="/adm/dashboard"
+              aria-label="Volver al panel"
               className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -579,6 +580,7 @@ function AdminProducto() {
                   <button
                     onClick={() => handlePageChange(currentPage - 1)}
                     disabled={currentPage === 1}
+                    aria-label="Página anterior"
                     className="p-2 rounded-lg bg-white/5 text-white/70 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     <svg
@@ -615,6 +617,7 @@ function AdminProducto() {
                   <button
                     onClick={() => handlePageChange(currentPage + 1)}
                     disabled={currentPage === totalPages}
+                    aria-label="Página siguiente"
                     className="p-2 rounded-lg bg-white/5 text-white/70 hover:bg-white/10 disabled:opacity-30 disabled:cursor-not-allowed"
                   >
                     <svg

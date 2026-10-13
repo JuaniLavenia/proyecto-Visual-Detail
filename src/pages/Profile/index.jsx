@@ -15,6 +15,7 @@ const Profile = () => {
           <div className="flex items-center gap-4">
             <Link
               to="/"
+              aria-label="Volver al inicio"
               className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-lg transition-colors"
             >
               <ArrowLeft className="w-5 h-5" />
@@ -33,8 +34,13 @@ const Profile = () => {
 
       {/* Tab Navigation */}
       <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
-        <div className="flex gap-4 mb-8">
+        <div className="flex gap-4 mb-8" role="tablist" aria-label="Secciones del perfil">
           <button
+            type="button"
+            role="tab"
+            id="tab-pedidos"
+            aria-selected={activeTab === "pedidos"}
+            aria-controls={activeTab === "pedidos" ? "profile-panel" : undefined}
             onClick={() => setActiveTab("pedidos")}
             className={`flex-1 py-4 px-6 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-3 ${
               activeTab === "pedidos"
@@ -46,6 +52,11 @@ const Profile = () => {
             Mis Pedidos
           </button>
           <button
+            type="button"
+            role="tab"
+            id="tab-informacion-personal"
+            aria-selected={activeTab === "informacion-personal"}
+            aria-controls={activeTab === "informacion-personal" ? "profile-panel" : undefined}
             onClick={() => setActiveTab("informacion-personal")}
             className={`flex-1 py-4 px-6 rounded-xl font-medium transition-all duration-200 flex items-center justify-center gap-3 ${
               activeTab === "informacion-personal"
@@ -59,7 +70,14 @@ const Profile = () => {
         </div>
 
         {/* Tab Content */}
-        <div className="bg-gray-900/50 border border-white/5 rounded-2xl p-6">
+        {/* Only the active panel is rendered, so aria-controls is set on the selected tab only */}
+        <div
+          role="tabpanel"
+          id="profile-panel"
+          aria-labelledby={`tab-${activeTab}`}
+          tabIndex={0}
+          className="bg-gray-900/50 border border-white/5 rounded-2xl p-6"
+        >
           {activeTab === "pedidos" && <OrdersTab />}
           {activeTab === "informacion-personal" && <PersonalInfoTab />}
         </div>

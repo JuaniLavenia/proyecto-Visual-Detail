@@ -139,6 +139,8 @@ function CardProductos({
           }}
           disabled={isTogglingFavorite}
           title={isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"}
+          aria-label={isFavorite ? "Quitar de favoritos" : "Agregar a favoritos"}
+          aria-pressed={isFavorite}
         >
           <Heart className="w-5 h-5" filled={isFavorite} />
         </button>
@@ -150,12 +152,14 @@ function CardProductos({
         <div className="product-card-brand">{brand}</div>
 
         {/* Title */}
-        <h3
-          className="product-card-title"
-          onClick={handleViewProduct}
-          style={{ cursor: "pointer" }}
-        >
-          {name}
+        <h3 className="product-card-title">
+          <button
+            type="button"
+            className="product-card-title-button"
+            onClick={handleViewProduct}
+          >
+            {name}
+          </button>
         </h3>
 
         {/* Category & Capacity */}
@@ -219,6 +223,7 @@ function CardProductos({
             className="product-card-btn product-card-btn-secondary"
             onClick={handleViewProduct}
             title="Ver detalles"
+            aria-label={`Ver detalles de ${name}`}
           >
             <Eye className="w-5 h-5" />
           </button>

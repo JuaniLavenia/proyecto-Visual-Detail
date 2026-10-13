@@ -465,6 +465,7 @@ function Carrito() {
                                 item.quantity - 1,
                               )
                             }
+                            aria-label={`Restar una unidad de ${item.product.name}`}
                             className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-white/70 hover:text-white transition-colors"
                           >
                             <Minus className="w-4 h-4" />
@@ -481,6 +482,7 @@ function Carrito() {
                               )
                             }
                             disabled={item.quantity >= item.product.stock}
+                            aria-label={`Sumar una unidad de ${item.product.name}`}
                             className="p-2 bg-white/5 hover:bg-white/10 rounded-lg text-white/70 hover:text-white disabled:opacity-30 disabled:cursor-not-allowed transition-colors"
                           >
                             <Plus className="w-4 h-4" />
@@ -494,6 +496,7 @@ function Carrito() {
 
                         <button
                           onClick={() => handleRemoveFromCart(item.product)}
+                          aria-label={`Eliminar ${item.product.name} del carrito`}
                           className="p-2 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                         >
                           <Trash className="w-5 h-5" />
@@ -569,6 +572,7 @@ function Carrito() {
               </div>
               <button
                 onClick={closeModal}
+                aria-label="Cerrar"
                 className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-full transition-colors"
               >
                 <Close className="w-5 h-5" />

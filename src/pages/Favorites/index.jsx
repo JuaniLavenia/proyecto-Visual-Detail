@@ -302,6 +302,7 @@ function Favoritos() {
                           onClick={() => removeFavorite(product)}
                           className="ml-auto p-2 text-red-400/70 hover:text-red-400 hover:bg-red-500/10 rounded-lg transition-colors"
                           title="Eliminar de favoritos"
+                          aria-label={`Eliminar ${product.name} de favoritos`}
                         >
                           <Trash className="w-5 h-5" />
                         </button>

@@ -5,6 +5,7 @@ import api, { API_BASE } from "../../../lib/api";
 import { formatPrice } from "../../../lib/pricing";
 import { useProductActions } from "../../../hooks/useProductActions";
 import useAuthStore from "../../../stores/useAuthStore";
+import { CART_STOCK_LIMIT_MESSAGE } from "../../../lib/cart-favorites-api";
 import { Heart, ShoppingCart, Image } from "../../common/Icons";
 
 // A single product comes wrapped in { data }
@@ -78,6 +79,8 @@ function ProductDetailContent({ productId, titleId, onBackToCatalog }) {
       notify("success", "Producto agregado al carrito");
     } else if (result.needsAuth) {
       notify("info", "Debe iniciar sesión para comprar", 2500);
+    } else if (result.stockLimit) {
+      notify("info", CART_STOCK_LIMIT_MESSAGE, 2500);
     } else if (result.error) {
       notify("error", "Error al agregar al carrito", 2000);
     }

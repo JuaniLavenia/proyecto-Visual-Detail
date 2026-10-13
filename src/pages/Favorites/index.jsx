@@ -5,6 +5,8 @@ import {
   fetchFavoriteProducts,
   removeFavoriteProduct,
   setCartProductQuantity,
+  nextCartQuantity,
+  CART_STOCK_LIMIT_MESSAGE,
 } from "../../lib/cart-favorites-api";
 import Swal from "sweetalert2";
 import useAuthStore from "../../stores/useAuthStore";
@@ -102,9 +104,22 @@ function Favoritos() {
       return;
     }
 
+    // One more than the cart already holds, capped at the stock
+    const quantity = nextCartQuantity(product._id, product.stock);
+    if (quantity === null) {
+      Swal.fire({
+        position: "center",
+        icon: "info",
+        title: CART_STOCK_LIMIT_MESSAGE,
+        showConfirmButton: false,
+        timer: 2500,
+      });
+      return;
+    }
+
     try {
       // Also syncs the Zustand cart store
-      await setCartProductQuantity(product._id, 1);
+      await setCartProductQuantity(product._id, quantity);
 
       Swal.fire({
         position: "center",

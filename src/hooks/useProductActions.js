@@ -1,5 +1,6 @@
 import { useState, useCallback } from 'react';
 import {
+  nextCartQuantity,
   setCartProductQuantity,
   addFavoriteProduct,
   removeFavoriteProduct,
@@ -35,9 +36,13 @@ export function useProductActions(useOptimistic = true) {
     if (!requireAuth()) return { success: false, needsAuth: true };
     
     if (isAddingToCart) return { success: false, loading: true };
-    setIsAddingToCart(true);
 
     const productId = product._id || product.id;
+    // One more than the cart already holds, capped at the stock
+    const quantity = nextCartQuantity(productId, product.stock);
+    if (quantity === null) return { success: false, stockLimit: true };
+
+    setIsAddingToCart(true);
     
     try {
       // Optimistic update: agregar localmente antes de API call
@@ -47,7 +52,7 @@ export function useProductActions(useOptimistic = true) {
       }
 
       // API call: the response carries the updated cart and syncs the store
-      await setCartProductQuantity(productId, 1);
+      await setCartProductQuantity(productId, quantity);
 
       return { success: true };
     } catch (error) {

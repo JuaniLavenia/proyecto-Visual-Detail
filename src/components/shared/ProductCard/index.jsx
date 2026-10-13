@@ -5,6 +5,7 @@ import { useProductActions } from "../../../hooks/useProductActions";
 import useAuthStore from "../../../stores/useAuthStore";
 import { API_BASE } from "../../../lib/api";
 import { toast } from "../../common/SimpleDialog";
+import { CART_STOCK_LIMIT_MESSAGE } from "../../../lib/cart-favorites-api";
 import { Heart, ShoppingCart, Eye, Package } from "../../common/Icons";
 
 function CardProductos({
@@ -56,6 +57,8 @@ function CardProductos({
       toast("Producto agregado al carrito", "success");
     } else if (result.needsAuth) {
       navigate("/login");
+    } else if (result.stockLimit) {
+      toast(CART_STOCK_LIMIT_MESSAGE, "warning");
     } else if (result.error) {
       toast("Error al agregar al carrito", "danger");
     }

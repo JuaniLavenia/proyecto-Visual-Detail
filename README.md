@@ -128,9 +128,13 @@ Los guards están en `src/components/routing/RouteGuards.jsx`: `/carrito`, `/fav
 
 ## Deployment
 
-Build con Vite, sirve estáticamente. Compatible con Vercel, Netlify, Cloudflare Pages.
+Build con Vite, sirve estáticamente. Se despliega en Netlify con `netlify.toml` (build `pnpm build`, publica `dist/` y redirige todas las rutas a `index.html`).
+
+`VITE_API_URL` es obligatoria para el build: apunta al sitio de Netlify del backend y se carga en *Site configuration → Environment variables*. Sin ella el build falla, para no publicar un sitio que llame a otra API. En desarrollo, si no está definida, se usa `http://localhost:5000`.
 
 ```bash
-npm run build
+VITE_API_URL=https://<backend>.netlify.app pnpm build
 # dist/ → servir estáticamente
 ```
+
+Las imágenes de productos son links externos (`http(s)://...`). Un producto que todavía guarda un nombre de archivo de la carpeta vieja del backend muestra el placeholder hasta que se le cargue el link.

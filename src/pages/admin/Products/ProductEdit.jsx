@@ -1,6 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import api from "../../../lib/api";
+import { productImageUrl } from "../../../lib/product-image";
 import Swal from "sweetalert2";
 import useTaxonomyOptions from "../../../hooks/useTaxonomyOptions";
 import {
@@ -80,16 +81,11 @@ function ProductoEdit() {
           category: p?.category || "",
           brand: p?.brand || "",
           capacity: p?.capacity || "",
-          // El modelo guarda la imagen en "image", no en "imageUrl". Solo
-          // precargamos el input cuando ya es una URL editable - un path
-          // local viejo (ver mas abajo) no tiene sentido pegado ahi.
-          imageUrl: p?.image && p.image.startsWith("http") ? p.image : "",
+          // El modelo guarda la imagen en "image", no en "imageUrl". Un nombre
+          // de archivo viejo (sin link) se descarta: el admin pega el link nuevo.
+          imageUrl: productImageUrl(p?.image) || "",
         });
-        if (p?.image && !p.image.startsWith("http")) {
-          setExistingImage(`/img/productos/${p.image}`);
-        } else {
-          setExistingImage(p?.image || null);
-        }
+        setExistingImage(productImageUrl(p?.image));
       })
       .catch(() => {
         Swal.fire({

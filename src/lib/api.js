@@ -45,11 +45,12 @@ function notifyTokenRefreshed(token, refreshToken, endReason = null) {
   onTokenRefreshCallbacks.forEach((cb) => cb(token, refreshToken, endReason));
 }
 
-// Backend base URL. Set VITE_API_URL (e.g. in .env.local) to point at another
-// backend; without it the production backend is used.
-const DEFAULT_API_BASE = "https://visual-detail-backend.onrender.com";
+// Backend base URL from VITE_API_URL (.env.local locally, the host's
+// environment on deploys). Production builds refuse to run without it (see
+// vite.config.js); the dev server falls back to the local backend.
+const DEV_API_BASE = "http://localhost:5000";
 export const API_BASE = (
-  import.meta.env.VITE_API_URL || DEFAULT_API_BASE
+  import.meta.env.VITE_API_URL || DEV_API_BASE
 ).replace(/\/+$/, "");
 
 // localStorage key where zustand persists the auth store (shared by all tabs)

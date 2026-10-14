@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
-import { API_BASE } from "../../lib/api";
+import { productImageUrl } from "../../lib/product-image";
 import {
   fetchFavoriteProducts,
   removeFavoriteProduct,
@@ -50,8 +50,7 @@ function Favoritos() {
 
   const getImageUrl = (product) => {
     if (imageErrors[product._id]) return null;
-    if (product.image?.startsWith("http")) return product.image;
-    return `${API_BASE}/img/productos/${product.image}`;
+    return productImageUrl(product.image);
   };
 
   const handleImageError = (productId) => {

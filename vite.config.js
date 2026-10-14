@@ -1,10 +1,29 @@
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
+
+// Production builds must name their backend: there is no default URL to fall
+// back to, so a missing VITE_API_URL fails the build instead of shipping a
+// site that calls the wrong API.
+function requireApiUrl() {
+  return {
+    name: 'require-api-url',
+    config(_, { command, mode }) {
+      if (command !== 'build') return
+      const { VITE_API_URL } = loadEnv(mode, process.cwd(), 'VITE_')
+      if (!VITE_API_URL) {
+        throw new Error(
+          'VITE_API_URL is required to build: set it to the backend URL (e.g. https://<site>.netlify.app).'
+        )
+      }
+    },
+  }
+}
 
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [
+    requireApiUrl(),
     react(),
     VitePWA({
       registerType: 'autoUpdate',
@@ -40,18 +59,6 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,ico,png,svg,woff2}'],
         // Rutas a ignorear (API calls)
         runtimeCaching: [
-          {
-            // Cachear imágenes del backend
-            urlPattern: /^https:\/\/visual-detail-backend\.onrender\.com\/img\/.*/i,
-            handler: 'CacheFirst',
-            options: {
-              cacheName: 'product-images',
-              expiration: {
-                maxEntries: 100,
-                maxAgeSeconds: 60 * 60 * 24 * 30, // 30 días
-              },
-            },
-          },
           {
             // Cachear fonts/icons si es necesario
             urlPattern: /^https:\/\/fonts\.googleapis\.com\/.*/i,

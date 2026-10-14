@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import useAuthStore from "../../stores/useAuthStore";
 import useCartStore from "../../stores/useCartStore";
-import api, { API_BASE } from "../../lib/api";
+import api from "../../lib/api";
 import { createOrder, normalizePhone } from "../../lib/orders-api";
 import {
   fetchCartProducts,
@@ -10,6 +10,7 @@ import {
   setCartProductQuantity,
 } from "../../lib/cart-favorites-api";
 import { getUnitPrice } from "../../lib/pricing";
+import { productImageUrl } from "../../lib/product-image";
 import Swal from "sweetalert2";
 import CheckoutPhoneField from "./CheckoutPhoneField";
 import {
@@ -107,8 +108,7 @@ function Carrito() {
 
   const getImageUrl = (product) => {
     if (imageErrors[product._id]) return null;
-    if (product.image?.startsWith("http")) return product.image;
-    return `${API_BASE}/img/productos/${product.image}`;
+    return productImageUrl(product.image);
   };
 
   const handleImageError = (productId) => {

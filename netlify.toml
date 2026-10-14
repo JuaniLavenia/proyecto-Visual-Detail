@@ -1,0 +1,14 @@
+# Static Vite build. Set VITE_API_URL in the site's environment variables:
+# the build fails without it.
+[build]
+  command = "pnpm build"
+  publish = "dist"
+
+[build.environment]
+  NODE_VERSION = "22"
+
+# Single-page app: every route that is not a file serves index.html
+[[redirects]]
+  from = "/*"
+  to = "/index.html"
+  status = 200

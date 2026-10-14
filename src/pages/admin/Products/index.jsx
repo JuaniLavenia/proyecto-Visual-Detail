@@ -15,12 +15,8 @@ import {
   Search,
   ArrowLeft,
 } from "../../../components/common/Icons";
+import { productImageUrl } from "../../../lib/product-image";
 import "./index.css";
-
-const productImageUrl = (image) => {
-  if (!image) return null;
-  return image.startsWith("http") ? image : `${API_BASE}/img/productos/${image}`;
-};
 
 // Thumbnail that shows the placeholder icon when the product has no image or
 // the URL fails to load. Callers key it by src so a new URL retries.

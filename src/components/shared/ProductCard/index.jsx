@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import "./index.css";
 import { useProductActions } from "../../../hooks/useProductActions";
 import useAuthStore from "../../../stores/useAuthStore";
-import { API_BASE } from "../../../lib/api";
+import { productImageUrl } from "../../../lib/product-image";
 import { toast } from "../../common/SimpleDialog";
 import { CART_STOCK_LIMIT_MESSAGE } from "../../../lib/cart-favorites-api";
 import { Heart, ShoppingCart, Eye, Package } from "../../common/Icons";
@@ -97,13 +97,7 @@ function CardProductos({
     navigate(`/productos/${_id}`, { state: { backgroundLocation: location } });
   };
 
-  // Obtener URL de imagen
-  const imageUrl =
-    imageError || !image
-      ? null
-      : image.startsWith("http")
-        ? image
-        : `${API_BASE}/img/productos/${image}`;
+  const imageUrl = imageError ? null : productImageUrl(image);
 
   return (
     <div className="product-card group">

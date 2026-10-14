@@ -1,7 +1,8 @@
 import { useState } from "react";
 import useSWR from "swr";
 import Swal from "sweetalert2";
-import api, { API_BASE } from "../../../lib/api";
+import api from "../../../lib/api";
+import { productImageUrl } from "../../../lib/product-image";
 import { formatPrice } from "../../../lib/pricing";
 import { useProductActions } from "../../../hooks/useProductActions";
 import useAuthStore from "../../../stores/useAuthStore";
@@ -13,11 +14,6 @@ const productFetcher = (url) => api.get(url).then((res) => res.data.data);
 
 function notify(icon, title, timer = 1500) {
   Swal.fire({ position: "center", icon, title, showConfirmButton: false, timer });
-}
-
-function getImageUrl(image) {
-  if (!image) return null;
-  return image.startsWith("http") ? image : `${API_BASE}/img/productos/${image}`;
 }
 
 /**
@@ -66,7 +62,7 @@ function ProductDetailContent({ productId, titleId, onBackToCatalog }) {
 
   const isFavorite = isFavoriteById(product._id);
   const inStock = product.stock > 0;
-  const imageUrl = imageError ? null : getImageUrl(product.image);
+  const imageUrl = imageError ? null : productImageUrl(product.image);
 
   const handleAddToCart = async () => {
     if (!token) {

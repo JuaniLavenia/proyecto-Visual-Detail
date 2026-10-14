@@ -12,12 +12,17 @@ export const PASSWORD_MAX_LENGTH = 72;
 export const RATE_LIMIT_MESSAGE =
   "Demasiados intentos. Esperá unos minutos y volvé a intentar.";
 
+// The backend sends the mail before answering and always waits at least 8 s
+// (so timing does not reveal registered emails): allow more than the
+// default 10 s client timeout
+const FORGOT_TIMEOUT_MS = 30000;
+
 /**
  * Requests a password reset link. The backend always answers with the same
  * generic message, whether the email is registered or not.
  */
 export async function requestPasswordReset(email) {
-  const res = await api.post("/api/forgot", { email });
+  const res = await api.post("/api/forgot", { email }, { timeout: FORGOT_TIMEOUT_MS });
   return res.data;
 }
 

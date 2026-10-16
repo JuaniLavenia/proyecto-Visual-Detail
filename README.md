@@ -138,3 +138,18 @@ VITE_API_URL=https://<backend>.netlify.app pnpm build
 ```
 
 Las imágenes de productos son links externos (`http(s)://...`). Un producto que todavía guarda un nombre de archivo de la carpeta vieja del backend muestra el placeholder hasta que se le cargue el link.
+
+## Versionado y releases
+
+Las versiones siguen [SemVer](https://semver.org/lang/es/) y las calcula [release-please](https://github.com/googleapis/release-please) (`.github/workflows/release-please.yml`) a partir de los títulos de los PRs, que entran con squash en formato Conventional Commits:
+
+| Commit | Versión |
+|---|---|
+| `fix(...)`, `perf(...)` | patch (`1.0.0` → `1.0.1`) |
+| `feat(...)` | minor (`1.0.0` → `1.1.0`) |
+| `feat(...)!` o `BREAKING CHANGE:` | major (`1.0.0` → `2.0.0`) |
+| `docs`, `chore`, `ci`, `test`, `refactor` | no generan versión |
+
+Con cada merge a `main`, release-please abre o actualiza un PR `chore(main): release X.Y.Z` que acumula los cambios. Al mergear ese PR se actualizan `package.json` y `CHANGELOG.md`, se crea el tag `vX.Y.Z` y se publica el GitHub Release. Netlify sigue desplegando cada merge a `main`; el tag marca qué versión está en producción.
+
+La versión actual está en `.release-please-manifest.json`; la configuración, en `release-please-config.json`. Si un release necesita una versión mínima del backend (por ejemplo, un parámetro nuevo de la API), se indica en las notas del release.

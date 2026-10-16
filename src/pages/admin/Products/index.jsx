@@ -47,6 +47,8 @@ function AdminProducto() {
   const [currentPage, setCurrentPage] = useState(1);
   const [currentSize, setCurrentSize] = useState(12);
   const [search, setSearch] = useState("");
+  // Stock filter driven by the KPI cards: "" (all), "in" or "out"
+  const [stockFilter, setStockFilter] = useState("");
   const [showModal, setShowModal] = useState(false);
   const [excelFile, setExcelFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
@@ -58,6 +60,7 @@ function AdminProducto() {
     const query = new URLSearchParams();
     const term = search.trim();
     if (term) query.set("search", term);
+    if (stockFilter) query.set("stock", stockFilter);
     query.set("page", String(currentPage));
     query.set("limit", String(currentSize));
     return `${API_BASE}/api/productos?${query.toString()}`;
@@ -129,6 +132,18 @@ function AdminProducto() {
     e?.preventDefault();
     setCurrentPage(1); // Reset a página 1 al buscar
   };
+
+  // Clicking the active card again clears the filter
+  const handleStockFilter = (value) => {
+    setStockFilter((current) => (current === value ? "" : value));    setCurrentPage(1);
+  };
+
+  const kpiCardClass = (active) =>
+    `min-w-0 w-full text-left rounded-xl p-4 border transition-colors cursor-pointer ${
+      active
+        ? "bg-gray-800/60 border-yellow-500/50"
+        : "bg-gray-800/30 border-white/5 hover:border-white/20"
+    }`;
 
   const handlePageChange = (newPage) => {
     if (newPage !== currentPage) {
@@ -241,7 +256,12 @@ function AdminProducto() {
                 Administración de Productos
               </h1>
               <p className="text-white/50 mt-1">
-                {totalRows} producto{totalRows !== 1 ? "s" : ""} en total
+                {totalRows} producto{totalRows !== 1 ? "s" : ""}{" "}
+                {stockFilter === "out"
+                  ? "sin stock"
+                  : stockFilter === "in"
+                    ? "en stock"
+                    : "en total"}
               </p>
             </div>
             <AdminActionsMenu
@@ -252,7 +272,12 @@ function AdminProducto() {
 
           {/* KPI Cards */}
           <div className="mt-6 grid grid-cols-2 md:grid-cols-4 gap-4">
-            <div className="min-w-0 bg-gray-800/30 border border-white/5 rounded-xl p-4">
+            <button
+              type="button"
+              onClick={() => handleStockFilter("")}
+              aria-pressed={stockFilter === ""}
+              className={kpiCardClass(stockFilter === "")}
+            >
               <div className="flex flex-col items-start sm:flex-row sm:items-center gap-3">
                 <div className="p-2 bg-yellow-500/10 rounded-lg text-yellow-400">
                   <Package className="w-6 h-6" />
@@ -264,8 +289,13 @@ function AdminProducto() {
                   </p>
                 </div>
               </div>
-            </div>
-            <div className="min-w-0 bg-gray-800/30 border border-white/5 rounded-xl p-4">
+            </button>
+            <button
+              type="button"
+              onClick={() => handleStockFilter("in")}
+              aria-pressed={stockFilter === "in"}
+              className={kpiCardClass(stockFilter === "in")}
+            >
               <div className="flex flex-col items-start sm:flex-row sm:items-center gap-3">
                 <div className="p-2 bg-green-500/10 rounded-lg text-green-400">
                   <Cube className="w-6 h-6" />
@@ -277,8 +307,13 @@ function AdminProducto() {
                   </p>
                 </div>
               </div>
-            </div>
-            <div className="min-w-0 bg-gray-800/30 border border-white/5 rounded-xl p-4">
+            </button>
+            <button
+              type="button"
+              onClick={() => handleStockFilter("out")}
+              aria-pressed={stockFilter === "out"}
+              className={kpiCardClass(stockFilter === "out")}
+            >
               <div className="flex flex-col items-start sm:flex-row sm:items-center gap-3">
                 <div className="p-2 bg-red-500/10 rounded-lg text-red-400">
                   <Exclamation className="w-6 h-6" />
@@ -290,7 +325,7 @@ function AdminProducto() {
                   </p>
                 </div>
               </div>
-            </div>
+            </button>
             <div className="min-w-0 bg-gray-800/30 border border-white/5 rounded-xl p-4">
               <div className="flex flex-col items-start sm:flex-row sm:items-center gap-3">
                 <div className="p-2 bg-blue-500/10 rounded-lg text-blue-400">
@@ -368,12 +403,22 @@ function AdminProducto() {
             <h3 className="text-xl font-semibold text-white mb-2">
               No se encontraron productos
             </h3>
-            <Link
-              to="/adm/productos/create"
-              className="mt-4 inline-flex items-center gap-2 px-6 py-2 bg-yellow-500 text-gray-900 font-semibold rounded-lg hover:bg-yellow-400"
-            >
-              Crear primer producto
-            </Link>
+            {stockFilter ? (
+              <button
+                type="button"
+                onClick={() => handleStockFilter("")}
+                className="mt-4 inline-flex items-center gap-2 px-6 py-2 bg-white/10 text-white font-semibold rounded-lg hover:bg-white/20"
+              >
+                Quitar filtro de stock
+              </button>
+            ) : (
+              <Link
+                to="/adm/productos/create"
+                className="mt-4 inline-flex items-center gap-2 px-6 py-2 bg-yellow-500 text-gray-900 font-semibold rounded-lg hover:bg-yellow-400"
+              >
+                Crear primer producto
+              </Link>
+            )}
           </div>
         ) : (
           <>

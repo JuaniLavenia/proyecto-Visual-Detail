@@ -3,6 +3,9 @@ import Swal from "sweetalert2";
 import api from "../../../lib/api";
 
 const CONFIRM_WORD = "REEMPLAZAR";
+// A large catalog takes longer than the API default (10 s); the backend
+// function itself stops at about 26 s
+const UPLOAD_TIMEOUT_MS = 30000;
 
 const MODES = [
   {
@@ -42,7 +45,7 @@ const Spinner = () => (
  * counts or the list of rows to fix. The import is all or nothing, so a
  * rejected file changed nothing.
  */
-function ImportProductsModal({ onClose, onImported }) {
+function ImportProductsModal({ onClose: close, onImported }) {
   const [file, setFile] = useState(null);
   const [mode, setMode] = useState("upsert");
   const [confirmText, setConfirmText] = useState("");
@@ -51,6 +54,10 @@ function ImportProductsModal({ onClose, onImported }) {
   // { message, details: [{ row, column, message }] } from a rejected upload
   const [rejection, setRejection] = useState(null);
 
+  // Closing mid-upload would hide the result, so the modal stays until it ends
+  const onClose = () => {
+    if (!isUploading) close();
+  };
   const isReplace = mode === "replace";
   const confirmed = !isReplace || confirmText.trim() === CONFIRM_WORD;
 
@@ -97,24 +104,26 @@ function ImportProductsModal({ onClose, onImported }) {
     try {
       const response = await api.post(`/api/productos/bulk-upload`, formData, {
         headers: { "Content-Type": "multipart/form-data" },
+        timeout: UPLOAD_TIMEOUT_MS,
       });
       const result = response.data?.data || {};
       const text = isReplace
         ? `Se eliminaron ${result.eliminados ?? 0} productos y se cargaron ${result.nuevos ?? 0}.`
         : `${result.nuevos ?? 0} productos nuevos, ${result.actualizados ?? 0} actualizados.`;
       onImported();
-      onClose();
+      close();
       Swal.fire({
         icon: "success",
         title: isReplace ? "¡Catálogo reemplazado!" : "¡Importación exitosa!",
         text,
       });
     } catch (err) {
-      const error = err.response?.data?.error;
-      setRejection({
-        message: error?.message || "No se pudo subir la planilla. Probá de nuevo en un rato.",
-        details: Array.isArray(error?.details) ? error.details : [],
-      });
+      // The api interceptor rejects with a flat error: serverMessage and
+      // details carry the backend message and the per-row list
+      const message = err?.isTimeout
+        ? "La carga tardó demasiado. Revisá la lista de productos antes de volver a intentarlo."
+        : err?.serverMessage || "No se pudo subir la planilla. Probá de nuevo en un rato.";
+      setRejection({ message, details: Array.isArray(err?.details) ? err.details : [] });
     } finally {
       setIsUploading(false);
     }
@@ -255,7 +264,8 @@ function ImportProductsModal({ onClose, onImported }) {
         <div className="flex gap-3">
           <button
             onClick={onClose}
-            className="flex-1 py-3 bg-white/10 text-white font-medium rounded-xl hover:bg-white/20 transition-colors"
+            disabled={isUploading}
+            className="flex-1 py-3 bg-white/10 disabled:opacity-50 text-white font-medium rounded-xl hover:bg-white/20 transition-colors"
           >
             Cancelar
           </button>

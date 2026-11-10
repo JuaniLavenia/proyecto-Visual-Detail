@@ -19,7 +19,7 @@ Branch: `feat/catalog-import` in both repos. Delivery: ask-on-risk. Test runner:
 - [x] **B2** (S3) back, inline: `bulkUpsert(rows, headers)` returns `{ errors }`, active brand/category required, identity name+capacity+brand. Commit 599e027, back PR #26 merged.
 - [x] **B3** (S4) back, inline + independent verifier (Risk item 1: deletes stored data): `mode=replace`, `replaceCatalog` in `withTransaction`. Commit efd6b2d, back PR #28 merged.
 - [x] **B4** (S5) back, inline: `GET /api/productos/template` (admin), `plantilla-productos.xlsx` from `TEMPLATE_HEADERS`. Back PR #30 merged.
-- [x] **F2** (S6) front, inline: `src/pages/admin/Products/ImportProductsModal.jsx` (mode picker, type REEMPLAZAR, template download, per-row error table, real counts); page refreshes list + KPIs after an import.
+- [x] **F2** (S6) front, inline: `src/pages/admin/Products/ImportProductsModal.jsx` (mode picker, type REEMPLAZAR, template download, per-row error table, real counts); page refreshes list + KPIs after an import. Commits 93dde8b + cd5efee, front PR (feat/import-ui).
 
 ## Log
 
@@ -32,3 +32,4 @@ Branch: `feat/catalog-import` in both repos. Delivery: ask-on-risk. Test runner:
 - **L7** B3 evidence: RED 8 failing, GREEN 474/474. Independent verifier (scratch clone) over B2+B3: S3 pass, S4 pass, no blockers; 15 probes (mode field order, start→delete→insert→commit with one session, abort on insert failure, no DB call on invalid/empty/unknown mode, real insertMany validation, bulkWrite counters, export re-imports). Atlas transactions already run in production for orders. Advisories kept as known behavior: upsert bulkWrite not transactional, empty optional cells clear stored values.
 - **L8** B4 evidence: RED 4 failing, GREEN 478/478; the template test parses the downloaded file back with no errors.
 - **L9** F2 evidence: `pnpm build` passes; the front has no test runner or lint. Not exercised against a real API: the local backend DB could be production and replace mode deletes the whole catalog. Manual check pending on a non-production DB.
+- **L10** Feature-end independent verifier (front, scratch clone, no real API): S1 pass. S6 blocker: the modal read `err.response`, but the api interceptor rejects with a flat error (`serverMessage`, `details`), so rejections showed only the generic message. One correction (cd5efee): read serverMessage/details/isTimeout, 30 s upload timeout, no closing while uploading. Recheck limited to the blocker: fixed, no defect in touched lines. Advisories left: re-pick the file after editing it on disk; `http://` Cloudinary links are not optimized. Manual check on a non-production DB still pending (user).

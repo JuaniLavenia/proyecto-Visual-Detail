@@ -14,8 +14,8 @@ Branch: `feat/catalog-import` in both repos. Delivery: ask-on-risk. Test runner:
 
 ## Tasks
 
-- [x] **F1** (S1) front, inline: `optimizeImage` in `src/lib/product-image.js`, admin previews optimized, edit form keeps the raw link.
-- [ ] **B1** (S2) back, inline: robust parsing.
+- [x] **F1** (S1) front, inline: `optimizeImage` in `src/lib/product-image.js`, admin previews optimized, edit form keeps the raw link. Commit 16a63bd (pushed).
+- [x] **B1** (S2) back, inline: `src/utils/product-sheet.js` + controller; all-or-nothing response `INVALID_SHEET` with details. Commit fb247ea.
 - [ ] **B2** (S3) back, inline: all-or-nothing validation, identity key, brand/category must exist.
 - [ ] **B3** (S4) back, inline + independent verifier (Risk item 1: deletes stored data).
 - [ ] **B4** (S5) back, inline: template endpoint.
@@ -27,3 +27,4 @@ Branch: `feat/catalog-import` in both repos. Delivery: ask-on-risk. Test runner:
 - **L2** Decisions: replace-catalog import option instead of a delete-all button; all-or-nothing in both modes; off-table content handled as in S2; identity without category or SKU; brands/categories must exist; the existing junk brands/categories are cleaned by hand from the admin.
 - **L3** Cause of S1: the client's photos are HEIC, which only Safari renders; the code never blocked Cloudinary.
 - **L4** F1 evidence: node check of the rewrite (HEIC URL gets the transformation, idempotent, non-Cloudinary unchanged, bare file name → null); `curl` of the transformed real URL returned `200 image/jpeg`; `pnpm build` passed. The edit form fills its input with `productImageLink` so saving never stores the transformed URL.
+- **L5** B1 evidence: RED 4 failing (3 HTTP + parser suite), GREEN `pnpm test` 459/459. B1 also delivers the all-or-nothing response part of S3. Running count ~640 authored lines (F1 ~42 + B1 ~600 incl. tests): over 400, delivery strategy asked.

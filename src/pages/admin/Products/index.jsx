@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from "react";
+import { useState, useEffect, useCallback } from "react";
 import { Link } from "react-router-dom";
 import useSWR, { mutate } from "swr";
 import api, { fetcher, API_BASE } from "../../../lib/api";
@@ -16,6 +16,7 @@ import {
   ArrowLeft,
 } from "../../../components/common/Icons";
 import { productImageUrl } from "../../../lib/product-image";
+import ImportProductsModal from "./ImportProductsModal";
 import "./index.css";
 
 // Thumbnail that shows the placeholder icon when the product has no image or
@@ -50,10 +51,7 @@ function AdminProducto() {
   // Stock filter driven by the KPI cards: "" (all), "in" or "out"
   const [stockFilter, setStockFilter] = useState("");
   const [showModal, setShowModal] = useState(false);
-  const [excelFile, setExcelFile] = useState(null);
-  const [isUploading, setIsUploading] = useState(false);
   const [isExporting, setIsExporting] = useState(false);
-  const fileInputRef = useRef();
 
   // Build key de request: la búsqueda va como query param y pagina igual
   const getKey = () => {
@@ -80,7 +78,7 @@ function AdminProducto() {
 
   // Stats separate fetch
   const [stats, setStats] = useState(null);
-  useEffect(() => {
+  const loadStats = useCallback(() => {
     if (token && isAdmin) {
       api
         .get(`/api/productos/stats`)
@@ -88,6 +86,7 @@ function AdminProducto() {
         .catch(() => {});
     }
   }, [token, isAdmin]);
+  useEffect(loadStats, [loadStats]);
 
   // Recargar datos después de eliminar
   const refreshData = () => {
@@ -154,52 +153,12 @@ function AdminProducto() {
 
   // Modal handlers
   const handleOpenModal = () => setShowModal(true);
-  const handleCloseModal = () => {
-    setShowModal(false);
-    setExcelFile(null);
-    if (fileInputRef.current) fileInputRef.current.value = "";
-  };
+  const handleCloseModal = () => setShowModal(false);
 
-  const handleFileChange = (e) => {
-    setExcelFile(e.target.files[0]);
-  };
-
-  const handleUpload = async () => {
-    if (!excelFile) {
-      Swal.fire({
-        icon: "warning",
-        title: "Seleccionar archivo",
-        text: "Debe seleccionar un archivo Excel",
-      });
-      return;
-    }
-
-    setIsUploading(true);
-    const formData = new FormData();
-    formData.append("file", excelFile);
-
-    try {
-      await api.post(`/api/productos/bulk-upload`, formData, {
-        headers: { "Content-Type": "multipart/form-data" },
-      });
-      Swal.fire({
-        icon: "success",
-        title: "¡Importación exitosa!",
-        text: "Los productos se han agregado",
-        showConfirmButton: false,
-        timer: 1500,
-      });
-      handleCloseModal();
-      refreshData();
-    } catch (err) {
-      Swal.fire({
-        icon: "error",
-        title: "Error",
-        text: "No se pudo subir la planilla",
-      });
-    } finally {
-      setIsUploading(false);
-    }
+  // An import can add, update or replace products: refresh list and KPIs
+  const handleImported = () => {
+    refreshData();
+    loadStats();
   };
 
   // Exportar productos a XLSX
@@ -684,89 +643,7 @@ function AdminProducto() {
 
       {/* Import Modal */}
       {showModal && (
-        <div className="fixed inset-0 z-50 flex items-center justify-center p-4">
-          <div
-            className="absolute inset-0 bg-black/70 backdrop-blur-sm"
-            onClick={handleCloseModal}
-          />
-          <div className="relative w-full max-w-md bg-gray-900 border border-white/10 rounded-2xl p-6 shadow-2xl">
-            <div className="flex items-center justify-between mb-5">
-              <h2 className="text-lg font-semibold text-white">
-                Importar productos desde Excel
-              </h2>
-              <button
-                onClick={handleCloseModal}
-                className="p-2 text-white/50 hover:text-white hover:bg-white/10 rounded-full"
-              >
-                <svg
-                  className="w-5 h-5"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                  stroke="white"
-                >
-                  <path
-                    strokeLinecap="round"
-                    strokeLinejoin="round"
-                    strokeWidth={2}
-                    d="M6 18L18 6M6 6l12 12"
-                  />
-                </svg>
-              </button>
-            </div>
-            <div className="mb-5">
-              <label className="block text-white/70 text-sm mb-2">
-                Seleccionar archivo Excel
-              </label>
-              <input
-                type="file"
-                accept=".xlsx,.xls"
-                onChange={handleFileChange}
-                ref={fileInputRef}
-                className="w-full px-4 py-3 bg-gray-800/50 border border-white/10 rounded-xl text-white file:mr-4 file:py-2 file:px-4 file:rounded-lg file:border-0 file:text-sm file:font-medium file:bg-yellow-500 file:text-gray-900 hover:file:bg-yellow-400"
-              />
-            </div>
-            <div className="flex gap-3">
-              <button
-                onClick={handleCloseModal}
-                className="flex-1 py-3 bg-white/10 text-white font-medium rounded-xl hover:bg-white/20 transition-colors"
-              >
-                Cancelar
-              </button>
-              <button
-                onClick={handleUpload}
-                disabled={isUploading}
-                className="flex-1 py-3 bg-yellow-500 text-gray-900 font-semibold rounded-xl hover:bg-yellow-400 transition-colors disabled:opacity-50 flex items-center justify-center gap-2"
-              >
-                {isUploading ? (
-                  <>
-                    <svg
-                      className="animate-spin w-5 h-5"
-                      fill="none"
-                      viewBox="0 0 24 24"
-                    >
-                      <circle
-                        className="opacity-25"
-                        cx="12"
-                        cy="12"
-                        r="10"
-                        stroke="white"
-                        strokeWidth="4"
-                      />
-                      <path
-                        className="opacity-75"
-                        fill="currentColor"
-                        d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"
-                      />
-                    </svg>
-                    Subiendo...
-                  </>
-                ) : (
-                  "Subir archivo"
-                )}
-              </button>
-            </div>
-          </div>
-        </div>
+        <ImportProductsModal onClose={handleCloseModal} onImported={handleImported} />
       )}
     </div>
   );

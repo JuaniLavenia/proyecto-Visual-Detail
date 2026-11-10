@@ -14,12 +14,12 @@ Branch: `feat/catalog-import` in both repos. Delivery: ask-on-risk. Test runner:
 
 ## Tasks
 
-- [x] **F1** (S1) front, inline: `optimizeImage` in `src/lib/product-image.js`, admin previews optimized, edit form keeps the raw link. Commit 16a63bd (pushed).
-- [x] **B1** (S2) back, inline: `src/utils/product-sheet.js` + controller; all-or-nothing response `INVALID_SHEET` with details. Commit fb247ea.
-- [ ] **B2** (S3) back, inline: all-or-nothing validation, identity key, brand/category must exist.
-- [ ] **B3** (S4) back, inline + independent verifier (Risk item 1: deletes stored data).
-- [ ] **B4** (S5) back, inline: template endpoint.
-- [ ] **F2** (S6) front, inline: import UI.
+- [x] **F1** (S1) front, inline: `optimizeImage` in `src/lib/product-image.js`, admin previews optimized, edit form keeps the raw link. Commit 16a63bd, PR #27 merged.
+- [x] **B1** (S2) back, inline: `src/utils/product-sheet.js` + controller; all-or-nothing response `INVALID_SHEET` with details. Commit fb247ea, back PR #24 merged (release 1.1.0).
+- [x] **B2** (S3) back, inline: `bulkUpsert(rows, headers)` returns `{ errors }`, active brand/category required, identity name+capacity+brand. Commit 599e027, back PR #26 merged.
+- [x] **B3** (S4) back, inline + independent verifier (Risk item 1: deletes stored data): `mode=replace`, `replaceCatalog` in `withTransaction`. Commit efd6b2d, back PR #28 merged.
+- [x] **B4** (S5) back, inline: `GET /api/productos/template` (admin), `plantilla-productos.xlsx` from `TEMPLATE_HEADERS`. Back PR #30 merged.
+- [x] **F2** (S6) front, inline: `src/pages/admin/Products/ImportProductsModal.jsx` (mode picker, type REEMPLAZAR, template download, per-row error table, real counts); page refreshes list + KPIs after an import.
 
 ## Log
 
@@ -28,3 +28,7 @@ Branch: `feat/catalog-import` in both repos. Delivery: ask-on-risk. Test runner:
 - **L3** Cause of S1: the client's photos are HEIC, which only Safari renders; the code never blocked Cloudinary.
 - **L4** F1 evidence: node check of the rewrite (HEIC URL gets the transformation, idempotent, non-Cloudinary unchanged, bare file name → null); `curl` of the transformed real URL returned `200 image/jpeg`; `pnpm build` passed. The edit form fills its input with `productImageLink` so saving never stores the transformed URL.
 - **L5** B1 evidence: RED 4 failing (3 HTTP + parser suite), GREEN `pnpm test` 459/459. B1 also delivers the all-or-nothing response part of S3. Running count ~640 authored lines (F1 ~42 + B1 ~600 incl. tests): over 400, delivery strategy asked.
+- **L6** (2026-11-10) Delivery decided by the user: one branch + PR to main per task, merged before continuing (stacked-to-main). B2 evidence: RED 10 failing, GREEN `pnpm test` 466/466. Risk item 1 (broader matching replaces stored products, requested): covered by the independent verifier planned with B3.
+- **L7** B3 evidence: RED 8 failing, GREEN 474/474. Independent verifier (scratch clone) over B2+B3: S3 pass, S4 pass, no blockers; 15 probes (mode field order, start→delete→insert→commit with one session, abort on insert failure, no DB call on invalid/empty/unknown mode, real insertMany validation, bulkWrite counters, export re-imports). Atlas transactions already run in production for orders. Advisories kept as known behavior: upsert bulkWrite not transactional, empty optional cells clear stored values.
+- **L8** B4 evidence: RED 4 failing, GREEN 478/478; the template test parses the downloaded file back with no errors.
+- **L9** F2 evidence: `pnpm build` passes; the front has no test runner or lint. Not exercised against a real API: the local backend DB could be production and replace mode deletes the whole catalog. Manual check pending on a non-production DB.

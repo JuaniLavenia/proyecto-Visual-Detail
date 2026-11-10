@@ -1,7 +1,7 @@
 import { useState, useEffect, useMemo } from "react";
 import { useNavigate, useParams, Link } from "react-router-dom";
 import api from "../../../lib/api";
-import { productImageUrl } from "../../../lib/product-image";
+import { optimizeImage, productImageLink, productImageUrl } from "../../../lib/product-image";
 import Swal from "sweetalert2";
 import useTaxonomyOptions from "../../../hooks/useTaxonomyOptions";
 import {
@@ -83,7 +83,7 @@ function ProductoEdit() {
           capacity: p?.capacity || "",
           // El modelo guarda la imagen en "image", no en "imageUrl". Un nombre
           // de archivo viejo (sin link) se descarta: el admin pega el link nuevo.
-          imageUrl: productImageUrl(p?.image) || "",
+          imageUrl: productImageLink(p?.image) || "",
         });
         setExistingImage(productImageUrl(p?.image));
       })
@@ -481,7 +481,7 @@ function ProductoEdit() {
                 </p>
                 <div className="w-40 h-40 rounded-xl overflow-hidden bg-gray-800 border border-white/10">
                   <img
-                    src={formData.imageUrl || existingImage}
+                    src={formData.imageUrl ? optimizeImage(formData.imageUrl) : existingImage}
                     alt="Producto"
                     className="w-full h-full object-cover"
                   />

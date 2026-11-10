@@ -1,6 +1,7 @@
 import { useState } from "react";
 import { useNavigate, Link } from "react-router-dom";
 import api from "../../../lib/api";
+import { optimizeImage } from "../../../lib/product-image";
 import Swal from "sweetalert2";
 import useTaxonomyOptions from "../../../hooks/useTaxonomyOptions";
 import {
@@ -406,7 +407,7 @@ function ProductoCreate() {
                 <p className="text-white/50 text-sm mb-2">Vista previa:</p>
                 <div className="w-40 h-40 rounded-xl overflow-hidden bg-gray-800 border border-white/10">
                   <img
-                    src={formData.imageUrl}
+                    src={optimizeImage(formData.imageUrl)}
                     alt="Preview"
                     className="w-full h-full object-cover"
                   />

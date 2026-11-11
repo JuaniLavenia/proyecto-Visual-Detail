@@ -304,7 +304,7 @@ function ProductoCreate() {
                     value={formData.price}
                     onChange={handleChange}
                     min="0"
-                    max="99999"
+                    max="99999999"
                     step="0.01"
                     placeholder="0"
                     className={`w-full pl-8 pr-4 py-3 bg-gray-800/50 border rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-yellow-500/50 transition-colors ${
@@ -332,7 +332,7 @@ function ProductoCreate() {
                     value={formData.precioMayorista}
                     onChange={handleChange}
                     min="0"
-                    max="99999"
+                    max="99999999"
                     step="0.01"
                     placeholder="0"
                     className={`w-full pl-8 pr-4 py-3 bg-gray-800/50 border rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-yellow-500/50 transition-colors ${
@@ -361,7 +361,7 @@ function ProductoCreate() {
                 value={formData.stock}
                 onChange={handleChange}
                 min="0"
-                max="999"
+                max="99999"
                 placeholder="0"
                 className={`w-full px-4 py-3 bg-gray-800/50 border rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-yellow-500/50 transition-colors ${
                   errors.stock ? "border-red-500" : "border-white/10"

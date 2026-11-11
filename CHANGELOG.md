@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.2.1](https://github.com/JuaniLavenia/proyecto-Visual-Detail/compare/v1.2.0...v1.2.1) (2026-11-11)
+
+
+### Bug Fixes
+
+* raise product form limits and recover from stale lazy chunks ([#32](https://github.com/JuaniLavenia/proyecto-Visual-Detail/issues/32)) ([c0267ea](https://github.com/JuaniLavenia/proyecto-Visual-Detail/commit/c0267eab0b73bf2d4476e91ff6e0c59703177db8))
+
 ## [1.2.0](https://github.com/JuaniLavenia/proyecto-Visual-Detail/compare/v1.1.0...v1.2.0) (2026-11-10)
 
 

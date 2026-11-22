@@ -185,13 +185,13 @@ function ProductoCreate() {
                 onChange={handleChange}
                 rows={4}
                 placeholder="Describe las características del producto..."
-                maxLength={300}
+                maxLength={1000}
                 className={`w-full px-4 py-3 bg-gray-800/50 border rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-yellow-500/50 transition-colors resize-none ${
                   errors.description ? "border-red-500" : "border-white/10"
                 }`}
               />
               <p className="text-white/30 text-xs mt-1">
-                {formData.description.length}/300 caracteres
+                {formData.description.length}/1000 caracteres
               </p>
               {errors.description && (
                 <p className="text-red-400 text-xs mt-1">

@@ -1,5 +1,12 @@
 # Changelog
 
+## [1.3.0](https://github.com/JuaniLavenia/proyecto-Visual-Detail/compare/v1.2.1...v1.3.0) (2026-11-22)
+
+
+### Features
+
+* **admin:** raise product description limit to 1000 characters ([#34](https://github.com/JuaniLavenia/proyecto-Visual-Detail/issues/34)) ([bc9859c](https://github.com/JuaniLavenia/proyecto-Visual-Detail/commit/bc9859cb9535930aa0878169b7215eb1e2ddbe90))
+
 ## [1.2.1](https://github.com/JuaniLavenia/proyecto-Visual-Detail/compare/v1.2.0...v1.2.1) (2026-11-11)
 
 
